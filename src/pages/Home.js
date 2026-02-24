@@ -1,26 +1,8 @@
-import { useState, useEffect } from 'react';
-import { supabase } from '../supabaseClient';
 import '../App.css';
 
 function Home() {
-  const [displayName, setDisplayName] = useState('');
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        setDisplayName(session.user.user_metadata.display_name);
-      }
-    });
-  }, []);
-
   return (
     <div>
-      {displayName && (
-        <div style={{ textAlign: 'right', padding: '10px 20px', fontWeight: 'bold', color: 'purple' }}>
-          Welcome, {displayName}!
-        </div>
-      )}
-
       <section className="hero">
         <div className="container">
           <h2>Building Web Applications</h2>
