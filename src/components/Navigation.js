@@ -5,6 +5,7 @@ import '../App.css';
 
 function Navigation() {
   const [displayName, setDisplayName] = useState('');
+  const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -24,18 +25,27 @@ function Navigation() {
     <header className="header">
       <div className="container">
         <h1>Allez</h1>
-        <nav>
-          <Link to="/home">Home</Link>
-          <Link to="/projects">Projects</Link>
-          <Link to="/about">About</Link>
-          <Link to="/contact">Contact</Link>
+        <div className="nav-right">
           {displayName && (
-            <div className="user-info">
-              <span className="welcome-message">Welcome, {displayName}!</span>
-              <button onClick={handleLogout} className="logout-link">Log Out</button>
-            </div>
+            <span className="welcome-message">Welcome, {displayName}!</span>
           )}
-        </nav>
+          <div style={{ position: 'relative', display: 'inline-block' }}>
+            <button className="hamburger" onClick={() => setMenuOpen(!menuOpen)}>
+              <span></span>
+              <span></span>
+              <span></span>
+            </button>
+            {menuOpen && (
+              <nav className="dropdown-menu">
+                <Link to="/home" onClick={() => setMenuOpen(false)}>Home</Link>
+                <Link to="/projects" onClick={() => setMenuOpen(false)}>Projects</Link>
+                <Link to="/about" onClick={() => setMenuOpen(false)}>About</Link>
+                <Link to="/contact" onClick={() => setMenuOpen(false)}>Contact</Link>
+                <button onClick={handleLogout} className="logout-link">Log Out</button>
+              </nav>
+            )}
+          </div>
+        </div>
       </div>
     </header>
   );
