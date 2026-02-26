@@ -24,7 +24,7 @@ function Navigation() {
   return (
     <header className="header">
       <div className="container">
-        <h1>Allez</h1>
+        <h1><Link to="/home" style={{ color: 'white', textDecoration: 'none' }}>Allez</Link></h1>
         <div className="nav-right">
           {displayName && (
             <span className="welcome-message">Welcome, {displayName}!</span>
