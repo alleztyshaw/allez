@@ -398,8 +398,16 @@ export default function ClientDetail() {
       else setClient(data);
       setLoading(false);
     }
+    async function loadNotes() {
+      const { data } = await supabase
+        .from('notes')
+        .select('*')
+        .eq('client_id', id)
+        .order('created_at', { ascending: false });
+      setClientNotes(data || []);
+    }
     fetchClient();
-    fetchNotes();
+    loadNotes();
   }, [id]);
 
   async function fetchNotes() {
