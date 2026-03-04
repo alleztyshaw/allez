@@ -8,6 +8,8 @@ import Home from './pages/Home';
 import Projects from './pages/Projects';
 import About from './pages/About';
 import Contact from './pages/Contact';
+import Clients from './pages/Clients';
+import HQ from './pages/HQ';
 import './App.css';
 
 function App() {
@@ -33,6 +35,22 @@ function App() {
             <ProtectedRoute>
               <Navigation />
               <main className="main"><Projects /></main>
+              <Footer />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/clients" element={
+            <ProtectedRoute>
+              <Navigation />
+              <main className="main"><Clients /></main>
+              <Footer />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/hq" element={
+            <ProtectedRoute>
+              <Navigation />
+              <main className="main"><HQ /></main>
               <Footer />
             </ProtectedRoute>
           } />

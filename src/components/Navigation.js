@@ -38,6 +38,7 @@ function Navigation() {
             {menuOpen && (
               <nav className="dropdown-menu">
                 <Link to="/home" onClick={() => setMenuOpen(false)}>Home</Link>
+                <Link to="/hq" onClick={() => setMenuOpen(false)}>HQ</Link>
                 <Link to="/projects" onClick={() => setMenuOpen(false)}>Projects</Link>
                 <Link to="/about" onClick={() => setMenuOpen(false)}>About</Link>
                 <Link to="/contact" onClick={() => setMenuOpen(false)}>Contact</Link>
