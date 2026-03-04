@@ -7,7 +7,7 @@ const features = [
     id: 'clients',
     title: 'Clients',
     description: 'Manage your client roster, financial profiles, risk tolerances, and relationship details.',
-    route: '/clients',
+    route: '/hq/clients',
     status: 'live',
     icon: '👤',
     metricLabel: 'Total Clients',
@@ -17,7 +17,7 @@ const features = [
     id: 'notes',
     title: 'AI Note Taker',
     description: 'Record and transcribe meetings. Extract action items, securities mentions, and compliance flags automatically.',
-    route: '/notes',
+    route: '/hq/notes',
     status: 'coming_soon',
     icon: '🎙️',
     metricLabel: 'Notes',
@@ -27,7 +27,7 @@ const features = [
     id: 'crm',
     title: 'CRM',
     description: 'Track client interactions, touchpoints, and communication history in one place.',
-    route: '/crm',
+    route: '/hq/crm',
     status: 'coming_soon',
     icon: '🤝',
     metricLabel: 'Interactions',
@@ -37,7 +37,7 @@ const features = [
     id: 'onboarding',
     title: 'Onboarding Tracker',
     description: 'Monitor new client onboarding progress, step completion, and outstanding tasks.',
-    route: '/onboarding',
+    route: '/hq/onboarding',
     status: 'coming_soon',
     icon: '📋',
     metricLabel: 'In Progress',
@@ -47,15 +47,18 @@ const features = [
 
 export default function HQ() {
   const navigate = useNavigate();
-  const [user, setUser] = useState(null);
+  const [firstName, setFirstName] = useState('');
   const [metrics, setMetrics] = useState({});
   const [metricsLoading, setMetricsLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setUser(data?.user));
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        setFirstName(session.user.user_metadata.display_name || '');
+      }
+    });
 
-    // Tick clock every minute
     const timer = setInterval(() => setCurrentTime(new Date()), 60000);
     return () => clearInterval(timer);
   }, []);
@@ -63,10 +66,8 @@ export default function HQ() {
   useEffect(() => {
     async function fetchMetrics() {
       setMetricsLoading(true);
-      const { count } = await supabase
-        .from('clients')
-        .select('*', { count: 'exact', head: true });
-      setMetrics({ clients: count ?? 0 });
+      const { data } = await supabase.from('clients').select('id');
+      setMetrics({ clients: data?.length ?? 0 });
       setMetricsLoading(false);
     }
     fetchMetrics();
@@ -79,23 +80,20 @@ export default function HQ() {
     return 'Good evening';
   };
 
-  const firstName = user?.user_metadata?.full_name?.split(' ')[0]
-    || user?.email?.split('@')[0]
-    || '';
-
   const formattedDate = currentTime.toLocaleDateString('en-US', {
     weekday: 'long', month: 'long', day: 'numeric',
   });
 
   return (
     <div style={s.page}>
-      {/* Background texture */}
       <div style={s.bgTexture} />
 
       {/* Header */}
       <div style={s.header}>
         <div style={s.headerLeft}>
-          <p style={s.greeting}>{getGreeting()}{firstName ? `, ${firstName}` : ''}</p>
+          <p style={s.greeting}>
+            {getGreeting()}{firstName ? `, ${firstName}` : ''}
+          </p>
           <h1 style={s.title}>Allez HQ</h1>
           <p style={s.date}>{formattedDate}</p>
         </div>
@@ -108,7 +106,6 @@ export default function HQ() {
         </div>
       </div>
 
-      {/* Divider */}
       <div style={s.divider} />
 
       {/* Feature Grid */}
@@ -128,7 +125,6 @@ export default function HQ() {
               onClick={() => isLive && navigate(feature.route)}
               className="hq-card"
             >
-              {/* Card top row */}
               <div style={s.cardTop}>
                 <span style={s.cardIcon}>{feature.icon}</span>
                 {isLive ? (
@@ -138,13 +134,11 @@ export default function HQ() {
                 )}
               </div>
 
-              {/* Title & description */}
               <h2 style={{ ...s.cardTitle, ...(isLive ? {} : s.cardTitleDimmed) }}>
                 {feature.title}
               </h2>
               <p style={s.cardDesc}>{feature.description}</p>
 
-              {/* Metric */}
               <div style={s.cardFooter}>
                 {isLive && !metricsLoading && metric !== null ? (
                   <div style={s.metric}>
@@ -168,7 +162,6 @@ export default function HQ() {
         })}
       </div>
 
-      {/* Footer note */}
       <p style={s.footerNote}>
         Allez HQ · Role-based access controls (Admin / Advisor / Viewer) are on the roadmap.
       </p>
@@ -223,7 +216,7 @@ const s = {
     justifyContent: 'space-between',
     alignItems: 'flex-end',
     maxWidth: '1100px',
-    margin: '0 auto 0',
+    margin: '0 auto',
     position: 'relative',
   },
   headerLeft: {},
@@ -381,7 +374,6 @@ const s = {
     fontSize: '13px',
     fontWeight: 500,
     cursor: 'pointer',
-    transition: 'background 0.15s',
   },
   footerNote: {
     maxWidth: '1100px',

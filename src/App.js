@@ -12,6 +12,16 @@ import Clients from './pages/Clients';
 import HQ from './pages/HQ';
 import './App.css';
 
+function ProtectedLayout({ children }) {
+  return (
+    <ProtectedRoute>
+      <Navigation />
+      <main className="main">{children}</main>
+      <Footer />
+    </ProtectedRoute>
+  );
+}
+
 function App() {
   return (
     <Router>
@@ -23,53 +33,14 @@ function App() {
           <Route path="/signup" element={<Signup />} />
 
           {/* Protected routes — login required */}
-          <Route path="/home" element={
-            <ProtectedRoute>
-              <Navigation />
-              <main className="main"><Home /></main>
-              <Footer />
-            </ProtectedRoute>
-          } />
+          <Route path="/home" element={<ProtectedLayout><Home /></ProtectedLayout>} />
+          <Route path="/projects" element={<ProtectedLayout><Projects /></ProtectedLayout>} />
+          <Route path="/about" element={<ProtectedLayout><About /></ProtectedLayout>} />
+          <Route path="/contact" element={<ProtectedLayout><Contact /></ProtectedLayout>} />
 
-          <Route path="/projects" element={
-            <ProtectedRoute>
-              <Navigation />
-              <main className="main"><Projects /></main>
-              <Footer />
-            </ProtectedRoute>
-          } />
-
-          <Route path="/clients" element={
-            <ProtectedRoute>
-              <Navigation />
-              <main className="main"><Clients /></main>
-              <Footer />
-            </ProtectedRoute>
-          } />
-
-          <Route path="/hq" element={
-            <ProtectedRoute>
-              <Navigation />
-              <main className="main"><HQ /></main>
-              <Footer />
-            </ProtectedRoute>
-          } />
-
-          <Route path="/about" element={
-            <ProtectedRoute>
-              <Navigation />
-              <main className="main"><About /></main>
-              <Footer />
-            </ProtectedRoute>
-          } />
-
-          <Route path="/contact" element={
-            <ProtectedRoute>
-              <Navigation />
-              <main className="main"><Contact /></main>
-              <Footer />
-            </ProtectedRoute>
-          } />
+          {/* HQ and nested pages */}
+          <Route path="/hq" element={<ProtectedLayout><HQ /></ProtectedLayout>} />
+          <Route path="/hq/clients" element={<ProtectedLayout><Clients /></ProtectedLayout>} />
 
         </Routes>
       </div>
