@@ -15,10 +15,10 @@ const features = [
   },
   {
     id: 'notes',
-    title: 'AI Note Taker',
-    description: 'Record and transcribe meetings. Extract action items, securities mentions, and compliance flags automatically.',
+    title: 'Notes',
+    description: 'Record meeting notes, calls, and emails. Tag by client and type, with AI transcription coming soon.',
     route: '/hq/notes',
-    status: 'coming_soon',
+    status: 'live',
     icon: '🎙️',
     metricLabel: 'Notes',
     metricQuery: null,
@@ -66,8 +66,8 @@ export default function HQ() {
   useEffect(() => {
     async function fetchMetrics() {
       setMetricsLoading(true);
-      const { data } = await supabase.from('clients').select('id');
-      setMetrics({ clients: data?.length ?? 0 });
+      const { data: clientsData } = await supabase.from('clients').select('id');
+      setMetrics({ clients: clientsData?.length ?? 0 });
       setMetricsLoading(false);
     }
     fetchMetrics();
@@ -141,10 +141,14 @@ export default function HQ() {
 
               <div style={s.cardFooter}>
                 {isLive && !metricsLoading && metric !== null ? (
-                  <div style={s.metric}>
-                    <span style={s.metricNumber}>{metric}</span>
-                    <span style={s.metricLabel}>{feature.metricLabel}</span>
-                  </div>
+                  feature.id === 'notes' ? (
+                    <span style={s.metricLabel}>{metric}</span>
+                  ) : (
+                    <div style={s.metric}>
+                      <span style={s.metricNumber}>{metric}</span>
+                      <span style={s.metricLabel}>{feature.metricLabel}</span>
+                    </div>
+                  )
                 ) : (
                   <div />
                 )}
@@ -289,6 +293,8 @@ const s = {
     padding: '28px 26px 22px',
     transition: 'transform 0.2s ease, box-shadow 0.2s ease',
     cursor: 'pointer',
+    display: 'flex',
+    flexDirection: 'column',
   },
   cardLive: {
     borderColor: BORDER,
@@ -338,14 +344,15 @@ const s = {
     fontSize: '13px',
     color: TEXT_MUTED,
     lineHeight: '1.6',
-    margin: '0 0 20px',
+    margin: '0',
     fontWeight: 300,
+    flex: 1,
   },
   cardFooter: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'flex-end',
-    marginTop: 'auto',
+    marginTop: '20px',
   },
   metric: {
     display: 'flex',

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import {
   GOLD, DARK, CARD_BG, BORDER, TEXT_PRIMARY, TEXT_MUTED, INPUT_BG,
@@ -152,6 +152,8 @@ const s = {
     background: `rgba(96,165,250,0.12)`,
     color: '#60a5fa',
     border: `1px solid rgba(96,165,250,0.2)`,
+    textDecoration: 'none',
+    transition: 'background 0.15s, box-shadow 0.15s',
   },
   noteBody: {
     fontSize: '14px',
@@ -240,6 +242,11 @@ export default function Notes() {
   const [error, setError] = useState('');
   const [editingNote, setEditingNote] = useState(null);
   const [editForm, setEditForm] = useState({});
+  const [expandedNotes, setExpandedNotes] = useState({});
+
+  function toggleExpand(noteId) {
+    setExpandedNotes((prev) => ({ ...prev, [noteId]: !prev[noteId] }));
+  }
 
   // If client_id passed in URL, open compose with that client preselected
   useEffect(() => {
@@ -401,35 +408,112 @@ export default function Notes() {
         ) : notes.length === 0 ? (
           <div style={s.emptyState}>No notes yet. Create your first note above.</div>
         ) : (
-          grouped.map(([date, dateNotes]) => (
-            <div key={date} style={s.dateGroup}>
-              <p style={s.dateLabel}>{formatDateLabel(date)}</p>
-              {dateNotes.map((note) => {
-                const status = clientStatus(note.client_id);
-                return (
-                  <div key={note.id} style={s.noteCard}>
-                    <div style={s.noteHeader}>
-                      <span style={s.noteTitle}>{note.title}</span>
-                      {note.note_type && <span style={s.noteTypeBadge}>{note.note_type}</span>}
-                      <span style={{
-                        ...s.clientBadge,
-                        backgroundColor: STATUS_COLORS?.[status]?.bg || 'rgba(96,165,250,0.12)',
-                        color: STATUS_COLORS?.[status]?.color || '#60a5fa',
-                        border: `1px solid ${STATUS_COLORS?.[status]?.color || '#60a5fa'}33`,
-                      }}>
-                        {clientName(note.client_id)}
-                      </span>
+          <>
+            <style>{`
+              @keyframes fadeUp {
+                from { opacity: 0; transform: translateY(18px); }
+                to   { opacity: 1; transform: translateY(0); }
+              }
+              .note-card {
+                animation: fadeUp 0.4s ease both;
+              }
+              .note-card:hover {
+                transform: translateY(-2px) !important;
+                box-shadow: 0 12px 30px rgba(0,0,0,0.2) !important;
+              }
+              .client-name-badge:hover {
+                background: rgba(96,165,250,0.25) !important;
+                box-shadow: 0 0 0 2px rgba(96,165,250,0.3);
+              }
+              .expand-triangle {
+                display: inline-block;
+                transition: transform 0.2s ease;
+                font-size: 9px;
+                margin-left: 4px;
+                vertical-align: middle;
+              }
+              .expand-triangle.open {
+                transform: rotate(90deg);
+              }
+            `}</style>
+            {grouped.map(([date, dateNotes]) => (
+              <div key={date} style={s.dateGroup}>
+                <p style={s.dateLabel}>{formatDateLabel(date)}</p>
+                {dateNotes.map((note, i) => {
+                  const status = clientStatus(note.client_id);
+                  const clientId = note.client_id;
+                  const isExpanded = expandedNotes[note.id];
+                  const bodyLines = note.body ? note.body.split('\n') : [];
+                  const isLong = note.body && (note.body.length > 80 || bodyLines.length > 1);
+                  return (
+                    <div
+                      key={note.id}
+                      className="note-card"
+                      style={{ ...s.noteCard, animationDelay: `${i * 60}ms`, transition: 'transform 0.2s ease, box-shadow 0.2s ease' }}
+                    >
+                      <div style={s.noteHeader}>
+                        <span style={s.noteTitle}>{note.title}</span>
+                        {note.note_type && <span style={s.noteTypeBadge}>{note.note_type}</span>}
+                        <Link
+                          to={`/hq/clients/${clientId}`}
+                          state={{ from: '/hq/notes' }}
+                          className="client-name-badge"
+                          style={{
+                            ...s.clientBadge,
+                            backgroundColor: STATUS_COLORS?.[status]?.bg || 'rgba(96,165,250,0.12)',
+                            color: STATUS_COLORS?.[status]?.color || '#60a5fa',
+                            border: `1px solid ${STATUS_COLORS?.[status]?.color || '#60a5fa'}33`,
+                          }}
+                        >
+                          {clientName(note.client_id)}
+                        </Link>
+                      </div>
+
+                      {note.body && (
+                        <div style={{ marginBottom: '10px' }}>
+                          <div style={{
+                            maxHeight: isExpanded ? '600px' : '1.4em',
+                            overflow: 'hidden',
+                            transition: isExpanded
+                              ? 'max-height 0.35s ease-in-out'
+                              : 'max-height 0.3s ease-in-out',
+                          }}>
+                            <p style={{
+                              ...s.noteBody,
+                              marginBottom: 0,
+                              whiteSpace: 'pre-wrap',
+                            }}>
+                              {note.body}
+                            </p>
+                          </div>
+                          {/* Always reserve space for the toggle row */}
+                          <div style={{ height: '24px', display: 'flex', alignItems: 'center', marginTop: '4px' }}>
+                            {isLong && (
+                              <button
+                                style={{ ...s.noteAction }}
+                                onClick={() => toggleExpand(note.id)}
+                              >
+                                {isExpanded ? 'Show less' : 'Read more'}
+                                <span className={`expand-triangle${isExpanded ? ' open' : ''}`}>▶</span>
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Reserve body space even when there's no body */}
+                      {!note.body && <div style={{ height: '58px' }} />}
+
+                      <div style={s.noteActions}>
+                        <button style={s.noteAction} onClick={() => openEdit(note)}>Edit</button>
+                        <button style={{ ...s.noteAction, color: '#f87171' }} onClick={() => handleDelete(note.id)}>Delete</button>
+                      </div>
                     </div>
-                    {note.body && <p style={s.noteBody}>{note.body}</p>}
-                    <div style={s.noteActions}>
-                      <button style={s.noteAction} onClick={() => openEdit(note)}>Edit</button>
-                      <button style={{ ...s.noteAction, color: '#f87171' }} onClick={() => handleDelete(note.id)}>Delete</button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          ))
+                  );
+                })}
+              </div>
+            ))}
+          </>
         )}
 
         {/* Edit modal */}

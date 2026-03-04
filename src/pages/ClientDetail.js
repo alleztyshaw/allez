@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import {
   GOLD, DARK, CARD_BG, BORDER, TEXT_PRIMARY, TEXT_MUTED, STATUS_COLORS,
@@ -375,6 +375,9 @@ function SelectField({ label, name, value, onChange, options }) {
 export default function ClientDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const backPath = location.state?.from || '/hq/clients';
+  const backLabel = backPath === '/hq/notes' ? '← Back to Notes' : '← Back to Clients';
   const [client, setClient] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showEdit, setShowEdit] = useState(false);
@@ -514,7 +517,7 @@ export default function ClientDetail() {
 
         {/* Top row: back link + action buttons */}
         <div style={s.topRow}>
-          <Link to="/hq/clients" style={s.backLink}>← Back to Clients</Link>
+          <Link to={backPath} style={s.backLink}>{backLabel}</Link>
           <div style={s.actionButtons}>
             <button style={s.editButton} onClick={openEdit}>Edit Details</button>
           </div>
