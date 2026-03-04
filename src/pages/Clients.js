@@ -14,6 +14,7 @@ function useWindowWidth() {
 
 // HQ design tokens — shared across all HQ sub-pages
 const GOLD = '#c9a84c';
+const GREEN = '#51da83';
 const DARK = '#0f1117';
 const CARD_BG = '#1e2330';
 const BORDER = 'rgba(201,168,76,0.18)';
@@ -94,10 +95,10 @@ const emptyForm = {
 };
 
 const statusColors = {
-  Active: { bg: '#d1fae5', color: '#065f46' },
-  Prospect: { bg: '#dbeafe', color: '#1e40af' },
-  Inactive: { bg: '#fef3c7', color: '#92400e' },
-  Former: { bg: '#fee2e2', color: '#991b1b' },
+  Active:   { bg: 'rgba(81,218,131,0.15)', color: '#51da83' },
+  Prospect: { bg: 'rgba(96,165,250,0.15)', color: '#60a5fa' },
+  Inactive: { bg: 'rgba(251,191,36,0.15)', color: '#fbbf24' },
+  Former:   { bg: 'rgba(248,113,113,0.15)', color: '#f87171' },
 };
 
 export default function Clients() {
@@ -295,8 +296,8 @@ export default function Clients() {
           box-shadow: 0 20px 40px rgba(0,0,0,0.25) !important;
         }
         .client-avatar-link:hover .client-avatar {
-          background: rgba(201,168,76,0.3) !important;
-          box-shadow: 0 0 0 2px rgba(201,168,76,0.5);
+          background: ${GREEN}44 !important;
+          box-shadow: 0 0 0 2px ${GREEN}88;
           transform: scale(1.08);
         }
         .client-avatar {
@@ -306,7 +307,7 @@ export default function Clients() {
           text-decoration: none;
         }
         .client-name-link:hover h3 {
-          color: #c9a84c !important;
+          color: #51da83 !important;
           text-decoration: underline;
           text-underline-offset: 3px;
         }
@@ -469,8 +470,8 @@ const styles = {
   },
   addButton: {
     background: 'transparent',
-    color: GOLD,
-    border: `1px solid ${BORDER}`,
+    color: GREEN,
+    border: `1px solid ${GREEN}`,
     borderRadius: '8px',
     padding: '10px 20px',
     fontSize: '14px',
@@ -548,9 +549,9 @@ const styles = {
     width: '42px',
     height: '42px',
     borderRadius: '50%',
-    background: `rgba(201,168,76,0.15)`,
-    border: `1px solid ${BORDER}`,
-    color: GOLD,
+    background: `${GREEN}22`,
+    border: `1px solid ${GREEN}55`,
+    color: GREEN,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',

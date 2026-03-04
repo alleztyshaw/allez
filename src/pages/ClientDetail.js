@@ -1,135 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
-
-// HQ design tokens — shared across all HQ sub-pages
-const GOLD = '#c9a84c';
-const DARK = '#0f1117';
-const CARD_BG = '#1e2330';
-const BORDER = 'rgba(201,168,76,0.18)';
-const TEXT_PRIMARY = '#f0ece0';
-const TEXT_MUTED = '#7a7d8a';
-
-const statusColors = {
-  Active:   { bg: '#d1fae5', color: '#065f46' },
-  Prospect: { bg: '#dbeafe', color: '#1e40af' },
-  Inactive: { bg: '#fef3c7', color: '#92400e' },
-  Former:   { bg: '#fee2e2', color: '#991b1b' },
-};
-
-function Field({ label, value }) {
-  if (!value) return null;
-  return (
-    <div style={s.field}>
-      <span style={s.fieldLabel}>{label}</span>
-      <span style={s.fieldValue}>{value}</span>
-    </div>
-  );
-}
-
-function Section({ title, children }) {
-  return (
-    <div style={s.section}>
-      <p style={s.sectionLabel}>{title}</p>
-      <div style={s.fieldGrid}>{children}</div>
-    </div>
-  );
-}
-
-export default function ClientDetail() {
-  const { id } = useParams();
-  const [client, setClient] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function fetchClient() {
-      const { data, error } = await supabase
-        .from('clients')
-        .select('*')
-        .eq('id', id)
-        .single();
-
-      if (error) console.error(error);
-      else setClient(data);
-      setLoading(false);
-    }
-    fetchClient();
-  }, [id]);
-
-  if (loading) return <div style={s.loading}>Loading client...</div>;
-  if (!client) return <div style={s.loading}>Client not found.</div>;
-
-  const fullName = `${client.first_name} ${client.last_name}`;
-
-  return (
-    <div style={s.pageWrapper}>
-      <div style={s.page}>
-
-        {/* Back link */}
-        <Link to="/hq/clients" style={s.backLink}>← Back to Clients</Link>
-
-        {/* Header */}
-        <div style={s.header}>
-          <div style={s.avatarLarge}>
-            {client.first_name?.[0]}{client.last_name?.[0]}
-          </div>
-          <div style={s.headerText}>
-            <h1 style={s.name}>{fullName}</h1>
-            {client.email && <p style={s.email}>{client.email}</p>}
-            {client.phone && <p style={s.email}>{client.phone}</p>}
-          </div>
-          {client.status && (
-            <span style={{
-              ...s.badge,
-              backgroundColor: statusColors[client.status]?.bg,
-              color: statusColors[client.status]?.color,
-            }}>
-              {client.status}
-            </span>
-          )}
-        </div>
-
-        <div style={s.divider} />
-
-        {/* Detail sections */}
-        <div style={s.grid}>
-
-          <Section title="Core Identity">
-            <Field label="Date of Birth" value={client.date_of_birth} />
-            <Field label="Client Since" value={client.client_since} />
-            <Field label="Preferred Contact" value={client.preferred_contact_method} />
-            <Field label="Communication Frequency" value={client.communication_frequency} />
-          </Section>
-
-          <Section title="Financial Profile">
-            <Field label="Asset Level" value={client.asset_level} />
-            <Field label="Risk Tolerance" value={client.risk_tolerance} />
-            <Field label="Investment Objective" value={client.investment_objective} />
-            <Field label="Time Horizon" value={client.time_horizon} />
-            <Field label="Tax Bracket" value={client.tax_bracket} />
-            <Field label="Liquidity Needs" value={client.liquidity_needs} />
-          </Section>
-
-          <Section title="Relationship">
-            <Field label="Relationship Manager" value={client.relationship_manager} />
-            <Field label="Referral Source" value={client.referral_source} />
-            <Field label="Next Review Date" value={client.next_review_date} />
-          </Section>
-
-        </div>
-
-        {/* Notes */}
-        {client.notes && (
-          <div style={s.notesCard}>
-            <p style={s.sectionLabel}>Notes</p>
-            <p style={s.notesText}>{client.notes}</p>
-          </div>
-        )}
-
-      </div>
-    </div>
-  );
-}
+import { GOLD, DARK, CARD_BG, BORDER, TEXT_PRIMARY, TEXT_MUTED, STATUS_COLORS, GREEN } from '../utils/hqConstants';
 
 const s = {
   pageWrapper: {
@@ -263,3 +135,117 @@ const s = {
     margin: 0,
   },
 };
+
+function Field({ label, value }) {
+  if (!value) return null;
+  return (
+    <div style={s.field}>
+      <span style={s.fieldLabel}>{label}</span>
+      <span style={s.fieldValue}>{value}</span>
+    </div>
+  );
+}
+
+function Section({ title, children }) {
+  return (
+    <div style={s.section}>
+      <p style={s.sectionLabel}>{title}</p>
+      <div style={s.fieldGrid}>{children}</div>
+    </div>
+  );
+}
+
+export default function ClientDetail() {
+  const { id } = useParams();
+  const [client, setClient] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchClient() {
+      const { data, error } = await supabase
+        .from('clients')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error) console.error(error);
+      else setClient(data);
+      setLoading(false);
+    }
+    fetchClient();
+  }, [id]);
+
+  if (loading) return <div style={s.loading}>Loading client...</div>;
+  if (!client) return <div style={s.loading}>Client not found.</div>;
+
+  const fullName = `${client.first_name} ${client.last_name}`;
+
+  return (
+    <div style={s.pageWrapper}>
+      <div style={s.page}>
+
+        {/* Back link */}
+        <Link to="/hq/clients" style={s.backLink}>← Back to Clients</Link>
+
+        {/* Header */}
+        <div style={s.header}>
+          <div style={s.avatarLarge}>
+            {client.first_name?.[0]}{client.last_name?.[0]}
+          </div>
+          <div style={s.headerText}>
+            <h1 style={s.name}>{fullName}</h1>
+            {client.email && <p style={s.email}>{client.email}</p>}
+            {client.phone && <p style={s.email}>{client.phone}</p>}
+          </div>
+          {client.status && (
+            <span style={{
+              ...s.badge,
+              backgroundColor: STATUS_COLORS?.[client.status]?.bg || 'rgba(255,255,255,0.1)',
+              color: STATUS_COLORS?.[client.status]?.color || '#f0ece0',
+            }}>
+              {client.status}
+            </span>
+          )}
+        </div>
+
+        <div style={s.divider} />
+
+        {/* Detail sections */}
+        <div style={s.grid}>
+
+          <Section title="Core Identity">
+            <Field label="Date of Birth" value={client.date_of_birth} />
+            <Field label="Client Since" value={client.client_since} />
+            <Field label="Preferred Contact" value={client.preferred_contact_method} />
+            <Field label="Communication Frequency" value={client.communication_frequency} />
+          </Section>
+
+          <Section title="Financial Profile">
+            <Field label="Asset Level" value={client.asset_level} />
+            <Field label="Risk Tolerance" value={client.risk_tolerance} />
+            <Field label="Investment Objective" value={client.investment_objective} />
+            <Field label="Time Horizon" value={client.time_horizon} />
+            <Field label="Tax Bracket" value={client.tax_bracket} />
+            <Field label="Liquidity Needs" value={client.liquidity_needs} />
+          </Section>
+
+          <Section title="Relationship">
+            <Field label="Relationship Manager" value={client.relationship_manager} />
+            <Field label="Referral Source" value={client.referral_source} />
+            <Field label="Next Review Date" value={client.next_review_date} />
+          </Section>
+
+        </div>
+
+        {/* Notes */}
+        {client.notes && (
+          <div style={s.notesCard}>
+            <p style={s.sectionLabel}>Notes</p>
+            <p style={s.notesText}>{client.notes}</p>
+          </div>
+        )}
+
+      </div>
+    </div>
+  );
+}
