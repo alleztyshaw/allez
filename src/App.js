@@ -9,6 +9,7 @@ import Projects from './pages/Projects';
 import About from './pages/About';
 import Contact from './pages/Contact';
 import Clients from './pages/Clients';
+import ClientDetail from './pages/ClientDetail';
 import HQ from './pages/HQ';
 import './App.css';
 
@@ -41,6 +42,7 @@ function App() {
           {/* HQ and nested pages */}
           <Route path="/hq" element={<ProtectedLayout><HQ /></ProtectedLayout>} />
           <Route path="/hq/clients" element={<ProtectedLayout><Clients /></ProtectedLayout>} />
+          <Route path="/hq/clients/:id" element={<ProtectedLayout><ClientDetail /></ProtectedLayout>} />
 
         </Routes>
       </div>

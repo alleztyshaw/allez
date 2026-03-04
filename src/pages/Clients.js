@@ -1,5 +1,16 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
+
+function useWindowWidth() {
+  const [width, setWidth] = useState(window.innerWidth);
+  useEffect(() => {
+    const handle = () => setWidth(window.innerWidth);
+    window.addEventListener('resize', handle);
+    return () => window.removeEventListener('resize', handle);
+  }, []);
+  return width;
+}
 
 // HQ design tokens — shared across all HQ sub-pages
 const GOLD = '#c9a84c';
@@ -98,6 +109,8 @@ export default function Clients() {
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
   const [activeTab, setActiveTab] = useState('all');
+  const windowWidth = useWindowWidth();
+  const isCompact = windowWidth < 1050;
 
   useEffect(() => {
     fetchClients();
@@ -211,56 +224,58 @@ export default function Clients() {
               className="client-card"
               style={{ ...styles.card, animationDelay: `${i * 60}ms` }}
             >
-              {/* Avatar + Name */}
+              {/* Avatar + Name — clicking either navigates to client detail */}
               <div style={styles.cardTop}>
-                <div style={styles.avatar}>
-                  {client.first_name?.[0]}{client.last_name?.[0]}
-                </div>
+                <Link to={`/hq/clients/${client.id}`} style={styles.avatarLink} className="client-avatar-link">
+                  <div style={styles.avatar} className="client-avatar">
+                    {client.first_name?.[0]}{client.last_name?.[0]}
+                  </div>
+                </Link>
                 <div>
-                  <h3 style={styles.cardName}>
-                    {client.first_name} {client.last_name}
-                  </h3>
+                  <Link to={`/hq/clients/${client.id}`} style={styles.nameLink} className="client-name-link">
+                    <h3 style={styles.cardName}>
+                      {client.first_name} {client.last_name}
+                    </h3>
+                  </Link>
                   {client.email && <p style={styles.cardEmail}>{client.email}</p>}
                 </div>
               </div>
 
-              {/* Vertical divider */}
-              <div style={styles.cardDivider} />
+              {/* Vertical divider + Stats — hidden on narrow windows */}
+              {!isCompact && (
+                <>
+                  <div style={styles.cardDivider} />
+                  <div style={styles.cardStats}>
+                    <div style={styles.stat}>
+                      <span style={styles.statLabel}>Assets</span>
+                      <span style={styles.statValue}>{client.asset_level || '—'}</span>
+                    </div>
+                    <div style={styles.stat}>
+                      <span style={styles.statLabel}>Risk</span>
+                      <span style={styles.statValue}>{client.risk_tolerance || '—'}</span>
+                    </div>
+                    <div style={styles.stat}>
+                      <span style={styles.statLabel}>Next Review</span>
+                      <span style={styles.statValue}>
+                        {client.next_review_date
+                          ? new Date(client.next_review_date).toLocaleDateString()
+                          : '—'}
+                      </span>
+                    </div>
+                  </div>
+                </>
+              )}
 
-              {/* Stats */}
-              <div style={styles.cardStats}>
-                <div style={styles.stat}>
-                  <span style={styles.statLabel}>Assets</span>
-                  <span style={styles.statValue}>{client.asset_level || '—'}</span>
-                </div>
-                <div style={styles.stat}>
-                  <span style={styles.statLabel}>Risk</span>
-                  <span style={styles.statValue}>{client.risk_tolerance || '—'}</span>
-                </div>
-                <div style={styles.stat}>
-                  <span style={styles.statLabel}>Next Review</span>
-                  <span style={styles.statValue}>
-                    {client.next_review_date
-                      ? new Date(client.next_review_date).toLocaleDateString()
-                      : '—'}
-                  </span>
-                </div>
-              </div>
-
-              {/* Badge + Manager pushed to the right */}
+              {/* Badge always pinned to the right */}
               {client.status && (
                 <span style={{
                   ...styles.badge,
+                  marginLeft: 'auto',
                   backgroundColor: statusColors[client.status]?.bg || '#f3f4f6',
                   color: statusColors[client.status]?.color || '#374151',
                 }}>
                   {client.status}
                 </span>
-              )}
-              {client.relationship_manager && (
-                <p style={styles.cardManager}>
-                  RM: {client.relationship_manager}
-                </p>
               )}
             </div>
           ))}
@@ -278,6 +293,25 @@ export default function Clients() {
         .client-card:hover {
           transform: translateY(-3px) !important;
           box-shadow: 0 20px 40px rgba(0,0,0,0.25) !important;
+        }
+        .client-avatar-link:hover .client-avatar {
+          background: rgba(201,168,76,0.3) !important;
+          box-shadow: 0 0 0 2px rgba(201,168,76,0.5);
+          transform: scale(1.08);
+        }
+        .client-avatar {
+          transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
+        }
+        .client-name-link {
+          text-decoration: none;
+        }
+        .client-name-link:hover h3 {
+          color: #c9a84c !important;
+          text-decoration: underline;
+          text-underline-offset: 3px;
+        }
+        .client-name-link h3 {
+          transition: color 0.2s;
         }
       `}</style>
 
@@ -500,7 +534,15 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     gap: '14px',
-    minWidth: '220px',
+    width: '260px',
+    flexShrink: 0,
+  },
+  avatarLink: {
+    textDecoration: 'none',
+    flexShrink: 0,
+  },
+  nameLink: {
+    textDecoration: 'none',
   },
   avatar: {
     width: '42px',
@@ -538,11 +580,14 @@ const styles = {
     display: 'flex',
     gap: '32px',
     flex: 1,
+    justifyContent: 'flex-start',
   },
   stat: {
     display: 'flex',
     flexDirection: 'column',
     gap: '3px',
+    width: '140px',
+    flexShrink: 0,
   },
   statLabel: {
     fontSize: '10px',
@@ -555,13 +600,6 @@ const styles = {
     fontSize: '13px',
     color: TEXT_PRIMARY,
     fontWeight: '500',
-  },
-  cardManager: {
-    fontSize: '12px',
-    color: TEXT_MUTED,
-    margin: 0,
-    marginLeft: 'auto',
-    whiteSpace: 'nowrap',
   },
   badge: {
     display: 'inline-block',
