@@ -1,6 +1,16 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 
+// HQ design tokens — shared across all HQ sub-pages
+const GOLD = '#c9a84c';
+const DARK = '#0f1117';
+const CARD_BG = '#1e2330';
+const SURFACE = '#252d3d';
+const BORDER = 'rgba(201,168,76,0.18)';
+const TEXT_PRIMARY = '#f0ece0';
+const TEXT_MUTED = '#7a7d8a';
+const INPUT_BG = '#2a3347';
+
 const ASSET_LEVEL_OPTIONS = [
   'Under $100K',
   '$100K – $250K',
@@ -145,7 +155,8 @@ export default function Clients() {
   const tabs = ['all', 'active', 'prospect', 'inactive'];
 
   return (
-    <div style={styles.page}>
+    <div style={styles.pageWrapper}>
+      <div style={styles.page}>
       {/* Header */}
       <div style={styles.header}>
         <div>
@@ -183,75 +194,93 @@ export default function Clients() {
         </div>
       </div>
 
-      {/* Table */}
-      <div style={styles.tableWrapper}>
-        {loading ? (
-          <div style={styles.emptyState}>Loading clients...</div>
-        ) : filteredClients.length === 0 ? (
-          <div style={styles.emptyState}>
-            No clients found.{' '}
-            <span
-              style={styles.emptyLink}
-              onClick={() => setShowModal(true)}
+      {/* Cards */}
+      {loading ? (
+        <div style={styles.emptyState}>Loading clients...</div>
+      ) : filteredClients.length === 0 ? (
+        <div style={styles.emptyState}>
+          No clients found.{' '}
+          <span style={styles.emptyLink} onClick={() => setShowModal(true)}>
+            Add your first client →
+          </span>
+        </div>
+      ) : (
+        <div style={styles.cardGrid}>
+          {filteredClients.map((client, i) => (
+            <div
+              key={client.id}
+              className="client-card"
+              style={{ ...styles.card, animationDelay: `${i * 60}ms` }}
             >
-              Add your first client →
-            </span>
-          </div>
-        ) : (
-          <table style={styles.table}>
-            <thead>
-              <tr>
-                {['Name', 'Email', 'Status', 'Asset Level', 'Risk Tolerance', 'Next Review', 'Manager'].map(
-                  (col) => (
-                    <th key={col} style={styles.th}>
-                      {col}
-                    </th>
-                  )
-                )}
-              </tr>
-            </thead>
-            <tbody>
-              {filteredClients.map((client, i) => (
-                <tr
-                  key={client.id}
-                  style={{
-                    ...styles.tr,
-                    backgroundColor: i % 2 === 0 ? '#ffffff' : '#f9fafb',
-                  }}
-                >
-                  <td style={{ ...styles.td, fontWeight: 600 }}>
+              {/* Avatar + Name */}
+              <div style={styles.cardTop}>
+                <div style={styles.avatar}>
+                  {client.first_name?.[0]}{client.last_name?.[0]}
+                </div>
+                <div>
+                  <h3 style={styles.cardName}>
                     {client.first_name} {client.last_name}
-                  </td>
-                  <td style={styles.td}>{client.email || '—'}</td>
-                  <td style={styles.td}>
-                    {client.status ? (
-                      <span
-                        style={{
-                          ...styles.badge,
-                          backgroundColor:
-                            statusColors[client.status]?.bg || '#f3f4f6',
-                          color:
-                            statusColors[client.status]?.color || '#374151',
-                        }}
-                      >
-                        {client.status}
-                      </span>
-                    ) : '—'}
-                  </td>
-                  <td style={styles.td}>{client.asset_level || '—'}</td>
-                  <td style={styles.td}>{client.risk_tolerance || '—'}</td>
-                  <td style={styles.td}>
+                  </h3>
+                  {client.email && <p style={styles.cardEmail}>{client.email}</p>}
+                </div>
+              </div>
+
+              {/* Vertical divider */}
+              <div style={styles.cardDivider} />
+
+              {/* Stats */}
+              <div style={styles.cardStats}>
+                <div style={styles.stat}>
+                  <span style={styles.statLabel}>Assets</span>
+                  <span style={styles.statValue}>{client.asset_level || '—'}</span>
+                </div>
+                <div style={styles.stat}>
+                  <span style={styles.statLabel}>Risk</span>
+                  <span style={styles.statValue}>{client.risk_tolerance || '—'}</span>
+                </div>
+                <div style={styles.stat}>
+                  <span style={styles.statLabel}>Next Review</span>
+                  <span style={styles.statValue}>
                     {client.next_review_date
                       ? new Date(client.next_review_date).toLocaleDateString()
                       : '—'}
-                  </td>
-                  <td style={styles.td}>{client.relationship_manager || '—'}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
+                  </span>
+                </div>
+              </div>
+
+              {/* Badge + Manager pushed to the right */}
+              {client.status && (
+                <span style={{
+                  ...styles.badge,
+                  backgroundColor: statusColors[client.status]?.bg || '#f3f4f6',
+                  color: statusColors[client.status]?.color || '#374151',
+                }}>
+                  {client.status}
+                </span>
+              )}
+              {client.relationship_manager && (
+                <p style={styles.cardManager}>
+                  RM: {client.relationship_manager}
+                </p>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      <style>{`
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(18px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        .client-card {
+          animation: fadeUp 0.45s ease both;
+        }
+        .client-card:hover {
+          transform: translateY(-3px) !important;
+          box-shadow: 0 20px 40px rgba(0,0,0,0.25) !important;
+        }
+      `}</style>
 
       {/* Modal */}
       {showModal && (
@@ -342,6 +371,7 @@ export default function Clients() {
         </div>
       )}
     </div>
+    </div>
   );
 }
 
@@ -375,12 +405,17 @@ function SelectField({ label, name, value, onChange, options }) {
 }
 
 const styles = {
+  pageWrapper: {
+    background: DARK,
+    minHeight: '100vh',
+    width: '100%',
+  },
   page: {
-    padding: '32px',
+    padding: '48px 40px 80px',
     maxWidth: '1200px',
     margin: '0 auto',
-    fontFamily: "'Segoe UI', sans-serif",
-    color: '#111827',
+    fontFamily: "'DM Sans', 'Segoe UI', sans-serif",
+    color: TEXT_PRIMARY,
   },
   header: {
     display: 'flex',
@@ -392,19 +427,17 @@ const styles = {
     fontSize: '28px',
     fontWeight: '700',
     margin: 0,
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    WebkitBackgroundClip: 'text',
-    WebkitTextFillColor: 'transparent',
+    color: TEXT_PRIMARY,
   },
   subtitle: {
     fontSize: '14px',
-    color: '#6b7280',
+    color: TEXT_MUTED,
     margin: '4px 0 0',
   },
   addButton: {
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    color: '#fff',
-    border: 'none',
+    background: 'transparent',
+    color: GOLD,
+    border: `1px solid ${BORDER}`,
     borderRadius: '8px',
     padding: '10px 20px',
     fontSize: '14px',
@@ -420,13 +453,14 @@ const styles = {
     flexWrap: 'wrap',
   },
   searchInput: {
-    border: '1px solid #e5e7eb',
+    border: `1px solid ${BORDER}`,
     borderRadius: '8px',
     padding: '9px 14px',
     fontSize: '14px',
     width: '280px',
     outline: 'none',
-    color: '#111827',
+    color: TEXT_PRIMARY,
+    background: INPUT_BG,
   },
   tabs: {
     display: 'flex',
@@ -435,48 +469,100 @@ const styles = {
   tab: {
     padding: '7px 16px',
     borderRadius: '20px',
-    border: '1px solid #e5e7eb',
-    background: '#fff',
+    border: `1px solid ${BORDER}`,
+    background: 'transparent',
     fontSize: '13px',
     cursor: 'pointer',
-    color: '#6b7280',
+    color: TEXT_MUTED,
     fontWeight: '500',
   },
   tabActive: {
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    color: '#fff',
-    border: '1px solid transparent',
+    background: `rgba(201,168,76,0.15)`,
+    color: GOLD,
+    border: `1px solid ${BORDER}`,
   },
-  tableWrapper: {
-    border: '1px solid #e5e7eb',
-    borderRadius: '12px',
-    overflow: 'hidden',
-    background: '#fff',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+  cardGrid: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '12px',
   },
-  table: {
-    width: '100%',
-    borderCollapse: 'collapse',
+  card: {
+    background: CARD_BG,
+    border: `1px solid ${BORDER}`,
+    borderRadius: '14px',
+    padding: '20px 24px',
+    cursor: 'pointer',
+    transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '24px',
   },
-  th: {
-    textAlign: 'left',
-    padding: '12px 16px',
-    fontSize: '12px',
-    fontWeight: '600',
-    color: '#6b7280',
-    textTransform: 'uppercase',
-    letterSpacing: '0.05em',
-    background: '#f9fafb',
-    borderBottom: '1px solid #e5e7eb',
+  cardTop: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '14px',
+    minWidth: '220px',
   },
-  tr: {
-    borderBottom: '1px solid #f3f4f6',
-    transition: 'background 0.15s',
-  },
-  td: {
-    padding: '13px 16px',
+  avatar: {
+    width: '42px',
+    height: '42px',
+    borderRadius: '50%',
+    background: `rgba(201,168,76,0.15)`,
+    border: `1px solid ${BORDER}`,
+    color: GOLD,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
     fontSize: '14px',
-    color: '#374151',
+    fontWeight: '700',
+    letterSpacing: '0.03em',
+    flexShrink: 0,
+  },
+  cardName: {
+    fontSize: '15px',
+    fontWeight: '700',
+    color: TEXT_PRIMARY,
+    margin: '0 0 2px',
+  },
+  cardEmail: {
+    fontSize: '12px',
+    color: TEXT_MUTED,
+    margin: 0,
+  },
+  cardDivider: {
+    width: '1px',
+    alignSelf: 'stretch',
+    background: BORDER,
+    flexShrink: 0,
+  },
+  cardStats: {
+    display: 'flex',
+    gap: '32px',
+    flex: 1,
+  },
+  stat: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '3px',
+  },
+  statLabel: {
+    fontSize: '10px',
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: '0.06em',
+    color: TEXT_MUTED,
+  },
+  statValue: {
+    fontSize: '13px',
+    color: TEXT_PRIMARY,
+    fontWeight: '500',
+  },
+  cardManager: {
+    fontSize: '12px',
+    color: TEXT_MUTED,
+    margin: 0,
+    marginLeft: 'auto',
+    whiteSpace: 'nowrap',
   },
   badge: {
     display: 'inline-block',
@@ -488,11 +574,11 @@ const styles = {
   emptyState: {
     padding: '48px',
     textAlign: 'center',
-    color: '#9ca3af',
+    color: TEXT_MUTED,
     fontSize: '15px',
   },
   emptyLink: {
-    color: '#667eea',
+    color: GOLD,
     cursor: 'pointer',
     textDecoration: 'underline',
   },
@@ -501,7 +587,7 @@ const styles = {
   overlay: {
     position: 'fixed',
     inset: 0,
-    background: 'rgba(0,0,0,0.4)',
+    background: 'rgba(0,0,0,0.6)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -509,47 +595,49 @@ const styles = {
     padding: '20px',
   },
   modal: {
-    background: '#fff',
+    background: CARD_BG,
+    border: `1px solid ${BORDER}`,
     borderRadius: '16px',
     width: '100%',
     maxWidth: '680px',
     maxHeight: '90vh',
     display: 'flex',
     flexDirection: 'column',
-    boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
+    boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
   },
   modalHeader: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: '20px 24px',
-    borderBottom: '1px solid #e5e7eb',
+    borderBottom: `1px solid ${BORDER}`,
   },
   modalTitle: {
     margin: 0,
     fontSize: '18px',
     fontWeight: '700',
-    color: '#111827',
+    color: TEXT_PRIMARY,
   },
   closeButton: {
     background: 'none',
     border: 'none',
     fontSize: '18px',
     cursor: 'pointer',
-    color: '#9ca3af',
+    color: TEXT_MUTED,
     padding: '4px 8px',
   },
   modalBody: {
     overflowY: 'auto',
     padding: '24px',
     flex: 1,
+    background: CARD_BG,
   },
   sectionLabel: {
     fontSize: '11px',
     fontWeight: '700',
     textTransform: 'uppercase',
     letterSpacing: '0.08em',
-    color: '#9ca3af',
+    color: GOLD,
     margin: '20px 0 12px',
   },
   formGrid: {
@@ -565,57 +653,59 @@ const styles = {
   label: {
     fontSize: '13px',
     fontWeight: '500',
-    color: '#374151',
+    color: TEXT_MUTED,
   },
   input: {
-    border: '1px solid #e5e7eb',
+    border: `1px solid ${BORDER}`,
     borderRadius: '8px',
     padding: '8px 12px',
     fontSize: '14px',
     outline: 'none',
-    color: '#111827',
-    background: '#fff',
+    color: TEXT_PRIMARY,
+    background: INPUT_BG,
   },
   textarea: {
     width: '100%',
-    border: '1px solid #e5e7eb',
+    border: `1px solid ${BORDER}`,
     borderRadius: '8px',
     padding: '10px 12px',
     fontSize: '14px',
     minHeight: '80px',
     resize: 'vertical',
     outline: 'none',
-    color: '#111827',
+    color: TEXT_PRIMARY,
+    background: INPUT_BG,
     fontFamily: 'inherit',
     boxSizing: 'border-box',
   },
   errorText: {
-    color: '#dc2626',
+    color: '#f87171',
     fontSize: '13px',
     marginTop: '12px',
   },
   modalFooter: {
     padding: '16px 24px',
-    borderTop: '1px solid #e5e7eb',
+    borderTop: `1px solid ${BORDER}`,
     display: 'flex',
     justifyContent: 'flex-end',
     gap: '10px',
+    background: CARD_BG,
   },
   cancelButton: {
     padding: '9px 20px',
     borderRadius: '8px',
-    border: '1px solid #e5e7eb',
-    background: '#fff',
+    border: `1px solid ${BORDER}`,
+    background: 'transparent',
     fontSize: '14px',
     cursor: 'pointer',
-    color: '#374151',
+    color: TEXT_MUTED,
   },
   saveButton: {
     padding: '9px 20px',
     borderRadius: '8px',
-    border: 'none',
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    color: '#fff',
+    border: `1px solid ${BORDER}`,
+    background: 'transparent',
+    color: GOLD,
     fontSize: '14px',
     fontWeight: '600',
     cursor: 'pointer',
