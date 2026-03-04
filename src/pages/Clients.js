@@ -5,7 +5,6 @@ import { supabase } from '../supabaseClient';
 const GOLD = '#c9a84c';
 const DARK = '#0f1117';
 const CARD_BG = '#1e2330';
-const SURFACE = '#252d3d';
 const BORDER = 'rgba(201,168,76,0.18)';
 const TEXT_PRIMARY = '#f0ece0';
 const TEXT_MUTED = '#7a7d8a';
