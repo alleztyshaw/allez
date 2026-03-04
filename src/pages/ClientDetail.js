@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
-import { GOLD, DARK, CARD_BG, BORDER, TEXT_PRIMARY, TEXT_MUTED, STATUS_COLORS, GREEN } from '../utils/hqConstants';
+import { GOLD, DARK, CARD_BG, BORDER, TEXT_PRIMARY, TEXT_MUTED, STATUS_COLORS } from '../utils/hqConstants';
 
 const s = {
   pageWrapper: {
