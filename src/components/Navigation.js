@@ -5,7 +5,7 @@ import '../App.css';
 
 const HQ_SUBMENU = [
   { label: 'Clients', path: '/hq/clients' },
-  { label: 'Notes', path: '/hq/notes', comingSoon: true },
+  { label: 'Notes', path: '/hq/notes' },
   { label: 'CRM', path: '/hq/crm', comingSoon: true },
 ];
 

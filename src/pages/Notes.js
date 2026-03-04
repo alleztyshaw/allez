@@ -1,0 +1,470 @@
+import { useState, useEffect } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { supabase } from '../supabaseClient';
+import {
+  GOLD, DARK, CARD_BG, BORDER, TEXT_PRIMARY, TEXT_MUTED, INPUT_BG,
+  STATUS_COLORS,
+} from '../utils/hqConstants';
+
+const NOTE_TYPES = ['Meeting', 'Call', 'Email', 'General'];
+
+const s = {
+  pageWrapper: { background: DARK, minHeight: '100vh', width: '100%' },
+  page: {
+    maxWidth: '1000px',
+    margin: '0 auto',
+    padding: '48px 40px 80px',
+    fontFamily: "'DM Sans', 'Segoe UI', sans-serif",
+    color: TEXT_PRIMARY,
+  },
+  header: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: '32px',
+  },
+  title: {
+    fontSize: '28px',
+    fontWeight: '700',
+    margin: '0 0 4px',
+    color: TEXT_PRIMARY,
+    fontFamily: "'Playfair Display', serif",
+  },
+  subtitle: { fontSize: '14px', color: TEXT_MUTED, margin: 0 },
+  addButton: {
+    background: 'transparent',
+    color: GOLD,
+    border: `1px solid ${BORDER}`,
+    borderRadius: '8px',
+    padding: '10px 20px',
+    fontSize: '14px',
+    fontWeight: '600',
+    cursor: 'pointer',
+    whiteSpace: 'nowrap',
+  },
+  // Compose form card
+  composeCard: {
+    background: CARD_BG,
+    border: `1px solid ${BORDER}`,
+    borderRadius: '14px',
+    padding: '24px',
+    marginBottom: '32px',
+  },
+  composeTitle: {
+    fontSize: '13px',
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: '0.08em',
+    color: GOLD,
+    margin: '0 0 16px',
+  },
+  formRow: { display: 'flex', gap: '12px', marginBottom: '12px', flexWrap: 'wrap' },
+  formField: { display: 'flex', flexDirection: 'column', gap: '4px', flex: 1, minWidth: '180px' },
+  label: { fontSize: '12px', fontWeight: '500', color: TEXT_MUTED },
+  input: {
+    border: `1px solid ${BORDER}`,
+    borderRadius: '8px',
+    padding: '8px 12px',
+    fontSize: '14px',
+    outline: 'none',
+    color: TEXT_PRIMARY,
+    background: INPUT_BG,
+    fontFamily: 'inherit',
+  },
+  textarea: {
+    width: '100%',
+    border: `1px solid ${BORDER}`,
+    borderRadius: '8px',
+    padding: '10px 12px',
+    fontSize: '14px',
+    minHeight: '100px',
+    resize: 'vertical',
+    outline: 'none',
+    color: TEXT_PRIMARY,
+    background: INPUT_BG,
+    fontFamily: 'inherit',
+    boxSizing: 'border-box',
+    marginBottom: '12px',
+  },
+  composeFooter: { display: 'flex', justifyContent: 'flex-end', gap: '10px' },
+  cancelButton: {
+    padding: '8px 18px',
+    borderRadius: '8px',
+    border: `1px solid ${BORDER}`,
+    background: 'transparent',
+    fontSize: '13px',
+    cursor: 'pointer',
+    color: TEXT_MUTED,
+    fontFamily: 'inherit',
+  },
+  saveButton: {
+    padding: '8px 18px',
+    borderRadius: '8px',
+    border: `1px solid ${BORDER}`,
+    background: 'transparent',
+    color: GOLD,
+    fontSize: '13px',
+    fontWeight: '600',
+    cursor: 'pointer',
+    fontFamily: 'inherit',
+  },
+  errorText: { color: '#f87171', fontSize: '13px', marginBottom: '10px' },
+  // Date group
+  dateGroup: { marginBottom: '28px' },
+  dateLabel: {
+    fontSize: '11px',
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: '0.08em',
+    color: TEXT_MUTED,
+    marginBottom: '10px',
+  },
+  // Note card
+  noteCard: {
+    background: CARD_BG,
+    border: `1px solid ${BORDER}`,
+    borderRadius: '12px',
+    padding: '18px 20px',
+    marginBottom: '10px',
+  },
+  noteHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    marginBottom: '8px',
+    flexWrap: 'wrap',
+  },
+  noteTitle: { fontSize: '15px', fontWeight: '600', color: TEXT_PRIMARY, flex: 1 },
+  noteTypeBadge: {
+    fontSize: '11px',
+    fontWeight: '600',
+    padding: '2px 10px',
+    borderRadius: '10px',
+    background: `rgba(201,168,76,0.12)`,
+    color: GOLD,
+    border: `1px solid rgba(201,168,76,0.2)`,
+  },
+  clientBadge: {
+    fontSize: '11px',
+    fontWeight: '600',
+    padding: '2px 10px',
+    borderRadius: '10px',
+    background: `rgba(96,165,250,0.12)`,
+    color: '#60a5fa',
+    border: `1px solid rgba(96,165,250,0.2)`,
+  },
+  noteBody: {
+    fontSize: '14px',
+    color: TEXT_MUTED,
+    lineHeight: '1.65',
+    margin: '0 0 10px',
+    whiteSpace: 'pre-wrap',
+  },
+  noteActions: { display: 'flex', gap: '12px' },
+  noteAction: {
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    fontSize: '12px',
+    color: TEXT_MUTED,
+    padding: 0,
+    fontFamily: 'inherit',
+  },
+  emptyState: {
+    background: CARD_BG,
+    border: `1px solid ${BORDER}`,
+    borderRadius: '14px',
+    padding: '48px',
+    textAlign: 'center',
+    color: TEXT_MUTED,
+    fontSize: '14px',
+  },
+  // Edit modal
+  overlay: {
+    position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    zIndex: 1000, padding: '20px',
+  },
+  modal: {
+    background: CARD_BG, border: `1px solid ${BORDER}`,
+    borderRadius: '16px', width: '100%', maxWidth: '580px',
+    boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
+  },
+  modalHeader: {
+    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+    padding: '18px 22px', borderBottom: `1px solid ${BORDER}`,
+  },
+  modalTitle: { margin: 0, fontSize: '16px', fontWeight: '700', color: TEXT_PRIMARY },
+  closeButton: {
+    background: 'none', border: 'none', fontSize: '16px',
+    cursor: 'pointer', color: TEXT_MUTED, padding: '2px 6px',
+  },
+  modalBody: { padding: '20px 22px' },
+  modalFooter: {
+    padding: '14px 22px', borderTop: `1px solid ${BORDER}`,
+    display: 'flex', justifyContent: 'flex-end', gap: '10px',
+  },
+};
+
+function formatDateLabel(dateStr) {
+  const today = new Date().toISOString().slice(0, 10);
+  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+  if (dateStr === today) return 'Today';
+  if (dateStr === yesterday) return 'Yesterday';
+  return new Date(dateStr + 'T12:00:00').toLocaleDateString('en-US', {
+    weekday: 'long', month: 'long', day: 'numeric', year: 'numeric',
+  });
+}
+
+function groupByDate(notes) {
+  const groups = {};
+  notes.forEach((note) => {
+    const date = note.created_at.slice(0, 10);
+    if (!groups[date]) groups[date] = [];
+    groups[date].push(note);
+  });
+  return Object.entries(groups).sort((a, b) => b[0].localeCompare(a[0]));
+}
+
+const emptyForm = { client_id: '', title: '', body: '', note_type: 'General' };
+
+export default function Notes() {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const [notes, setNotes] = useState([]);
+  const [clients, setClients] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showCompose, setShowCompose] = useState(false);
+  const [formData, setFormData] = useState(emptyForm);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const [editingNote, setEditingNote] = useState(null);
+  const [editForm, setEditForm] = useState({});
+
+  // If client_id passed in URL, open compose with that client preselected
+  useEffect(() => {
+    const clientId = searchParams.get('client_id');
+    if (clientId) {
+      setFormData((f) => ({ ...f, client_id: clientId }));
+      setShowCompose(true);
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  async function fetchData() {
+    const [{ data: notesData }, { data: clientsData }] = await Promise.all([
+      supabase.from('notes').select('*').order('created_at', { ascending: false }),
+      supabase.from('clients').select('id, first_name, last_name, status').order('last_name'),
+    ]);
+    setNotes(notesData || []);
+    setClients(clientsData || []);
+    setLoading(false);
+  }
+
+  function clientName(id) {
+    const c = clients.find((c) => c.id === id);
+    return c ? `${c.first_name} ${c.last_name}` : '—';
+  }
+
+  function clientStatus(id) {
+    const c = clients.find((c) => c.id === id);
+    return c?.status;
+  }
+
+  function handleChange(e) {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  }
+
+  async function handleSave() {
+    if (!formData.client_id) { setError('Please select a client.'); return; }
+    if (!formData.title.trim()) { setError('Please enter a title.'); return; }
+    setSaving(true); setError('');
+    const { error } = await supabase.from('notes').insert([{
+      client_id: formData.client_id,
+      title: formData.title,
+      body: formData.body,
+      note_type: formData.note_type,
+      source: 'manual',
+    }]);
+    if (error) { setError('Something went wrong. Please try again.'); console.error(error); }
+    else {
+      setFormData(emptyForm);
+      setShowCompose(false);
+      fetchData();
+      // Remove client_id from URL if present
+      navigate('/hq/notes', { replace: true });
+    }
+    setSaving(false);
+  }
+
+  function openEdit(note) {
+    setEditingNote(note);
+    setEditForm({ title: note.title, body: note.body, note_type: note.note_type });
+  }
+
+  async function handleEditSave() {
+    if (!editForm.title.trim()) return;
+    const { error } = await supabase.from('notes').update({
+      title: editForm.title,
+      body: editForm.body,
+      note_type: editForm.note_type,
+      updated_at: new Date().toISOString(),
+    }).eq('id', editingNote.id);
+    if (!error) {
+      setEditingNote(null);
+      fetchData();
+    }
+  }
+
+  async function handleDelete(id) {
+    await supabase.from('notes').delete().eq('id', id);
+    fetchData();
+  }
+
+  const grouped = groupByDate(notes);
+
+  return (
+    <div style={s.pageWrapper}>
+      <div style={s.page}>
+
+        {/* Header */}
+        <div style={s.header}>
+          <div>
+            <h1 style={s.title}>Notes</h1>
+            <p style={s.subtitle}>{notes.length} total across {clients.length} clients</p>
+          </div>
+          {!showCompose && (
+            <button style={s.addButton} onClick={() => setShowCompose(true)}>+ New Note</button>
+          )}
+        </div>
+
+        {/* Compose form */}
+        {showCompose && (
+          <div style={s.composeCard}>
+            <p style={s.composeTitle}>New Note</p>
+
+            <div style={s.formRow}>
+              {/* Client selector */}
+              <div style={{ ...s.formField, minWidth: '220px' }}>
+                <label style={s.label}>Client *</label>
+                <select name="client_id" value={formData.client_id} onChange={handleChange} style={s.input}>
+                  <option value="">— Select client —</option>
+                  {clients.map((c) => (
+                    <option key={c.id} value={c.id}>{c.first_name} {c.last_name}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Note type */}
+              <div style={s.formField}>
+                <label style={s.label}>Type</label>
+                <select name="note_type" value={formData.note_type} onChange={handleChange} style={s.input}>
+                  {NOTE_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+                </select>
+              </div>
+
+              {/* Title */}
+              <div style={{ ...s.formField, flex: 2 }}>
+                <label style={s.label}>Title *</label>
+                <input name="title" value={formData.title} onChange={handleChange} placeholder="e.g. Q1 Review Meeting" style={s.input} />
+              </div>
+            </div>
+
+            {/* Body */}
+            <textarea
+              name="body"
+              value={formData.body}
+              onChange={handleChange}
+              placeholder="Note content, key discussion points, action items..."
+              style={s.textarea}
+            />
+
+            {error && <p style={s.errorText}>{error}</p>}
+
+            <div style={s.composeFooter}>
+              <button style={s.cancelButton} onClick={() => { setShowCompose(false); setError(''); setFormData(emptyForm); navigate('/hq/notes', { replace: true }); }}>
+                Cancel
+              </button>
+              <button style={s.saveButton} onClick={handleSave} disabled={saving}>
+                {saving ? 'Saving...' : 'Save Note'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Notes list grouped by date */}
+        {loading ? (
+          <div style={s.emptyState}>Loading notes...</div>
+        ) : notes.length === 0 ? (
+          <div style={s.emptyState}>No notes yet. Create your first note above.</div>
+        ) : (
+          grouped.map(([date, dateNotes]) => (
+            <div key={date} style={s.dateGroup}>
+              <p style={s.dateLabel}>{formatDateLabel(date)}</p>
+              {dateNotes.map((note) => {
+                const status = clientStatus(note.client_id);
+                return (
+                  <div key={note.id} style={s.noteCard}>
+                    <div style={s.noteHeader}>
+                      <span style={s.noteTitle}>{note.title}</span>
+                      {note.note_type && <span style={s.noteTypeBadge}>{note.note_type}</span>}
+                      <span style={{
+                        ...s.clientBadge,
+                        backgroundColor: STATUS_COLORS?.[status]?.bg || 'rgba(96,165,250,0.12)',
+                        color: STATUS_COLORS?.[status]?.color || '#60a5fa',
+                        border: `1px solid ${STATUS_COLORS?.[status]?.color || '#60a5fa'}33`,
+                      }}>
+                        {clientName(note.client_id)}
+                      </span>
+                    </div>
+                    {note.body && <p style={s.noteBody}>{note.body}</p>}
+                    <div style={s.noteActions}>
+                      <button style={s.noteAction} onClick={() => openEdit(note)}>Edit</button>
+                      <button style={{ ...s.noteAction, color: '#f87171' }} onClick={() => handleDelete(note.id)}>Delete</button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ))
+        )}
+
+        {/* Edit modal */}
+        {editingNote && (
+          <div style={s.overlay}>
+            <div style={s.modal}>
+              <div style={s.modalHeader}>
+                <h2 style={s.modalTitle}>Edit Note</h2>
+                <button style={s.closeButton} onClick={() => setEditingNote(null)}>✕</button>
+              </div>
+              <div style={s.modalBody}>
+                <div style={{ ...s.formField, marginBottom: '12px' }}>
+                  <label style={s.label}>Type</label>
+                  <select value={editForm.note_type} onChange={(e) => setEditForm({ ...editForm, note_type: e.target.value })} style={s.input}>
+                    {NOTE_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+                  </select>
+                </div>
+                <div style={{ ...s.formField, marginBottom: '12px' }}>
+                  <label style={s.label}>Title</label>
+                  <input value={editForm.title} onChange={(e) => setEditForm({ ...editForm, title: e.target.value })} style={s.input} />
+                </div>
+                <div style={s.formField}>
+                  <label style={s.label}>Body</label>
+                  <textarea value={editForm.body} onChange={(e) => setEditForm({ ...editForm, body: e.target.value })} style={{ ...s.textarea, marginBottom: 0 }} />
+                </div>
+              </div>
+              <div style={s.modalFooter}>
+                <button style={s.cancelButton} onClick={() => setEditingNote(null)}>Cancel</button>
+                <button style={s.saveButton} onClick={handleEditSave}>Save Changes</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+      </div>
+    </div>
+  );
+}
