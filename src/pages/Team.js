@@ -258,16 +258,26 @@ export default function Team() {
                 style={s.saveButton}
                 onClick={async () => {
                   if (!inviteEmail.trim()) { setInviteError('Email is required'); return; }
-                  // Supabase invite — sends magic link email
-                  const { error } = await supabase.auth.admin.inviteUserByEmail(inviteEmail, {
-                    data: { org_id: selectedOrg, role: inviteRole }
-                  });
-                  if (error) {
-                    setInviteError('Invite failed — use Supabase dashboard to invite for now');
-                  } else {
-                    setInviteSuccess(`Invite sent to ${inviteEmail}`);
-                    setInviteEmail('');
-                    setShowInvite(false);
+                  try {
+                    const res = await fetch('/api/invite', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        email: inviteEmail.trim(),
+                        role: inviteRole,
+                        org_id: selectedOrg,
+                      }),
+                    });
+                    const data = await res.json();
+                    if (!res.ok) {
+                      setInviteError(data.error || 'Invite failed');
+                    } else {
+                      setInviteSuccess(`Invite sent to ${inviteEmail}`);
+                      setInviteEmail('');
+                      setShowInvite(false);
+                    }
+                  } catch {
+                    setInviteError('Network error — please try again');
                   }
                 }}
               >
