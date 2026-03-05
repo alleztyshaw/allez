@@ -4,17 +4,17 @@ import { supabase } from '../supabaseClient';
 const OrgContext = createContext(null);
 
 export function OrgProvider({ children }) {
-  const [orgId, setOrgId]       = useState(null);
-  const [role, setRole]         = useState(null);
-  const [features, setFeatures] = useState({});
-  const [orgLoading, setOrgLoading] = useState(true);
+  const [orgId, setOrgId]               = useState(null);
+  const [role, setRole]                 = useState(null);
+  const [features, setFeatures]         = useState({});
+  const [isPlatformOrg, setIsPlatformOrg] = useState(false);
+  const [orgLoading, setOrgLoading]     = useState(true);
 
   useEffect(() => {
     async function fetchOrg() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) { setOrgLoading(false); return; }
 
-      // Fetch membership (org_id + role in one query)
       const { data: member } = await supabase
         .from('org_members')
         .select('org_id, role')
@@ -26,7 +26,15 @@ export function OrgProvider({ children }) {
       setOrgId(member.org_id);
       setRole(member.role);
 
-      // Fetch feature flags for this org
+      // Check if this user belongs to the platform org
+      const { data: org } = await supabase
+        .from('organizations')
+        .select('is_platform_org')
+        .eq('org_id', member.org_id)
+        .single();
+
+      setIsPlatformOrg(org?.is_platform_org || false);
+
       const { data: settings } = await supabase
         .from('org_settings')
         .select('features')
@@ -46,12 +54,43 @@ export function OrgProvider({ children }) {
     return () => listener.subscription.unsubscribe();
   }, []);
 
-  // Convenience helpers
-  const isAdmin        = role === 'admin';
-  const hasFeature     = (flag) => Boolean(features[flag]);
+  // ─── Role hierarchy ───────────────────────────────────────────────────────
+  const isAdmin      = role === 'admin';
+  const isManager    = role === 'manager' || isAdmin;
+  const isAdvisor    = role === 'advisor' || isManager;
+  const isAssociate  = role === 'associate' || isAdvisor;
+  const isCompliance = role === 'compliance';
+
+  // Platform admin — Allez org member with admin role
+  const isPlatformAdmin = isPlatformOrg && isAdmin;
+
+  // ─── Permission helpers ───────────────────────────────────────────────────
+  const canCreateClients  = isAdvisor    || isPlatformAdmin;
+  const canEditClients    = isAdvisor    || isPlatformAdmin;
+  const canDeleteClients  = isManager    || isPlatformAdmin;
+  const canCreateNotes    = isAssociate  || isPlatformAdmin;
+  const canEditNotes      = isAssociate  || isPlatformAdmin;
+  const canDeleteNotes    = isManager    || isPlatformAdmin;
+  const canManageUsers    = isAdmin      || isPlatformAdmin;
+  const canViewAllClients = isManager    || isCompliance || isPlatformAdmin;
+  const canManageAllOrgs  = isPlatformAdmin;
+
+  // ─── Feature flags ────────────────────────────────────────────────────────
+  const hasFeature = (flag) => Boolean(features[flag]);
 
   return (
-    <OrgContext.Provider value={{ orgId, role, features, orgLoading, isAdmin, hasFeature }}>
+    <OrgContext.Provider value={{
+      orgId, role, features, orgLoading,
+      // Role booleans
+      isAdmin, isManager, isAdvisor, isAssociate, isCompliance,
+      isPlatformAdmin,
+      // Permission helpers
+      canCreateClients, canEditClients, canDeleteClients,
+      canCreateNotes, canEditNotes, canDeleteNotes,
+      canManageUsers, canViewAllClients, canManageAllOrgs,
+      // Feature flags
+      hasFeature,
+    }}>
       {children}
     </OrgContext.Provider>
   );

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
+import { useOrg } from '../context/OrgContext';
 import '../App.css';
 
 const HQ_SUBMENU = [
@@ -14,6 +15,7 @@ function Navigation() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [hqHovered, setHqHovered] = useState(false);
   const hqHoverTimeout = useRef(null);
+  const { canManageUsers } = useOrg();
 
   const getGreeting = () => {
     const h = new Date().getHours();
@@ -139,6 +141,15 @@ function Navigation() {
                             {item.label}
                           </Link>
                         )
+                      )}
+                      {canManageUsers && (
+                        <Link
+                          to="/hq/team"
+                          onClick={() => { setMenuOpen(false); setHqHovered(false); }}
+                          style={{...styles.submenuItem, color: linkColor}}
+                        >
+                          Team
+                        </Link>
                       )}
                     </div>
                   )}
