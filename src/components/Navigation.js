@@ -15,6 +15,20 @@ function Navigation() {
   const [hqHovered, setHqHovered] = useState(false);
   const hqHoverTimeout = useRef(null);
 
+  const menuRef = useRef(null);
+
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setMenuOpen(false);
+      }
+    }
+    if (menuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [menuOpen]);
+
   const handleHqEnter = () => {
     clearTimeout(hqHoverTimeout.current);
     setHqHovered(true);
@@ -59,7 +73,7 @@ function Navigation() {
     <header className="header">
       <div className="container">
         <h1>
-          <Link to="/home" style={{ color: 'white', textDecoration: 'none' }}>
+          <Link to="/hq" style={{ color: 'white', textDecoration: 'none' }}>
             Allez
           </Link>
         </h1>
@@ -67,7 +81,7 @@ function Navigation() {
           {displayName && (
             <span className="welcome-message">Welcome, {displayName}!</span>
           )}
-          <div style={{ position: 'relative', display: 'inline-block' }}>
+          <div ref={menuRef} style={{ position: 'relative', display: 'inline-block' }}>
             <button className="hamburger" onClick={() => setMenuOpen(!menuOpen)}>
               <span></span>
               <span></span>
@@ -76,10 +90,6 @@ function Navigation() {
 
             {menuOpen && (
               <nav className="dropdown-menu">
-                <Link to="/home" onClick={() => setMenuOpen(false)} style={{...styles.menuLink, color: linkColor}}>
-                  Home
-                </Link>
-
                 {/* HQ with flyout submenu */}
                 <div
                   ref={hqRef}
@@ -125,9 +135,6 @@ function Navigation() {
                   )}
                 </div>
 
-                <Link to="/projects" onClick={() => setMenuOpen(false)} style={{...styles.menuLink, color: linkColor}}>
-                  Projects
-                </Link>
                 <Link to="/about" onClick={() => setMenuOpen(false)} style={{...styles.menuLink, color: linkColor}}>
                   About
                 </Link>

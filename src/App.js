@@ -4,8 +4,6 @@ import Footer from './components/Footer';
 import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
-import Home from './pages/Home';
-import Projects from './pages/Projects';
 import About from './pages/About';
 import Contact from './pages/Contact';
 import Clients from './pages/Clients';
@@ -30,13 +28,11 @@ function App() {
       <div className="App">
         <Routes>
 
-          {/* Public routes — no login required */}
+          {/* Public routes */}
           <Route path="/" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
 
-          {/* Protected routes — login required */}
-          <Route path="/home" element={<ProtectedLayout><Home /></ProtectedLayout>} />
-          <Route path="/projects" element={<ProtectedLayout><Projects /></ProtectedLayout>} />
+          {/* Protected routes */}
           <Route path="/about" element={<ProtectedLayout><About /></ProtectedLayout>} />
           <Route path="/contact" element={<ProtectedLayout><Contact /></ProtectedLayout>} />
 
