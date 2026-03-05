@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { OrgProvider } from './context/OrgContext';
 import Navigation from './components/Navigation';
 import Footer from './components/Footer';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -24,27 +25,22 @@ function ProtectedLayout({ children }) {
 
 function App() {
   return (
-    <Router>
-      <div className="App">
-        <Routes>
-
-          {/* Public routes */}
-          <Route path="/" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
-
-          {/* Protected routes */}
-          <Route path="/about" element={<ProtectedLayout><About /></ProtectedLayout>} />
-          <Route path="/contact" element={<ProtectedLayout><Contact /></ProtectedLayout>} />
-
-          {/* HQ and nested pages */}
-          <Route path="/hq" element={<ProtectedLayout><HQ /></ProtectedLayout>} />
-          <Route path="/hq/clients" element={<ProtectedLayout><Clients /></ProtectedLayout>} />
-          <Route path="/hq/clients/:id" element={<ProtectedLayout><ClientDetail /></ProtectedLayout>} />
-          <Route path="/hq/notes" element={<ProtectedLayout><Notes /></ProtectedLayout>} />
-
-        </Routes>
-      </div>
-    </Router>
+    <OrgProvider>
+      <Router>
+        <div className="App">
+          <Routes>
+            <Route path="/" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/about" element={<ProtectedLayout><About /></ProtectedLayout>} />
+            <Route path="/contact" element={<ProtectedLayout><Contact /></ProtectedLayout>} />
+            <Route path="/hq" element={<ProtectedLayout><HQ /></ProtectedLayout>} />
+            <Route path="/hq/clients" element={<ProtectedLayout><Clients /></ProtectedLayout>} />
+            <Route path="/hq/clients/:id" element={<ProtectedLayout><ClientDetail /></ProtectedLayout>} />
+            <Route path="/hq/notes" element={<ProtectedLayout><Notes /></ProtectedLayout>} />
+          </Routes>
+        </div>
+      </Router>
+    </OrgProvider>
   );
 }
 

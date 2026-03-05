@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
+import { useOrg } from '../context/OrgContext';
 import {
   GOLD, GREEN, DARK, CARD_BG, BORDER, TEXT_PRIMARY, TEXT_MUTED, INPUT_BG,
   STATUS_COLORS, STATUS_OPTIONS, ASSET_LEVEL_OPTIONS, RISK_TOLERANCE_OPTIONS,
@@ -43,6 +44,7 @@ const emptyForm = {
 
 
 export default function Clients() {
+  const { orgId } = useOrg();
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -55,14 +57,15 @@ export default function Clients() {
   const isCompact = windowWidth < 1050;
 
   useEffect(() => {
-    fetchClients();
-  }, []);
+    if (orgId) fetchClients();
+  }, [orgId]);
 
   async function fetchClients() {
     setLoading(true);
     const { data, error } = await supabase
       .from('clients')
       .select('*')
+      .eq('org_id', orgId)
       .order('last_name', { ascending: true });
 
     if (error) {
@@ -80,7 +83,7 @@ export default function Clients() {
     }
     setSaving(true);
     setError('');
-    const { error } = await supabase.from('clients').insert([formData]);
+    const { error } = await supabase.from('clients').insert([{ ...formData, org_id: orgId }]);
     if (error) {
       setError('Something went wrong. Please try again.');
       console.error(error);

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
+import { useOrg } from '../context/OrgContext';
 import {
   GOLD, DARK, CARD_BG, BORDER, TEXT_PRIMARY, TEXT_MUTED, STATUS_COLORS,
   STATUS_OPTIONS, ASSET_LEVEL_OPTIONS, RISK_TOLERANCE_OPTIONS,
@@ -376,6 +377,7 @@ export default function ClientDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
+  const { orgId } = useOrg();
   const backPath = location.state?.from || '/hq/clients';
   const backLabel = backPath === '/hq/notes' ? '← Back to Notes' : '← Back to Clients';
   const [client, setClient] = useState(null);

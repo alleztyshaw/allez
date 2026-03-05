@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
+import { useOrg } from '../context/OrgContext';
 import {
   GOLD, DARK, CARD_BG, BORDER, TEXT_PRIMARY, TEXT_MUTED, INPUT_BG,
   STATUS_COLORS, PAGE_PADDING, PAGE_FONT,
@@ -233,6 +234,7 @@ const emptyForm = { client_id: '', title: '', body: '', note_type: 'General' };
 export default function Notes() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { orgId } = useOrg();
   const [notes, setNotes] = useState([]);
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -248,7 +250,6 @@ export default function Notes() {
     setExpandedNotes((prev) => ({ ...prev, [noteId]: !prev[noteId] }));
   }
 
-  // If client_id passed in URL, open compose with that client preselected
   useEffect(() => {
     const clientId = searchParams.get('client_id');
     if (clientId) {
@@ -258,13 +259,13 @@ export default function Notes() {
   }, [searchParams]);
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (orgId) fetchData();
+  }, [orgId]);
 
   async function fetchData() {
     const [{ data: notesData }, { data: clientsData }] = await Promise.all([
-      supabase.from('notes').select('*').order('created_at', { ascending: false }),
-      supabase.from('clients').select('id, first_name, last_name, status').order('last_name'),
+      supabase.from('notes').select('*').eq('org_id', orgId).order('created_at', { ascending: false }),
+      supabase.from('clients').select('id, first_name, last_name, status').eq('org_id', orgId).order('last_name'),
     ]);
     setNotes(notesData || []);
     setClients(clientsData || []);
@@ -295,13 +296,13 @@ export default function Notes() {
       body: formData.body,
       note_type: formData.note_type,
       source: 'manual',
+      org_id: orgId,
     }]);
     if (error) { setError('Something went wrong. Please try again.'); console.error(error); }
     else {
       setFormData(emptyForm);
       setShowCompose(false);
       fetchData();
-      // Remove client_id from URL if present
       navigate('/hq/notes', { replace: true });
     }
     setSaving(false);
