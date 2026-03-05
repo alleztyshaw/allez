@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 
@@ -12,20 +12,46 @@ const INPUT_BG = '#2a3347';
 
 export default function Welcome() {
   const navigate = useNavigate();
+  const [session, setSession] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [form, setForm] = useState({
     first_name: '',
     last_name: '',
     display_name: '',
+    password: '',
+    confirm_password: '',
   });
+  const [displayNameEdited, setDisplayNameEdited] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    // Supabase automatically processes the token from the URL hash on page load.
+    // We just need to wait for the session to be ready.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session) {
+        setSession(session);
+        setLoading(false);
+      }
+    });
+
+    // Also check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        setSession(session);
+      }
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   function handleChange(e) {
     const { name, value } = e.target;
     setForm(prev => {
       const updated = { ...prev, [name]: value };
-      // Auto-populate display_name from first_name unless user has edited it
-      if (name === 'first_name' && !prev.display_name_edited) {
+      // Auto-populate display_name from first_name unless manually edited
+      if (name === 'first_name' && !displayNameEdited) {
         updated.display_name = value;
       }
       return updated;
@@ -33,7 +59,8 @@ export default function Welcome() {
   }
 
   function handleDisplayNameChange(e) {
-    setForm(prev => ({ ...prev, display_name: e.target.value, display_name_edited: true }));
+    setDisplayNameEdited(true);
+    setForm(prev => ({ ...prev, display_name: e.target.value }));
   }
 
   async function handleSubmit() {
@@ -41,39 +68,45 @@ export default function Welcome() {
       setError('First and last name are required.');
       return;
     }
+    if (!form.password || form.password.length < 8) {
+      setError('Password must be at least 8 characters.');
+      return;
+    }
+    if (form.password !== form.confirm_password) {
+      setError('Passwords do not match.');
+      return;
+    }
+
     setSaving(true);
     setError('');
 
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) { navigate('/'); return; }
-
     const displayName = form.display_name.trim() || form.first_name.trim();
 
-    // 1. Update auth user metadata (display_name for greeting)
-    const { error: metaError } = await supabase.auth.updateUser({
-      data: { display_name: displayName, onboarding_complete: true },
+    // 1. Set password and update metadata
+    const { error: updateError } = await supabase.auth.updateUser({
+      password: form.password,
+      data: {
+        display_name: displayName,
+        onboarding_complete: true,
+      },
     });
 
-    if (metaError) {
+    if (updateError) {
       setError('Something went wrong. Please try again.');
       setSaving(false);
       return;
     }
 
-    // 2. Update org_members with first/last/display name
-    const { error: memberError } = await supabase
-      .from('org_members')
-      .update({
-        first_name: form.first_name.trim(),
-        last_name: form.last_name.trim(),
-        display_name: displayName,
-      })
-      .eq('user_id', session.user.id);
-
-    if (memberError) {
-      setError('Something went wrong saving your profile.');
-      setSaving(false);
-      return;
+    // 2. Update org_members with name fields
+    if (session) {
+      await supabase
+        .from('org_members')
+        .update({
+          first_name: form.first_name.trim(),
+          last_name: form.last_name.trim(),
+          display_name: displayName,
+        })
+        .eq('user_id', session.user.id);
     }
 
     navigate('/hq');
@@ -172,7 +205,35 @@ export default function Welcome() {
       color: '#f87171',
       margin: '12px 0 0',
     },
+    loadingText: {
+      color: TEXT_MUTED,
+      fontSize: '14px',
+      textAlign: 'center',
+    },
   };
+
+  if (loading) {
+    return (
+      <div style={s.page}>
+        <p style={s.loadingText}>Setting up your account…</p>
+      </div>
+    );
+  }
+
+  if (!session) {
+    return (
+      <div style={s.page}>
+        <div style={s.card}>
+          <p style={s.logo}>Allez HQ</p>
+          <h1 style={s.title}>Invalid or expired link.</h1>
+          <p style={s.subtitle}>
+            This invite link has expired or already been used.
+            Please ask your admin to send a new invite.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={s.page}>
@@ -181,8 +242,7 @@ export default function Welcome() {
 
         <h1 style={s.title}>Welcome aboard.</h1>
         <p style={s.subtitle}>
-          Let's get your profile set up before you dive in.
-          This only takes a moment.
+          Set up your profile and create a password to get started.
         </p>
 
         <div style={s.fieldGroup}>
@@ -207,8 +267,6 @@ export default function Welcome() {
           />
         </div>
 
-        <div style={s.divider} />
-
         <div style={s.fieldGroup}>
           <label style={s.label}>Display Name</label>
           <input
@@ -218,7 +276,33 @@ export default function Welcome() {
             value={form.display_name}
             onChange={handleDisplayNameChange}
           />
-          <p style={s.hint}>This is how we'll greet you — "Good morning, Jane."</p>
+          <p style={s.hint}>How we'll greet you — "Good morning, Jane."</p>
+        </div>
+
+        <div style={s.divider} />
+
+        <div style={s.fieldGroup}>
+          <label style={s.label}>Password</label>
+          <input
+            style={s.input}
+            name="password"
+            type="password"
+            placeholder="At least 8 characters"
+            value={form.password}
+            onChange={handleChange}
+          />
+        </div>
+
+        <div style={s.fieldGroup}>
+          <label style={s.label}>Confirm Password</label>
+          <input
+            style={s.input}
+            name="confirm_password"
+            type="password"
+            placeholder="Repeat your password"
+            value={form.confirm_password}
+            onChange={handleChange}
+          />
         </div>
 
         {error && <p style={s.error}>{error}</p>}
@@ -228,7 +312,7 @@ export default function Welcome() {
           onClick={handleSubmit}
           disabled={saving}
         >
-          {saving ? 'Saving…' : 'Enter HQ →'}
+          {saving ? 'Setting up…' : 'Enter HQ →'}
         </button>
       </div>
     </div>
