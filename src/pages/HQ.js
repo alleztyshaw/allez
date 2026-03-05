@@ -48,18 +48,11 @@ const features = [
 
 export default function HQ() {
   const navigate = useNavigate();
-  const [firstName, setFirstName] = useState('');
   const [metrics, setMetrics] = useState({});
   const [metricsLoading, setMetricsLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        setFirstName(session.user.user_metadata.display_name || '');
-      }
-    });
-
     const timer = setInterval(() => setCurrentTime(new Date()), 60000);
     return () => clearInterval(timer);
   }, []);
@@ -73,13 +66,6 @@ export default function HQ() {
     }
     fetchMetrics();
   }, []);
-
-  const getGreeting = () => {
-    const h = currentTime.getHours();
-    if (h < 12) return 'Good morning';
-    if (h < 17) return 'Good afternoon';
-    return 'Good evening';
-  };
 
   const formattedDate = currentTime.toLocaleDateString('en-US', {
     weekday: 'long', month: 'long', day: 'numeric',
