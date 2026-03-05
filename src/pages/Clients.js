@@ -58,7 +58,7 @@ export default function Clients() {
 
   useEffect(() => {
     if (orgId) fetchClients();
-  }, [orgId]);
+  }, [orgId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function fetchClients() {
     setLoading(true);

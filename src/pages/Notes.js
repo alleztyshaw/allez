@@ -260,7 +260,7 @@ export default function Notes() {
 
   useEffect(() => {
     if (orgId) fetchData();
-  }, [orgId]);
+  }, [orgId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function fetchData() {
     const [{ data: notesData }, { data: clientsData }] = await Promise.all([

@@ -398,6 +398,7 @@ export default function ClientDetail() {
         .from('clients')
         .select('*')
         .eq('id', id)
+        .eq('org_id', orgId)
         .single();
       if (error) console.error(error);
       else setClient(data);
@@ -408,18 +409,19 @@ export default function ClientDetail() {
         .from('notes')
         .select('*')
         .eq('client_id', id)
+        .eq('org_id', orgId)
         .order('created_at', { ascending: false });
       setClientNotes(data || []);
     }
-    fetchClient();
-    loadNotes();
-  }, [id]);
+    if (orgId) { fetchClient(); loadNotes(); }
+  }, [id, orgId]);
 
   async function fetchNotes() {
     const { data } = await supabase
       .from('notes')
       .select('*')
       .eq('client_id', id)
+      .eq('org_id', orgId)
       .order('created_at', { ascending: false });
     setClientNotes(data || []);
   }
