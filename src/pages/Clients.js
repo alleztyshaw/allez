@@ -66,6 +66,7 @@ export default function Clients() {
       .from('clients')
       .select('*')
       .eq('org_id', orgId)
+      .is('deleted_at', null)
       .order('last_name', { ascending: true });
 
     if (error) {

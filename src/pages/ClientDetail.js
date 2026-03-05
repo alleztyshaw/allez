@@ -377,7 +377,7 @@ export default function ClientDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const { orgId } = useOrg();
+  const { orgId, isAdmin } = useOrg();
   const backPath = location.state?.from || '/hq/clients';
   const backLabel = backPath === '/hq/notes' ? '← Back to Notes' : '← Back to Clients';
   const [client, setClient] = useState(null);
@@ -391,6 +391,9 @@ export default function ClientDetail() {
   const [clientNotes, setClientNotes] = useState([]);
   const [editingNote, setEditingNote] = useState(null);
   const [editNoteForm, setEditNoteForm] = useState({});
+  const [advisors, setAdvisors] = useState([]);
+  const [orgMembers, setOrgMembers] = useState([]);
+  const [showAdvisorModal, setShowAdvisorModal] = useState(false);
 
   useEffect(() => {
     async function fetchClient() {
@@ -399,6 +402,7 @@ export default function ClientDetail() {
         .select('*')
         .eq('id', id)
         .eq('org_id', orgId)
+        .is('deleted_at', null)
         .single();
       if (error) console.error(error);
       else setClient(data);
@@ -410,10 +414,33 @@ export default function ClientDetail() {
         .select('*')
         .eq('client_id', id)
         .eq('org_id', orgId)
+        .is('deleted_at', null)
         .order('created_at', { ascending: false });
       setClientNotes(data || []);
     }
-    if (orgId) { fetchClient(); loadNotes(); }
+    async function loadAdvisors() {
+      const { data } = await supabase
+        .from('client_advisors')
+        .select('id, user_id, is_primary')
+        .eq('client_id', id)
+        .eq('org_id', orgId);
+      if (!data) { setAdvisors([]); return; }
+      // Enrich with names from org_members
+      const { data: members } = await supabase
+        .from('org_members')
+        .select('user_id, first_name, last_name, role')
+        .eq('org_id', orgId);
+      const memberMap = Object.fromEntries((members || []).map(m => [m.user_id, m]));
+      setAdvisors(data.map(a => ({ ...a, ...memberMap[a.user_id] })));
+    }
+    async function loadOrgMembers() {
+      const { data } = await supabase
+        .from('org_members')
+        .select('user_id, role, first_name, last_name')
+        .eq('org_id', orgId);
+      setOrgMembers(data || []);
+    }
+    if (orgId) { fetchClient(); loadNotes(); loadAdvisors(); loadOrgMembers(); }
   }, [id, orgId]);
 
   async function fetchNotes() {
@@ -422,8 +449,48 @@ export default function ClientDetail() {
       .select('*')
       .eq('client_id', id)
       .eq('org_id', orgId)
+      .is('deleted_at', null)
       .order('created_at', { ascending: false });
     setClientNotes(data || []);
+  }
+
+  async function fetchAdvisors() {
+    const { data } = await supabase
+      .from('client_advisors')
+      .select('id, user_id, is_primary')
+      .eq('client_id', id)
+      .eq('org_id', orgId);
+    if (!data) { setAdvisors([]); return; }
+    const { data: members } = await supabase
+      .from('org_members')
+      .select('user_id, first_name, last_name, role')
+      .eq('org_id', orgId);
+    const memberMap = Object.fromEntries((members || []).map(m => [m.user_id, m]));
+    setAdvisors(data.map(a => ({ ...a, ...memberMap[a.user_id] })));
+  }
+
+  async function handleAssignAdvisor(userId) {
+    const already = advisors.find(a => a.user_id === userId);
+    if (already) return;
+    const isPrimary = advisors.length === 0;
+    await supabase.from('client_advisors').insert([{
+      org_id: orgId,
+      client_id: id,
+      user_id: userId,
+      is_primary: isPrimary,
+    }]);
+    fetchAdvisors();
+  }
+
+  async function handleRemoveAdvisor(advisorId) {
+    await supabase.from('client_advisors').delete().eq('id', advisorId);
+    fetchAdvisors();
+  }
+
+  async function handleSetPrimary(advisorId) {
+    await supabase.from('client_advisors').update({ is_primary: false }).eq('client_id', id);
+    await supabase.from('client_advisors').update({ is_primary: true }).eq('id', advisorId);
+    fetchAdvisors();
   }
 
   function groupNotesByDate(notes) {
@@ -447,7 +514,9 @@ export default function ClientDetail() {
   }
 
   async function handleDeleteNote(noteId) {
-    await supabase.from('notes').delete().eq('id', noteId);
+    await supabase.from('notes')
+      .update({ deleted_at: new Date().toISOString() })
+      .eq('id', noteId);
     fetchNotes();
   }
 
@@ -501,7 +570,10 @@ export default function ClientDetail() {
 
   async function handleDelete() {
     setDeleting(true);
-    const { error } = await supabase.from('clients').delete().eq('id', id);
+    const { error } = await supabase
+      .from('clients')
+      .update({ deleted_at: new Date().toISOString() })
+      .eq('id', id);
     if (error) {
       console.error(error);
       setDeleting(false);
@@ -549,6 +621,71 @@ export default function ClientDetail() {
         </div>
 
         <div style={s.divider} />
+
+        {/* Advisor assignment */}
+        <div style={{ marginBottom: '32px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+            <p style={s.sectionLabel}>Assigned Advisors</p>
+            {isAdmin && (
+              <button
+                onClick={() => setShowAdvisorModal(true)}
+                style={{ background: 'none', border: `1px solid ${BORDER}`, borderRadius: '6px', padding: '3px 10px', fontSize: '12px', color: GOLD, cursor: 'pointer', fontFamily: 'inherit' }}
+              >
+                + Assign
+              </button>
+            )}
+          </div>
+          {advisors.length === 0 ? (
+            <p style={{ color: TEXT_MUTED, fontSize: '13px' }}>No advisors assigned yet.</p>
+          ) : (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+              {advisors.map(a => (
+                <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: CARD_BG, border: `1px solid ${BORDER}`, borderRadius: '8px', padding: '6px 12px' }}>
+                  <span style={{ fontSize: '13px', color: TEXT_PRIMARY }}>
+                    {a.first_name && a.last_name ? `${a.first_name} ${a.last_name}` : a.user_id.slice(0, 8) + '…'}
+                  </span>
+                  {a.is_primary && (
+                    <span style={{ fontSize: '10px', background: 'rgba(201,168,76,0.15)', color: GOLD, borderRadius: '4px', padding: '1px 6px' }}>Primary</span>
+                  )}
+                  {isAdmin && !a.is_primary && (
+                    <button onClick={() => handleSetPrimary(a.id)} style={{ background: 'none', border: 'none', fontSize: '11px', color: TEXT_MUTED, cursor: 'pointer', padding: 0 }}>Set primary</button>
+                  )}
+                  {isAdmin && (
+                    <button onClick={() => handleRemoveAdvisor(a.id)} style={{ background: 'none', border: 'none', fontSize: '11px', color: '#f87171', cursor: 'pointer', padding: 0 }}>✕</button>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Assign advisor modal */}
+        {showAdvisorModal && (
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }}>
+            <div style={{ background: CARD_BG, border: `1px solid ${BORDER}`, borderRadius: '16px', padding: '32px', width: '340px' }}>
+              <h3 style={{ color: TEXT_PRIMARY, fontSize: '16px', marginBottom: '20px' }}>Assign Advisor</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '24px' }}>
+                {orgMembers.map(m => {
+                  const assigned = advisors.find(a => a.user_id === m.user_id);
+                  return (
+                    <div key={m.user_id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: 'rgba(255,255,255,0.04)', borderRadius: '8px' }}>
+                      <span style={{ fontSize: '13px', color: TEXT_PRIMARY }}>
+                        {m.first_name && m.last_name ? `${m.first_name} ${m.last_name}` : m.user_id.slice(0, 8) + '…'}
+                        <span style={{ color: TEXT_MUTED, fontSize: '11px', marginLeft: '6px' }}>({m.role})</span>
+                      </span>
+                      {assigned ? (
+                        <span style={{ fontSize: '11px', color: TEXT_MUTED }}>Assigned</span>
+                      ) : (
+                        <button onClick={() => { handleAssignAdvisor(m.user_id); }} style={{ background: GOLD, border: 'none', borderRadius: '6px', padding: '4px 12px', fontSize: '12px', color: '#0f1117', cursor: 'pointer', fontWeight: '600' }}>Assign</button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+              <button onClick={() => setShowAdvisorModal(false)} style={{ width: '100%', background: 'none', border: `1px solid ${BORDER}`, borderRadius: '8px', padding: '10px', color: TEXT_MUTED, cursor: 'pointer', fontFamily: 'inherit' }}>Done</button>
+            </div>
+          </div>
+        )}
 
         {/* Detail sections */}
         <div style={s.grid}>

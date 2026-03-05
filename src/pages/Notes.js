@@ -264,8 +264,8 @@ export default function Notes() {
 
   async function fetchData() {
     const [{ data: notesData }, { data: clientsData }] = await Promise.all([
-      supabase.from('notes').select('*').eq('org_id', orgId).order('created_at', { ascending: false }),
-      supabase.from('clients').select('id, first_name, last_name, status').eq('org_id', orgId).order('last_name'),
+      supabase.from('notes').select('*').eq('org_id', orgId).is('deleted_at', null).order('created_at', { ascending: false }),
+      supabase.from('clients').select('id, first_name, last_name, status').eq('org_id', orgId).is('deleted_at', null).order('last_name'),
     ]);
     setNotes(notesData || []);
     setClients(clientsData || []);
@@ -328,7 +328,9 @@ export default function Notes() {
   }
 
   async function handleDelete(id) {
-    await supabase.from('notes').delete().eq('id', id);
+    await supabase.from('notes')
+      .update({ deleted_at: new Date().toISOString() })
+      .eq('id', id);
     fetchData();
   }
 
