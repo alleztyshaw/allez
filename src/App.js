@@ -13,7 +13,6 @@ import Notes from './pages/Notes';
 import HQ from './pages/HQ';
 import Team from './pages/Team';
 import Welcome from './pages/Welcome';
-import AuthCallback from './pages/AuthCallback';
 import './App.css';
 
 function ProtectedLayout({ children }) {
