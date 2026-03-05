@@ -15,6 +15,13 @@ function Navigation() {
   const [hqHovered, setHqHovered] = useState(false);
   const hqHoverTimeout = useRef(null);
 
+  const getGreeting = () => {
+    const h = new Date().getHours();
+    if (h < 12) return 'Good morning';
+    if (h < 17) return 'Good afternoon';
+    return 'Good evening';
+  };
+
   const menuRef = useRef(null);
 
   useEffect(() => {
@@ -70,16 +77,18 @@ function Navigation() {
   };
 
   return (
-    <header className="header">
+    <header className="header" style={{ background: 'transparent', boxShadow: 'none', borderBottom: 'none' }}>
       <div className="container">
-        <h1>
-          <Link to="/hq" style={{ color: 'white', textDecoration: 'none' }}>
-            Allez
+        <h1 style={{ margin: 0 }}>
+          <Link to="/hq" style={{ color: linkColor, textDecoration: 'none', fontSize: '26px', fontWeight: '700', fontFamily: "'Playfair Display', serif", letterSpacing: '0.02em' }}>
+            Allez HQ
           </Link>
         </h1>
         <div className="nav-right">
           {displayName && (
-            <span className="welcome-message">Welcome, {displayName}!</span>
+            <span className="welcome-message" style={{ color: linkColor, opacity: 0.8, fontSize: '16px' }}>
+              {getGreeting()}, {displayName}
+            </span>
           )}
           <div ref={menuRef} style={{ position: 'relative', display: 'inline-block' }}>
             <button className="hamburger" onClick={() => setMenuOpen(!menuOpen)}>

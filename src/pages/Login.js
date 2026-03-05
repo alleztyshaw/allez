@@ -19,7 +19,7 @@ function Login() {
     if (error) {
       setErrorMessage(error.message);
     } else {
-      navigate('/home');
+      navigate('/hq');
     }
 
     setLoading(false);

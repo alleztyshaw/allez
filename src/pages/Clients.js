@@ -1,6 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
+import {
+  GOLD, GREEN, DARK, CARD_BG, BORDER, TEXT_PRIMARY, TEXT_MUTED, INPUT_BG,
+  STATUS_COLORS, STATUS_OPTIONS, ASSET_LEVEL_OPTIONS, RISK_TOLERANCE_OPTIONS,
+  INVESTMENT_OBJECTIVE_OPTIONS, TIME_HORIZON_OPTIONS, CONTACT_METHOD_OPTIONS,
+  COMMUNICATION_FREQUENCY_OPTIONS, LIQUIDITY_NEEDS_OPTIONS, TAX_BRACKET_OPTIONS,
+  REFERRAL_SOURCE_OPTIONS, PAGE_PADDING, PAGE_FONT,
+} from '../utils/hqConstants';
 
 function useWindowWidth() {
   const [width, setWidth] = useState(window.innerWidth);
@@ -11,66 +18,6 @@ function useWindowWidth() {
   }, []);
   return width;
 }
-
-// HQ design tokens — shared across all HQ sub-pages
-const GOLD = '#c9a84c';
-const GREEN = '#51da83';
-const DARK = '#0f1117';
-const CARD_BG = '#1e2330';
-const BORDER = 'rgba(201,168,76,0.18)';
-const TEXT_PRIMARY = '#f0ece0';
-const TEXT_MUTED = '#7a7d8a';
-const INPUT_BG = '#2a3347';
-
-const ASSET_LEVEL_OPTIONS = [
-  'Under $100K',
-  '$100K – $250K',
-  '$250K – $500K',
-  '$500K – $1M',
-  '$1M – $5M',
-  '$5M – $10M',
-  '$10M+',
-];
-
-const RISK_TOLERANCE_OPTIONS = [
-  'Conservative',
-  'Moderately Conservative',
-  'Moderate',
-  'Moderately Aggressive',
-  'Aggressive',
-];
-
-const INVESTMENT_OBJECTIVE_OPTIONS = [
-  'Growth',
-  'Income',
-  'Preservation',
-  'Balanced',
-];
-
-const TIME_HORIZON_OPTIONS = [
-  'Short (0–3yr)',
-  'Medium (3–10yr)',
-  'Long (10yr+)',
-];
-
-const STATUS_OPTIONS = ['Prospect', 'Active', 'Inactive', 'Former'];
-
-const CONTACT_METHOD_OPTIONS = ['Email', 'Phone', 'In-person'];
-
-const COMMUNICATION_FREQUENCY_OPTIONS = ['Monthly', 'Quarterly', 'Annually'];
-
-const LIQUIDITY_NEEDS_OPTIONS = ['Low', 'Medium', 'High'];
-
-const TAX_BRACKET_OPTIONS = ['10%', '12%', '22%', '24%', '32%', '35%', '37%'];
-
-const REFERRAL_SOURCE_OPTIONS = [
-  'Existing Client',
-  'LinkedIn',
-  'Event',
-  'Cold Outreach',
-  'Website',
-  'Other',
-];
 
 const emptyForm = {
   first_name: '',
@@ -94,12 +41,6 @@ const emptyForm = {
   notes: '',
 };
 
-const statusColors = {
-  Active:   { bg: 'rgba(81,218,131,0.15)', color: '#51da83' },
-  Prospect: { bg: 'rgba(96,165,250,0.15)', color: '#60a5fa' },
-  Inactive: { bg: 'rgba(251,191,36,0.15)', color: '#fbbf24' },
-  Former:   { bg: 'rgba(248,113,113,0.15)', color: '#f87171' },
-};
 
 export default function Clients() {
   const [clients, setClients] = useState([]);
@@ -227,13 +168,13 @@ export default function Clients() {
             >
               {/* Avatar + Name — clicking either navigates to client detail */}
               <div style={styles.cardTop}>
-                <Link to={`/hq/clients/${client.id}`} style={styles.avatarLink} className="client-avatar-link">
+                <Link to={`/hq/clients/${client.id}`} state={{ from: '/hq/clients' }} style={styles.avatarLink} className="client-avatar-link">
                   <div style={styles.avatar} className="client-avatar">
                     {client.first_name?.[0]}{client.last_name?.[0]}
                   </div>
                 </Link>
                 <div>
-                  <Link to={`/hq/clients/${client.id}`} style={styles.nameLink} className="client-name-link">
+                  <Link to={`/hq/clients/${client.id}`} state={{ from: '/hq/clients' }} style={styles.nameLink} className="client-name-link">
                     <h3 style={styles.cardName}>
                       {client.first_name} {client.last_name}
                     </h3>
@@ -272,8 +213,8 @@ export default function Clients() {
                 <span style={{
                   ...styles.badge,
                   marginLeft: 'auto',
-                  backgroundColor: statusColors[client.status]?.bg || '#f3f4f6',
-                  color: statusColors[client.status]?.color || '#374151',
+                  backgroundColor: STATUS_COLORS[client.status]?.bg || '#f3f4f6',
+                  color: STATUS_COLORS[client.status]?.color || '#374151',
                 }}>
                   {client.status}
                 </span>
@@ -445,10 +386,10 @@ const styles = {
     width: '100%',
   },
   page: {
-    padding: '48px 40px 80px',
+    padding: PAGE_PADDING,
     maxWidth: '1200px',
     margin: '0 auto',
-    fontFamily: "'DM Sans', 'Segoe UI', sans-serif",
+    fontFamily: PAGE_FONT,
     color: TEXT_PRIMARY,
   },
   header: {

@@ -13,7 +13,7 @@ function ProtectedRoute({ children }) {
 
   if (session === undefined) return null;
 
-  if (!session) return <Navigate to="/" />;
+  if (!session) return <Navigate to="/hq" />;
 
   return children;
 }

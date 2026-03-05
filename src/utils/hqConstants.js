@@ -8,6 +8,10 @@ export const TEXT_PRIMARY = '#f0ece0';
 export const TEXT_MUTED = '#7a7d8a';
 export const INPUT_BG = '#2a3347';
 
+// Layout — controls spacing and typography across all HQ pages
+export const PAGE_PADDING = '120px 40px 80px';
+export const PAGE_FONT = "'DM Sans', 'Segoe UI', sans-serif";
+
 // Client status badge colours
 export const STATUS_COLORS = {
   Active:   { bg: 'rgba(81,218,131,0.15)',  color: '#51da83' },

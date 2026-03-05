@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
+import { PAGE_PADDING } from '../utils/hqConstants';
 
 const features = [
   {
@@ -91,10 +92,6 @@ export default function HQ() {
       {/* Header */}
       <div style={s.header}>
         <div style={s.headerLeft}>
-          <p style={s.greeting}>
-            {getGreeting()}{firstName ? `, ${firstName}` : ''}
-          </p>
-          <h1 style={s.title}>Allez HQ</h1>
           <p style={s.date}>{formattedDate}</p>
         </div>
         <div style={s.headerRight}>
@@ -202,7 +199,7 @@ const s = {
   page: {
     minHeight: '100vh',
     background: DARK,
-    padding: '48px 40px 80px',
+    padding: PAGE_PADDING,
     position: 'relative',
     fontFamily: "'DM Sans', sans-serif",
     color: TEXT_PRIMARY,

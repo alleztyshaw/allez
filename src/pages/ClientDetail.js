@@ -6,7 +6,7 @@ import {
   STATUS_OPTIONS, ASSET_LEVEL_OPTIONS, RISK_TOLERANCE_OPTIONS,
   INVESTMENT_OBJECTIVE_OPTIONS, TIME_HORIZON_OPTIONS, CONTACT_METHOD_OPTIONS,
   COMMUNICATION_FREQUENCY_OPTIONS, LIQUIDITY_NEEDS_OPTIONS, TAX_BRACKET_OPTIONS,
-  REFERRAL_SOURCE_OPTIONS, INPUT_BG,
+  REFERRAL_SOURCE_OPTIONS, INPUT_BG, PAGE_PADDING, PAGE_FONT,
 } from '../utils/hqConstants';
 
 const s = {
@@ -18,8 +18,8 @@ const s = {
   page: {
     maxWidth: '1000px',
     margin: '0 auto',
-    padding: '48px 40px 80px',
-    fontFamily: "'DM Sans', 'Segoe UI', sans-serif",
+    padding: PAGE_PADDING,
+    fontFamily: PAGE_FONT,
     color: TEXT_PRIMARY,
   },
   loading: {

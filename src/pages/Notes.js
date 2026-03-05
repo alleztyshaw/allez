@@ -3,7 +3,7 @@ import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import {
   GOLD, DARK, CARD_BG, BORDER, TEXT_PRIMARY, TEXT_MUTED, INPUT_BG,
-  STATUS_COLORS,
+  STATUS_COLORS, PAGE_PADDING, PAGE_FONT,
 } from '../utils/hqConstants';
 
 const NOTE_TYPES = ['Meeting', 'Call', 'Email', 'General'];
@@ -13,8 +13,8 @@ const s = {
   page: {
     maxWidth: '1000px',
     margin: '0 auto',
-    padding: '48px 40px 80px',
-    fontFamily: "'DM Sans', 'Segoe UI', sans-serif",
+    padding: PAGE_PADDING,
+    fontFamily: PAGE_FONT,
     color: TEXT_PRIMARY,
   },
   header: {
