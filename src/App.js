@@ -13,6 +13,7 @@ import Notes from './pages/Notes';
 import HQ from './pages/HQ';
 import Team from './pages/Team';
 import Welcome from './pages/Welcome';
+import AuthCallback from './pages/AuthCallback';
 import './App.css';
 
 function ProtectedLayout({ children }) {
@@ -35,6 +36,7 @@ function App() {
             <Route path="/signup" element={<Signup />} />
             <Route path="/about" element={<ProtectedLayout><About /></ProtectedLayout>} />
             <Route path="/contact" element={<ProtectedLayout><Contact /></ProtectedLayout>} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/welcome" element={<Welcome />} />
             <Route path="/hq" element={<ProtectedLayout><HQ /></ProtectedLayout>} />
             <Route path="/hq/clients" element={<ProtectedLayout><Clients /></ProtectedLayout>} />
