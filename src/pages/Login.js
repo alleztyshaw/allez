@@ -63,7 +63,7 @@ export default function Login() {
           50%       { transform: translateY(6px); opacity: 1; }
         }
 
-        .sign-in-btn:hover    { background: rgba(0,0,0,0.08) !important; }
+        .sign-in-btn:hover    { opacity: 1 !important; }
         .close-btn:hover      { opacity: 0.4 !important; }
         .submit-btn:hover     { filter: brightness(1.06); }
         .login-input:focus    {
@@ -130,7 +130,7 @@ export default function Login() {
 
         {/* Scroll cue */}
         <div className="scroll-cue" style={s.scrollCue}>
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <svg width="32" height="32" viewBox="0 0 20 20" fill="none">
             <path d="M5 7.5L10 12.5L15 7.5" stroke="rgba(26,26,26,0.35)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         </div>
@@ -267,13 +267,14 @@ const s = {
   },
   logo: {
     fontFamily: "'Cormorant Garamond', serif", fontSize: '28px',
-    fontWeight: '600', color: '#1a1a1a', letterSpacing: '0.06em',
+    fontWeight: '300', color: '#1a1a1a', letterSpacing: '0.06em',
   },
   signInBtn: {
-    background: 'rgba(0,0,0,0.04)', border: '1px solid rgba(0,0,0,0.10)',
-    borderRadius: '20px', padding: '8px 22px', fontFamily: "'DM Sans', sans-serif",
-    fontSize: '14px', fontWeight: '500', color: '#1a1a1a',
-    cursor: 'pointer', transition: 'background 0.2s', letterSpacing: '0.02em',
+    background: 'none', border: 'none', padding: 0,
+    fontFamily: "'DM Sans', sans-serif",
+    fontSize: '16px', fontWeight: '400', color: '#1a1a1a',
+    cursor: 'pointer', letterSpacing: '0.04em', opacity: 0.6,
+    transition: 'opacity 0.2s',
   },
 
   // ── Login card ────────────────────────────────
@@ -326,7 +327,7 @@ const s = {
     padding: '0 40px', position: 'relative', zIndex: 1,
   },
   eyebrow: {
-    fontSize: '11px', fontWeight: '500', textTransform: 'uppercase',
+    fontSize: '12px', fontWeight: '500', textTransform: 'uppercase',
     letterSpacing: '0.22em', color: 'rgba(26,26,26,0.45)', margin: '0 0 20px',
   },
   tagline: {
@@ -336,7 +337,7 @@ const s = {
     letterSpacing: '0.01em', lineHeight: 1.1,
   },
   scrollCue: {
-    position: 'absolute', bottom: '40px',
+    position: 'absolute', bottom: '100px',
     left: '50%', transform: 'translateX(-50%)',
     cursor: 'default',
   },
@@ -344,10 +345,10 @@ const s = {
   // ── Scroll section ────────────────────────────
   scrollSection: {
     position: 'relative', zIndex: 1,
-    background: 'rgba(248,248,245,0.7)',
-    backdropFilter: 'blur(24px)',
-    WebkitBackdropFilter: 'blur(24px)',
-    borderTop: '1px solid rgba(0,0,0,0.06)',
+    background: 'rgba(248,248,245,0.35)',
+    backdropFilter: 'blur(12px)',
+    WebkitBackdropFilter: 'blur(12px)',
+    borderTop: '1px solid rgba(0,0,0,0.04)',
   },
 
   // Definition block
@@ -417,10 +418,10 @@ const s = {
     gap: '16px',
   },
   featureCard: {
-    background: 'rgba(255,255,255,0.55)',
+    background: 'rgba(255,255,255,0.3)',
     backdropFilter: 'blur(8px)',
     WebkitBackdropFilter: 'blur(8px)',
-    border: '1px solid rgba(255,255,255,0.7)',
+    border: '1px solid rgba(255,255,255,0.5)',
     borderRadius: '16px', padding: '28px',
     transition: 'background 0.2s, transform 0.2s',
   },
