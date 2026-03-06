@@ -19,7 +19,7 @@ body {
 .container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 20px;
+  padding: 0 40px;
 }
 
 /* Header — transparent, floats over page content */
@@ -131,26 +131,6 @@ body {
 /* Main Content */
 .main {
   flex: 1;
-}
-
-/* About */
-.about {
-  padding: 5rem 0;
-  text-align: center;
-}
-
-.about h2 {
-  font-size: 2.5rem;
-  margin-bottom: 2rem;
-  color: #667eea;
-}
-
-.about p {
-  font-size: 1.2rem;
-  max-width: 800px;
-  margin: 0 auto;
-  color: #666;
-  line-height: 1.8;
 }
 
 /* Contact */

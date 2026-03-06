@@ -29,7 +29,7 @@ function ProtectedLayout({ children }) {
         zIndex: 5, pointerEvents: 'none', margin: 0,
         fontFamily: "'DM Sans', sans-serif",
       }}>
-        © 2026 Allez HQ · Built for wealth management professionals
+        © 2026 Allez HQ · All rights reserved · Built for wealth management professionals
       </p>
     </ProtectedRoute>
   );
