@@ -21,12 +21,6 @@ const features = [
   { id: 'onboarding', title: 'Onboarding',  description: 'Monitor new client onboarding progress, step completion, and outstanding tasks.', status: 'soon', route: null },
 ];
 
-function getGreeting() {
-  const h = new Date().getHours();
-  if (h < 12) return 'Good morning';
-  if (h < 17) return 'Good afternoon';
-  return 'Good evening';
-}
 
 function formatDate(d) {
   return d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
@@ -35,16 +29,10 @@ function formatDate(d) {
 export default function HQ() {
   const navigate = useNavigate();
   const t = useTokens();
-  const [firstName, setFirstName] = useState('');
   const [metrics, setMetrics] = useState({});
   const [metricsLoading, setMetricsLoading] = useState(true);
-  const [hoveredCard, setHoveredCard] = useState(null);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      const name = data?.user?.user_metadata?.display_name || '';
-      setFirstName(name.split(' ')[0]);
-    });
     async function fetchMetrics() {
       const [{ data: clients }, { data: notes }] = await Promise.all([
         supabase.from('clients').select('id'),
@@ -119,8 +107,6 @@ export default function HQ() {
                 className={`hq-card ${isLive ? 'hq-card-live' : ''}`}
                 style={{ ...s.card, ...(isLive ? {} : s.cardDimmed), animationDelay: `${i * 80}ms` }}
                 onClick={() => isLive && navigate(feature.route)}
-                onMouseEnter={() => isLive && setHoveredCard(feature.id)}
-                onMouseLeave={() => setHoveredCard(null)}
               >
                 <div style={s.cardTop}>
                   {isLive ? <span style={s.liveBadge}>Live</span> : <span style={s.soonBadge}>Coming Soon</span>}

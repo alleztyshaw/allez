@@ -1,8 +1,8 @@
 import { useTheme } from '../context/ThemeContext';
 import {
-  ACCENT, ACCENT_MUTED, ACCENT_BORDER,
+  ACCENT,
   FONT_DISPLAY, FONT_BODY,
-  RADIUS_MD, RADIUS_LG, RADIUS_PILL,
+  RADIUS_LG,
   SHADOW_MD,
 } from '../utils/hqConstants';
 import { useTokens } from '../context/ThemeContext';
