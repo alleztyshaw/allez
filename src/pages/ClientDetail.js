@@ -3,34 +3,40 @@ import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { useOrg } from '../context/OrgContext';
 import {
-  GOLD, DARK, CARD_BG, BORDER, TEXT_PRIMARY, TEXT_MUTED, STATUS_COLORS,
-  STATUS_OPTIONS, ASSET_LEVEL_OPTIONS, RISK_TOLERANCE_OPTIONS,
-  INVESTMENT_OBJECTIVE_OPTIONS, TIME_HORIZON_OPTIONS, CONTACT_METHOD_OPTIONS,
-  COMMUNICATION_FREQUENCY_OPTIONS, LIQUIDITY_NEEDS_OPTIONS, TAX_BRACKET_OPTIONS,
-  REFERRAL_SOURCE_OPTIONS, INPUT_BG, PAGE_PADDING, PAGE_FONT,
+  ACCENT, ACCENT_MUTED, ACCENT_BORDER,
+  D_BG, D_SURFACE, D_SURFACE_ALT, D_BORDER,
+  D_TEXT, D_TEXT_MUTED,
+  FONT_DISPLAY, FONT_BODY,
+  RADIUS_MD, RADIUS_LG, RADIUS_PILL,
+  SHADOW_MD,
+  STATUS_COLORS, STATUS_OPTIONS,
+  ASSET_LEVEL_OPTIONS, RISK_TOLERANCE_OPTIONS,
+  INVESTMENT_OBJECTIVE_OPTIONS, TIME_HORIZON_OPTIONS,
+  CONTACT_METHOD_OPTIONS, COMMUNICATION_FREQUENCY_OPTIONS,
+  LIQUIDITY_NEEDS_OPTIONS, TAX_BRACKET_OPTIONS, REFERRAL_SOURCE_OPTIONS,
 } from '../utils/hqConstants';
 
 const s = {
   pageWrapper: {
-    background: DARK,
+    background: D_BG,
     minHeight: '100vh',
     width: '100%',
   },
   page: {
-    maxWidth: '1000px',
+    maxWidth: '1200px',
     margin: '0 auto',
-    padding: PAGE_PADDING,
-    fontFamily: PAGE_FONT,
-    color: TEXT_PRIMARY,
+    padding: '120px 40px 80px',
+    fontFamily: FONT_BODY,
+    color: D_TEXT,
   },
   loading: {
-    background: DARK,
+    background: D_BG,
     minHeight: '100vh',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    color: TEXT_MUTED,
-    fontFamily: "'DM Sans', sans-serif",
+    color: D_TEXT_MUTED,
+    fontFamily: FONT_BODY,
   },
   topRow: {
     display: 'flex',
@@ -39,9 +45,10 @@ const s = {
     marginBottom: '32px',
   },
   backLink: {
-    color: TEXT_MUTED,
+    color: D_TEXT_MUTED,
     textDecoration: 'none',
     fontSize: '14px',
+    fontWeight: '300',
     transition: 'color 0.15s',
   },
   actionButtons: {
@@ -49,24 +56,26 @@ const s = {
     gap: '10px',
   },
   editButton: {
-    background: 'transparent',
-    color: GOLD,
-    border: `1px solid ${BORDER}`,
-    borderRadius: '8px',
+    background: ACCENT_MUTED,
+    color: ACCENT,
+    border: `1px solid ${ACCENT_BORDER}`,
+    borderRadius: RADIUS_MD,
     padding: '8px 18px',
     fontSize: '13px',
     fontWeight: '600',
     cursor: 'pointer',
+    fontFamily: FONT_BODY,
   },
   deleteButton: {
     background: 'transparent',
-    color: TEXT_MUTED,
-    border: `1px solid rgba(122,125,138,0.3)`,
-    borderRadius: '8px',
+    color: D_TEXT_MUTED,
+    border: `1px solid rgba(122,125,138,0.25)`,
+    borderRadius: RADIUS_MD,
     padding: '8px 18px',
     fontSize: '13px',
-    fontWeight: '600',
+    fontWeight: '500',
     cursor: 'pointer',
+    fontFamily: FONT_BODY,
   },
   header: {
     display: 'flex',
@@ -78,59 +87,68 @@ const s = {
     width: '64px',
     height: '64px',
     borderRadius: '50%',
-    background: 'rgba(201,168,76,0.15)',
-    border: `1px solid ${BORDER}`,
-    color: GOLD,
+    background: ACCENT_MUTED,
+    border: `1px solid ${ACCENT_BORDER}`,
+    color: ACCENT,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     fontSize: '22px',
-    fontWeight: '700',
+    fontWeight: '400',
+    fontFamily: FONT_DISPLAY,
+    letterSpacing: '0.02em',
     flexShrink: 0,
   },
   headerText: { flex: 1 },
   name: {
-    fontSize: '28px',
-    fontWeight: '700',
+    fontFamily: FONT_DISPLAY,
+    fontSize: '40px',
+    fontWeight: '300',
     margin: '0 0 4px',
-    color: TEXT_PRIMARY,
+    color: D_TEXT,
+    letterSpacing: '0.01em',
+    lineHeight: 1.1,
   },
   email: {
     fontSize: '14px',
-    color: TEXT_MUTED,
+    color: D_TEXT_MUTED,
     margin: '0 0 2px',
+    fontWeight: '300',
   },
   badge: {
     display: 'inline-block',
     padding: '4px 14px',
-    borderRadius: '12px',
-    fontSize: '13px',
+    borderRadius: RADIUS_PILL,
+    fontSize: '11px',
     fontWeight: '600',
+    letterSpacing: '0.06em',
+    textTransform: 'uppercase',
     marginLeft: 'auto',
   },
   divider: {
     height: '1px',
-    background: `linear-gradient(to right, ${BORDER}, transparent)`,
+    background: `linear-gradient(to right, ${D_BORDER}, transparent)`,
     marginBottom: '36px',
   },
   grid: {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-    gap: '20px',
+    gap: '16px',
     marginBottom: '20px',
   },
   section: {
-    background: CARD_BG,
-    border: `1px solid ${BORDER}`,
-    borderRadius: '14px',
+    background: D_SURFACE,
+    border: `1px solid ${D_BORDER}`,
+    borderRadius: RADIUS_LG,
     padding: '24px',
+    boxShadow: SHADOW_MD,
   },
   sectionLabel: {
-    fontSize: '11px',
-    fontWeight: '700',
+    fontSize: '10px',
+    fontWeight: '600',
     textTransform: 'uppercase',
-    letterSpacing: '0.08em',
-    color: GOLD,
+    letterSpacing: '0.12em',
+    color: ACCENT,
     margin: '0 0 16px',
   },
   fieldGrid: {
@@ -146,32 +164,35 @@ const s = {
   },
   fieldLabel: {
     fontSize: '13px',
-    color: TEXT_MUTED,
-    fontWeight: '500',
+    color: D_TEXT_MUTED,
+    fontWeight: '400',
   },
   fieldValue: {
     fontSize: '13px',
-    color: TEXT_PRIMARY,
+    color: D_TEXT,
     textAlign: 'right',
+    fontWeight: '400',
   },
   notesCard: {
-    background: CARD_BG,
-    border: `1px solid ${BORDER}`,
-    borderRadius: '14px',
+    background: D_SURFACE,
+    border: `1px solid ${D_BORDER}`,
+    borderRadius: RADIUS_LG,
     padding: '24px',
     marginTop: '4px',
+    boxShadow: SHADOW_MD,
   },
   notesText: {
     fontSize: '14px',
-    color: TEXT_PRIMARY,
+    color: D_TEXT,
     lineHeight: '1.7',
     margin: 0,
+    fontWeight: '300',
   },
   // Modal
   overlay: {
     position: 'fixed',
     inset: 0,
-    background: 'rgba(0,0,0,0.6)',
+    background: 'rgba(0,0,0,0.65)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -179,49 +200,51 @@ const s = {
     padding: '20px',
   },
   modal: {
-    background: CARD_BG,
-    border: `1px solid ${BORDER}`,
-    borderRadius: '16px',
+    background: D_SURFACE,
+    border: `1px solid ${D_BORDER}`,
+    borderRadius: RADIUS_LG,
     width: '100%',
     maxWidth: '680px',
     maxHeight: '90vh',
     display: 'flex',
     flexDirection: 'column',
-    boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
+    boxShadow: '0 24px 64px rgba(0,0,0,0.5)',
   },
   modalHeader: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: '20px 24px',
-    borderBottom: `1px solid ${BORDER}`,
+    borderBottom: `1px solid ${D_BORDER}`,
   },
   modalTitle: {
     margin: 0,
-    fontSize: '18px',
-    fontWeight: '700',
-    color: TEXT_PRIMARY,
+    fontFamily: FONT_DISPLAY,
+    fontSize: '24px',
+    fontWeight: '400',
+    color: D_TEXT,
+    letterSpacing: '0.01em',
   },
   closeButton: {
     background: 'none',
     border: 'none',
     fontSize: '18px',
     cursor: 'pointer',
-    color: TEXT_MUTED,
+    color: D_TEXT_MUTED,
     padding: '4px 8px',
   },
   modalBody: {
     overflowY: 'auto',
     padding: '24px',
     flex: 1,
-    background: CARD_BG,
+    background: D_SURFACE,
   },
   formSectionLabel: {
-    fontSize: '11px',
-    fontWeight: '700',
+    fontSize: '10px',
+    fontWeight: '600',
     textTransform: 'uppercase',
-    letterSpacing: '0.08em',
-    color: GOLD,
+    letterSpacing: '0.12em',
+    color: ACCENT,
     margin: '20px 0 12px',
   },
   formGrid: {
@@ -235,31 +258,33 @@ const s = {
     gap: '4px',
   },
   label: {
-    fontSize: '13px',
+    fontSize: '12px',
     fontWeight: '500',
-    color: TEXT_MUTED,
+    color: D_TEXT_MUTED,
+    letterSpacing: '0.02em',
   },
   input: {
-    border: `1px solid ${BORDER}`,
-    borderRadius: '8px',
+    border: `1px solid ${D_BORDER}`,
+    borderRadius: RADIUS_MD,
     padding: '8px 12px',
     fontSize: '14px',
     outline: 'none',
-    color: TEXT_PRIMARY,
-    background: INPUT_BG,
+    color: D_TEXT,
+    background: D_SURFACE_ALT,
+    fontFamily: FONT_BODY,
   },
   textarea: {
     width: '100%',
-    border: `1px solid ${BORDER}`,
-    borderRadius: '8px',
+    border: `1px solid ${D_BORDER}`,
+    borderRadius: RADIUS_MD,
     padding: '10px 12px',
     fontSize: '14px',
     minHeight: '80px',
     resize: 'vertical',
     outline: 'none',
-    color: TEXT_PRIMARY,
-    background: INPUT_BG,
-    fontFamily: 'inherit',
+    color: D_TEXT,
+    background: D_SURFACE_ALT,
+    fontFamily: FONT_BODY,
     boxSizing: 'border-box',
   },
   errorText: {
@@ -269,52 +294,56 @@ const s = {
   },
   modalFooter: {
     padding: '16px 24px',
-    borderTop: `1px solid ${BORDER}`,
+    borderTop: `1px solid ${D_BORDER}`,
     display: 'flex',
     justifyContent: 'flex-end',
     gap: '10px',
-    background: CARD_BG,
+    background: D_SURFACE,
   },
   cancelButton: {
     padding: '9px 20px',
-    borderRadius: '8px',
-    border: `1px solid ${BORDER}`,
+    borderRadius: RADIUS_MD,
+    border: `1px solid ${D_BORDER}`,
     background: 'transparent',
     fontSize: '14px',
     cursor: 'pointer',
-    color: TEXT_MUTED,
+    color: D_TEXT_MUTED,
+    fontFamily: FONT_BODY,
   },
   saveButton: {
     padding: '9px 20px',
-    borderRadius: '8px',
-    border: `1px solid ${BORDER}`,
-    background: 'transparent',
-    color: GOLD,
+    borderRadius: RADIUS_MD,
+    border: `1px solid ${ACCENT_BORDER}`,
+    background: ACCENT_MUTED,
+    color: ACCENT,
     fontSize: '14px',
     fontWeight: '600',
     cursor: 'pointer',
+    fontFamily: FONT_BODY,
   },
-  // Delete confirmation modal
   confirmModal: {
-    background: CARD_BG,
+    background: D_SURFACE,
     border: `1px solid rgba(248,113,113,0.3)`,
-    borderRadius: '16px',
+    borderRadius: RADIUS_LG,
     width: '100%',
     maxWidth: '420px',
     padding: '32px',
-    boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
+    boxShadow: '0 24px 64px rgba(0,0,0,0.5)',
   },
   confirmTitle: {
-    fontSize: '18px',
-    fontWeight: '700',
-    color: TEXT_PRIMARY,
+    fontFamily: FONT_DISPLAY,
+    fontSize: '24px',
+    fontWeight: '400',
+    color: D_TEXT,
     margin: '0 0 10px',
+    letterSpacing: '0.01em',
   },
   confirmText: {
     fontSize: '14px',
-    color: TEXT_MUTED,
+    color: D_TEXT_MUTED,
     margin: '0 0 24px',
     lineHeight: '1.6',
+    fontWeight: '300',
   },
   confirmButtons: {
     display: 'flex',
@@ -323,13 +352,14 @@ const s = {
   },
   confirmDeleteButton: {
     padding: '9px 20px',
-    borderRadius: '8px',
+    borderRadius: RADIUS_MD,
     border: '1px solid rgba(248,113,113,0.4)',
     background: 'transparent',
     color: '#f87171',
     fontSize: '14px',
     fontWeight: '600',
     cursor: 'pointer',
+    fontFamily: FONT_BODY,
   },
 };
 
@@ -398,46 +428,32 @@ export default function ClientDetail() {
   useEffect(() => {
     async function fetchClient() {
       const { data, error } = await supabase
-        .from('clients')
-        .select('*')
-        .eq('id', id)
-        .eq('org_id', orgId)
-        .is('deleted_at', null)
-        .single();
+        .from('clients').select('*')
+        .eq('id', id).eq('org_id', orgId).is('deleted_at', null).single();
       if (error) console.error(error);
       else setClient(data);
       setLoading(false);
     }
     async function loadNotes() {
       const { data } = await supabase
-        .from('notes')
-        .select('*')
-        .eq('client_id', id)
-        .eq('org_id', orgId)
-        .is('deleted_at', null)
+        .from('notes').select('*')
+        .eq('client_id', id).eq('org_id', orgId).is('deleted_at', null)
         .order('created_at', { ascending: false });
       setClientNotes(data || []);
     }
     async function loadAdvisors() {
       const { data } = await supabase
-        .from('client_advisors')
-        .select('id, user_id, is_primary')
-        .eq('client_id', id)
-        .eq('org_id', orgId);
+        .from('client_advisors').select('id, user_id, is_primary')
+        .eq('client_id', id).eq('org_id', orgId);
       if (!data) { setAdvisors([]); return; }
-      // Enrich with names from org_members
       const { data: members } = await supabase
-        .from('org_members')
-        .select('user_id, first_name, last_name, role')
-        .eq('org_id', orgId);
+        .from('org_members').select('user_id, first_name, last_name, role').eq('org_id', orgId);
       const memberMap = Object.fromEntries((members || []).map(m => [m.user_id, m]));
       setAdvisors(data.map(a => ({ ...a, ...memberMap[a.user_id] })));
     }
     async function loadOrgMembers() {
       const { data } = await supabase
-        .from('org_members')
-        .select('user_id, role, first_name, last_name')
-        .eq('org_id', orgId);
+        .from('org_members').select('user_id, role, first_name, last_name').eq('org_id', orgId);
       setOrgMembers(data || []);
     }
     if (orgId) { fetchClient(); loadNotes(); loadAdvisors(); loadOrgMembers(); }
@@ -445,26 +461,19 @@ export default function ClientDetail() {
 
   async function fetchNotes() {
     const { data } = await supabase
-      .from('notes')
-      .select('*')
-      .eq('client_id', id)
-      .eq('org_id', orgId)
-      .is('deleted_at', null)
+      .from('notes').select('*')
+      .eq('client_id', id).eq('org_id', orgId).is('deleted_at', null)
       .order('created_at', { ascending: false });
     setClientNotes(data || []);
   }
 
   async function fetchAdvisors() {
     const { data } = await supabase
-      .from('client_advisors')
-      .select('id, user_id, is_primary')
-      .eq('client_id', id)
-      .eq('org_id', orgId);
+      .from('client_advisors').select('id, user_id, is_primary')
+      .eq('client_id', id).eq('org_id', orgId);
     if (!data) { setAdvisors([]); return; }
     const { data: members } = await supabase
-      .from('org_members')
-      .select('user_id, first_name, last_name, role')
-      .eq('org_id', orgId);
+      .from('org_members').select('user_id, first_name, last_name, role').eq('org_id', orgId);
     const memberMap = Object.fromEntries((members || []).map(m => [m.user_id, m]));
     setAdvisors(data.map(a => ({ ...a, ...memberMap[a.user_id] })));
   }
@@ -473,12 +482,7 @@ export default function ClientDetail() {
     const already = advisors.find(a => a.user_id === userId);
     if (already) return;
     const isPrimary = advisors.length === 0;
-    await supabase.from('client_advisors').insert([{
-      org_id: orgId,
-      client_id: id,
-      user_id: userId,
-      is_primary: isPrimary,
-    }]);
+    await supabase.from('client_advisors').insert([{ org_id: orgId, client_id: id, user_id: userId, is_primary: isPrimary }]);
     fetchAdvisors();
   }
 
@@ -514,9 +518,7 @@ export default function ClientDetail() {
   }
 
   async function handleDeleteNote(noteId) {
-    await supabase.from('notes')
-      .update({ deleted_at: new Date().toISOString() })
-      .eq('id', noteId);
+    await supabase.from('notes').update({ deleted_at: new Date().toISOString() }).eq('id', noteId);
     fetchNotes();
   }
 
@@ -554,10 +556,7 @@ export default function ClientDetail() {
     }
     setSaving(true);
     setError('');
-    const { error } = await supabase
-      .from('clients')
-      .update(formData)
-      .eq('id', id);
+    const { error } = await supabase.from('clients').update(formData).eq('id', id);
     if (error) {
       setError('Something went wrong. Please try again.');
       console.error(error);
@@ -571,9 +570,7 @@ export default function ClientDetail() {
   async function handleDelete() {
     setDeleting(true);
     const { error } = await supabase
-      .from('clients')
-      .update({ deleted_at: new Date().toISOString() })
-      .eq('id', id);
+      .from('clients').update({ deleted_at: new Date().toISOString() }).eq('id', id);
     if (error) {
       console.error(error);
       setDeleting(false);
@@ -591,7 +588,7 @@ export default function ClientDetail() {
     <div style={s.pageWrapper}>
       <div style={s.page}>
 
-        {/* Top row: back link + action buttons */}
+        {/* Top row */}
         <div style={s.topRow}>
           <Link to={backPath} style={s.backLink}>{backLabel}</Link>
           <div style={s.actionButtons}>
@@ -612,8 +609,8 @@ export default function ClientDetail() {
           {client.status && (
             <span style={{
               ...s.badge,
-              backgroundColor: STATUS_COLORS?.[client.status]?.bg || 'rgba(255,255,255,0.1)',
-              color: STATUS_COLORS?.[client.status]?.color || '#f0ece0',
+              backgroundColor: STATUS_COLORS?.[client.status]?.bg || ACCENT_MUTED,
+              color: STATUS_COLORS?.[client.status]?.color || ACCENT,
             }}>
               {client.status}
             </span>
@@ -622,33 +619,33 @@ export default function ClientDetail() {
 
         <div style={s.divider} />
 
-        {/* Advisor assignment */}
+        {/* Assigned Advisors */}
         <div style={{ marginBottom: '32px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
             <p style={s.sectionLabel}>Assigned Advisors</p>
             {isAdmin && (
               <button
                 onClick={() => setShowAdvisorModal(true)}
-                style={{ background: 'none', border: `1px solid ${BORDER}`, borderRadius: '6px', padding: '3px 10px', fontSize: '12px', color: GOLD, cursor: 'pointer', fontFamily: 'inherit' }}
+                style={{ background: 'none', border: `1px solid ${ACCENT_BORDER}`, borderRadius: RADIUS_MD, padding: '3px 10px', fontSize: '12px', color: ACCENT, cursor: 'pointer', fontFamily: FONT_BODY }}
               >
                 + Assign
               </button>
             )}
           </div>
           {advisors.length === 0 ? (
-            <p style={{ color: TEXT_MUTED, fontSize: '13px' }}>No advisors assigned yet.</p>
+            <p style={{ color: D_TEXT_MUTED, fontSize: '13px', fontWeight: '300' }}>No advisors assigned yet.</p>
           ) : (
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
               {advisors.map(a => (
-                <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: CARD_BG, border: `1px solid ${BORDER}`, borderRadius: '8px', padding: '6px 12px' }}>
-                  <span style={{ fontSize: '13px', color: TEXT_PRIMARY }}>
+                <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: D_SURFACE, border: `1px solid ${D_BORDER}`, borderRadius: RADIUS_MD, padding: '6px 12px' }}>
+                  <span style={{ fontSize: '13px', color: D_TEXT }}>
                     {a.first_name && a.last_name ? `${a.first_name} ${a.last_name}` : a.user_id.slice(0, 8) + '…'}
                   </span>
                   {a.is_primary && (
-                    <span style={{ fontSize: '10px', background: 'rgba(201,168,76,0.15)', color: GOLD, borderRadius: '4px', padding: '1px 6px' }}>Primary</span>
+                    <span style={{ fontSize: '10px', background: ACCENT_MUTED, color: ACCENT, borderRadius: '4px', padding: '1px 6px', letterSpacing: '0.06em' }}>Primary</span>
                   )}
                   {isAdmin && !a.is_primary && (
-                    <button onClick={() => handleSetPrimary(a.id)} style={{ background: 'none', border: 'none', fontSize: '11px', color: TEXT_MUTED, cursor: 'pointer', padding: 0 }}>Set primary</button>
+                    <button onClick={() => handleSetPrimary(a.id)} style={{ background: 'none', border: 'none', fontSize: '11px', color: D_TEXT_MUTED, cursor: 'pointer', padding: 0 }}>Set primary</button>
                   )}
                   {isAdmin && (
                     <button onClick={() => handleRemoveAdvisor(a.id)} style={{ background: 'none', border: 'none', fontSize: '11px', color: '#f87171', cursor: 'pointer', padding: 0 }}>✕</button>
@@ -659,30 +656,30 @@ export default function ClientDetail() {
           )}
         </div>
 
-        {/* Assign advisor modal */}
+        {/* Assign Advisor Modal */}
         {showAdvisorModal && (
-          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }}>
-            <div style={{ background: CARD_BG, border: `1px solid ${BORDER}`, borderRadius: '16px', padding: '32px', width: '340px' }}>
-              <h3 style={{ color: TEXT_PRIMARY, fontSize: '16px', marginBottom: '20px' }}>Assign Advisor</h3>
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.65)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }}>
+            <div style={{ background: D_SURFACE, border: `1px solid ${D_BORDER}`, borderRadius: RADIUS_LG, padding: '32px', width: '340px' }}>
+              <h3 style={{ fontFamily: FONT_DISPLAY, fontWeight: '400', color: D_TEXT, fontSize: '22px', marginBottom: '20px' }}>Assign Advisor</h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '24px' }}>
                 {orgMembers.map(m => {
                   const assigned = advisors.find(a => a.user_id === m.user_id);
                   return (
-                    <div key={m.user_id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: 'rgba(255,255,255,0.04)', borderRadius: '8px' }}>
-                      <span style={{ fontSize: '13px', color: TEXT_PRIMARY }}>
+                    <div key={m.user_id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: D_SURFACE_ALT, borderRadius: RADIUS_MD }}>
+                      <span style={{ fontSize: '13px', color: D_TEXT }}>
                         {m.first_name && m.last_name ? `${m.first_name} ${m.last_name}` : m.user_id.slice(0, 8) + '…'}
-                        <span style={{ color: TEXT_MUTED, fontSize: '11px', marginLeft: '6px' }}>({m.role})</span>
+                        <span style={{ color: D_TEXT_MUTED, fontSize: '11px', marginLeft: '6px' }}>({m.role})</span>
                       </span>
                       {assigned ? (
-                        <span style={{ fontSize: '11px', color: TEXT_MUTED }}>Assigned</span>
+                        <span style={{ fontSize: '11px', color: D_TEXT_MUTED }}>Assigned</span>
                       ) : (
-                        <button onClick={() => { handleAssignAdvisor(m.user_id); }} style={{ background: GOLD, border: 'none', borderRadius: '6px', padding: '4px 12px', fontSize: '12px', color: '#0f1117', cursor: 'pointer', fontWeight: '600' }}>Assign</button>
+                        <button onClick={() => handleAssignAdvisor(m.user_id)} style={{ background: ACCENT_MUTED, border: `1px solid ${ACCENT_BORDER}`, borderRadius: RADIUS_MD, padding: '4px 12px', fontSize: '12px', color: ACCENT, cursor: 'pointer', fontWeight: '600', fontFamily: FONT_BODY }}>Assign</button>
                       )}
                     </div>
                   );
                 })}
               </div>
-              <button onClick={() => setShowAdvisorModal(false)} style={{ width: '100%', background: 'none', border: `1px solid ${BORDER}`, borderRadius: '8px', padding: '10px', color: TEXT_MUTED, cursor: 'pointer', fontFamily: 'inherit' }}>Done</button>
+              <button onClick={() => setShowAdvisorModal(false)} style={{ width: '100%', background: 'none', border: `1px solid ${D_BORDER}`, borderRadius: RADIUS_MD, padding: '10px', color: D_TEXT_MUTED, cursor: 'pointer', fontFamily: FONT_BODY }}>Done</button>
             </div>
           </div>
         )}
@@ -710,7 +707,7 @@ export default function ClientDetail() {
           </Section>
         </div>
 
-        {/* Client notes field from profile */}
+        {/* Profile Notes */}
         {client.notes && (
           <div style={s.notesCard}>
             <p style={s.sectionLabel}>Profile Notes</p>
@@ -722,44 +719,38 @@ export default function ClientDetail() {
         <div style={{ marginTop: '36px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
             <p style={{ ...s.sectionLabel, margin: 0 }}>Notes ({clientNotes.length})</p>
-            <button
-              style={s.editButton}
-              onClick={() => navigate(`/hq/notes?client_id=${id}`)}
-            >
+            <button style={s.editButton} onClick={() => navigate(`/hq/notes?client_id=${id}`)}>
               + Record Note
             </button>
           </div>
 
           {clientNotes.length === 0 ? (
-            <div style={{ ...s.notesCard, textAlign: 'center', color: TEXT_MUTED, fontSize: '14px' }}>
+            <div style={{ ...s.notesCard, textAlign: 'center', color: D_TEXT_MUTED, fontSize: '14px' }}>
               No notes yet.{' '}
-              <span
-                style={{ color: GOLD, cursor: 'pointer' }}
-                onClick={() => navigate(`/hq/notes?client_id=${id}`)}
-              >
+              <span style={{ color: ACCENT, cursor: 'pointer' }} onClick={() => navigate(`/hq/notes?client_id=${id}`)}>
                 Add the first note →
               </span>
             </div>
           ) : (
             groupNotesByDate(clientNotes).map(([date, dateNotes]) => (
               <div key={date} style={{ marginBottom: '20px' }}>
-                <p style={{ fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.08em', color: TEXT_MUTED, marginBottom: '8px' }}>
+                <p style={{ fontSize: '11px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.08em', color: D_TEXT_MUTED, marginBottom: '8px' }}>
                   {formatDateLabel(date)}
                 </p>
                 {dateNotes.map((note) => (
                   <div key={note.id} style={{ ...s.notesCard, marginBottom: '10px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: note.body ? '8px' : '0', flexWrap: 'wrap' }}>
-                      <span style={{ fontSize: '15px', fontWeight: '600', color: TEXT_PRIMARY, flex: 1 }}>{note.title}</span>
+                      <span style={{ fontFamily: FONT_DISPLAY, fontSize: '17px', fontWeight: '400', color: D_TEXT, flex: 1, letterSpacing: '0.01em' }}>{note.title}</span>
                       {note.note_type && (
-                        <span style={{ fontSize: '11px', fontWeight: '600', padding: '2px 10px', borderRadius: '10px', background: 'rgba(201,168,76,0.12)', color: GOLD, border: '1px solid rgba(201,168,76,0.2)' }}>
+                        <span style={{ fontSize: '10px', fontWeight: '600', padding: '2px 10px', borderRadius: RADIUS_PILL, background: ACCENT_MUTED, color: ACCENT, border: `1px solid ${ACCENT_BORDER}`, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
                           {note.note_type}
                         </span>
                       )}
                     </div>
                     {note.body && <p style={{ ...s.notesText, marginBottom: '10px' }}>{note.body}</p>}
                     <div style={{ display: 'flex', gap: '12px' }}>
-                      <button style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px', color: TEXT_MUTED, padding: 0, fontFamily: 'inherit' }} onClick={() => openEditNote(note)}>Edit</button>
-                      <button style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px', color: '#f87171', padding: 0, fontFamily: 'inherit' }} onClick={() => handleDeleteNote(note.id)}>Delete</button>
+                      <button style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px', color: D_TEXT_MUTED, padding: 0, fontFamily: FONT_BODY }} onClick={() => openEditNote(note)}>Edit</button>
+                      <button style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px', color: '#f87171', padding: 0, fontFamily: FONT_BODY }} onClick={() => handleDeleteNote(note.id)}>Delete</button>
                     </div>
                   </div>
                 ))}
@@ -778,21 +769,21 @@ export default function ClientDetail() {
               </div>
               <div style={s.modalBody}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '12px' }}>
-                  <label style={{ fontSize: '12px', color: TEXT_MUTED }}>Type</label>
+                  <label style={s.label}>Type</label>
                   <select value={editNoteForm.note_type} onChange={(e) => setEditNoteForm({ ...editNoteForm, note_type: e.target.value })} style={s.input}>
                     {['Meeting', 'Call', 'Email', 'General'].map((t) => <option key={t} value={t}>{t}</option>)}
                   </select>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '12px' }}>
-                  <label style={{ fontSize: '12px', color: TEXT_MUTED }}>Title</label>
+                  <label style={s.label}>Title</label>
                   <input value={editNoteForm.title} onChange={(e) => setEditNoteForm({ ...editNoteForm, title: e.target.value })} style={s.input} />
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <label style={{ fontSize: '12px', color: TEXT_MUTED }}>Body</label>
+                  <label style={s.label}>Body</label>
                   <textarea
                     value={editNoteForm.body || ''}
                     onChange={(e) => setEditNoteForm({ ...editNoteForm, body: e.target.value })}
-                    style={{ ...s.input, minHeight: '100px', resize: 'vertical', fontFamily: 'inherit' }}
+                    style={{ ...s.input, minHeight: '100px', resize: 'vertical', fontFamily: FONT_BODY }}
                   />
                 </div>
               </div>
@@ -804,7 +795,7 @@ export default function ClientDetail() {
           </div>
         )}
 
-        {/* Delete Client — bottom of page */}
+        {/* Delete Client */}
         <div style={{ textAlign: 'center', marginTop: '60px' }}>
           <button style={s.deleteButton} onClick={() => setShowConfirmDelete(true)}>
             Delete Client
@@ -823,41 +814,32 @@ export default function ClientDetail() {
                 <p style={s.formSectionLabel}>Core Identity</p>
                 <div style={s.formGrid}>
                   <FormField label="First Name *" name="first_name" value={formData.first_name || ''} onChange={handleChange} />
-                  <FormField label="Last Name *" name="last_name" value={formData.last_name || ''} onChange={handleChange} />
+                  <FormField label="Last Name *"  name="last_name"  value={formData.last_name  || ''} onChange={handleChange} />
                   <FormField label="Email" name="email" type="email" value={formData.email || ''} onChange={handleChange} />
                   <FormField label="Phone" name="phone" value={formData.phone || ''} onChange={handleChange} />
                   <FormField label="Date of Birth" name="date_of_birth" type="date" value={formData.date_of_birth || ''} onChange={handleChange} />
                   <SelectField label="Status" name="status" value={formData.status || ''} onChange={handleChange} options={STATUS_OPTIONS} />
                 </div>
-
                 <p style={s.formSectionLabel}>Financial Profile</p>
                 <div style={s.formGrid}>
-                  <SelectField label="Asset Level" name="asset_level" value={formData.asset_level || ''} onChange={handleChange} options={ASSET_LEVEL_OPTIONS} />
-                  <SelectField label="Risk Tolerance" name="risk_tolerance" value={formData.risk_tolerance || ''} onChange={handleChange} options={RISK_TOLERANCE_OPTIONS} />
-                  <SelectField label="Investment Objective" name="investment_objective" value={formData.investment_objective || ''} onChange={handleChange} options={INVESTMENT_OBJECTIVE_OPTIONS} />
-                  <SelectField label="Time Horizon" name="time_horizon" value={formData.time_horizon || ''} onChange={handleChange} options={TIME_HORIZON_OPTIONS} />
-                  <SelectField label="Tax Bracket" name="tax_bracket" value={formData.tax_bracket || ''} onChange={handleChange} options={TAX_BRACKET_OPTIONS} />
-                  <SelectField label="Liquidity Needs" name="liquidity_needs" value={formData.liquidity_needs || ''} onChange={handleChange} options={LIQUIDITY_NEEDS_OPTIONS} />
+                  <SelectField label="Asset Level"          name="asset_level"          value={formData.asset_level          || ''} onChange={handleChange} options={ASSET_LEVEL_OPTIONS} />
+                  <SelectField label="Risk Tolerance"       name="risk_tolerance"        value={formData.risk_tolerance        || ''} onChange={handleChange} options={RISK_TOLERANCE_OPTIONS} />
+                  <SelectField label="Investment Objective" name="investment_objective"  value={formData.investment_objective  || ''} onChange={handleChange} options={INVESTMENT_OBJECTIVE_OPTIONS} />
+                  <SelectField label="Time Horizon"         name="time_horizon"          value={formData.time_horizon          || ''} onChange={handleChange} options={TIME_HORIZON_OPTIONS} />
+                  <SelectField label="Tax Bracket"          name="tax_bracket"           value={formData.tax_bracket           || ''} onChange={handleChange} options={TAX_BRACKET_OPTIONS} />
+                  <SelectField label="Liquidity Needs"      name="liquidity_needs"       value={formData.liquidity_needs       || ''} onChange={handleChange} options={LIQUIDITY_NEEDS_OPTIONS} />
                 </div>
-
                 <p style={s.formSectionLabel}>Relationship</p>
                 <div style={s.formGrid}>
                   <FormField label="Relationship Manager" name="relationship_manager" value={formData.relationship_manager || ''} onChange={handleChange} />
-                  <SelectField label="Referral Source" name="referral_source" value={formData.referral_source || ''} onChange={handleChange} options={REFERRAL_SOURCE_OPTIONS} />
-                  <FormField label="Client Since" name="client_since" type="date" value={formData.client_since || ''} onChange={handleChange} />
-                  <FormField label="Next Review Date" name="next_review_date" type="date" value={formData.next_review_date || ''} onChange={handleChange} />
-                  <SelectField label="Preferred Contact" name="preferred_contact_method" value={formData.preferred_contact_method || ''} onChange={handleChange} options={CONTACT_METHOD_OPTIONS} />
-                  <SelectField label="Communication Frequency" name="communication_frequency" value={formData.communication_frequency || ''} onChange={handleChange} options={COMMUNICATION_FREQUENCY_OPTIONS} />
+                  <SelectField label="Referral Source"    name="referral_source"      value={formData.referral_source      || ''} onChange={handleChange} options={REFERRAL_SOURCE_OPTIONS} />
+                  <FormField label="Client Since"         name="client_since"         type="date" value={formData.client_since || ''} onChange={handleChange} />
+                  <FormField label="Next Review Date"     name="next_review_date"     type="date" value={formData.next_review_date || ''} onChange={handleChange} />
+                  <SelectField label="Preferred Contact"         name="preferred_contact_method"  value={formData.preferred_contact_method  || ''} onChange={handleChange} options={CONTACT_METHOD_OPTIONS} />
+                  <SelectField label="Communication Frequency"   name="communication_frequency"   value={formData.communication_frequency   || ''} onChange={handleChange} options={COMMUNICATION_FREQUENCY_OPTIONS} />
                 </div>
-
                 <p style={s.formSectionLabel}>Notes</p>
-                <textarea
-                  name="notes"
-                  value={formData.notes || ''}
-                  onChange={handleChange}
-                  placeholder="Any additional context about this client..."
-                  style={s.textarea}
-                />
+                <textarea name="notes" value={formData.notes || ''} onChange={handleChange} placeholder="Any additional context about this client..." style={s.textarea} />
                 {error && <p style={s.errorText}>{error}</p>}
               </div>
               <div style={s.modalFooter}>
@@ -879,9 +861,7 @@ export default function ClientDetail() {
                 This will permanently remove this client and all their data. This cannot be undone.
               </p>
               <div style={s.confirmButtons}>
-                <button style={s.cancelButton} onClick={() => setShowConfirmDelete(false)}>
-                  Cancel
-                </button>
+                <button style={s.cancelButton} onClick={() => setShowConfirmDelete(false)}>Cancel</button>
                 <button style={s.confirmDeleteButton} onClick={handleDelete} disabled={deleting}>
                   {deleting ? 'Deleting...' : 'Yes, Delete'}
                 </button>

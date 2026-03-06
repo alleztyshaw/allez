@@ -3,11 +3,18 @@ import { Link } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { useOrg } from '../context/OrgContext';
 import {
-  GOLD, GREEN, DARK, CARD_BG, BORDER, TEXT_PRIMARY, TEXT_MUTED, INPUT_BG,
-  STATUS_COLORS, STATUS_OPTIONS, ASSET_LEVEL_OPTIONS, RISK_TOLERANCE_OPTIONS,
-  INVESTMENT_OBJECTIVE_OPTIONS, TIME_HORIZON_OPTIONS, CONTACT_METHOD_OPTIONS,
-  COMMUNICATION_FREQUENCY_OPTIONS, LIQUIDITY_NEEDS_OPTIONS, TAX_BRACKET_OPTIONS,
-  REFERRAL_SOURCE_OPTIONS, PAGE_PADDING, PAGE_FONT,
+  ACCENT, ACCENT_MUTED, ACCENT_BORDER,
+  D_BG, D_SURFACE, D_SURFACE_ALT, D_BORDER,
+  D_TEXT, D_TEXT_MUTED,
+  FONT_DISPLAY, FONT_BODY,
+  RADIUS_MD, RADIUS_LG, RADIUS_PILL,
+  SHADOW_MD,
+  STATUS_COLORS, STATUS_OPTIONS,
+  ASSET_LEVEL_OPTIONS, RISK_TOLERANCE_OPTIONS,
+  INVESTMENT_OBJECTIVE_OPTIONS, TIME_HORIZON_OPTIONS,
+  CONTACT_METHOD_OPTIONS, COMMUNICATION_FREQUENCY_OPTIONS,
+  LIQUIDITY_NEEDS_OPTIONS, TAX_BRACKET_OPTIONS,
+  REFERRAL_SOURCE_OPTIONS,
 } from '../utils/hqConstants';
 
 function useWindowWidth() {
@@ -21,27 +28,13 @@ function useWindowWidth() {
 }
 
 const emptyForm = {
-  first_name: '',
-  last_name: '',
-  email: '',
-  phone: '',
-  date_of_birth: '',
-  status: 'Prospect',
-  asset_level: '',
-  risk_tolerance: '',
-  investment_objective: '',
-  time_horizon: '',
-  tax_bracket: '',
-  liquidity_needs: '',
-  relationship_manager: '',
-  referral_source: '',
-  client_since: '',
-  next_review_date: '',
-  preferred_contact_method: '',
-  communication_frequency: '',
-  notes: '',
+  first_name: '', last_name: '', email: '', phone: '',
+  date_of_birth: '', status: 'Prospect', asset_level: '',
+  risk_tolerance: '', investment_objective: '', time_horizon: '',
+  tax_bracket: '', liquidity_needs: '', relationship_manager: '',
+  referral_source: '', client_since: '', next_review_date: '',
+  preferred_contact_method: '', communication_frequency: '', notes: '',
 };
-
 
 export default function Clients() {
   const { orgId } = useOrg();
@@ -68,12 +61,8 @@ export default function Clients() {
       .eq('org_id', orgId)
       .is('deleted_at', null)
       .order('last_name', { ascending: true });
-
-    if (error) {
-      console.error('Error fetching clients:', error);
-    } else {
-      setClients(data || []);
-    }
+    if (error) console.error('Error fetching clients:', error);
+    else setClients(data || []);
     setLoading(false);
   }
 
@@ -101,345 +90,324 @@ export default function Clients() {
   }
 
   const filteredClients = clients.filter((c) => {
-    const matchesSearch =
-      `${c.first_name} ${c.last_name} ${c.email}`
-        .toLowerCase()
-        .includes(search.toLowerCase());
-    const matchesTab =
-      activeTab === 'all' || c.status?.toLowerCase() === activeTab;
+    const matchesSearch = `${c.first_name} ${c.last_name} ${c.email}`
+      .toLowerCase().includes(search.toLowerCase());
+    const matchesTab = activeTab === 'all' || c.status?.toLowerCase() === activeTab;
     return matchesSearch && matchesTab;
   });
 
   const tabs = ['all', 'active', 'prospect', 'inactive'];
 
   return (
-    <div style={styles.pageWrapper}>
-      <div style={styles.page}>
-      {/* Header */}
-      <div style={styles.header}>
-        <div>
-          <h1 style={styles.title}>Clients</h1>
-          <p style={styles.subtitle}>
-            {clients.length} total · {clients.filter(c => c.status === 'Active').length} active
-          </p>
+    <div style={s.pageWrapper}>
+      <div style={s.page}>
+
+        {/* Header */}
+        <div style={s.header}>
+          <div>
+            <h1 style={s.title}>Clients</h1>
+            <p style={s.subtitle}>
+              {clients.length} total · {clients.filter(c => c.status === 'Active').length} active
+            </p>
+          </div>
+          <button style={s.addButton} onClick={() => setShowModal(true)}>
+            + New Client
+          </button>
         </div>
-        <button style={styles.addButton} onClick={() => setShowModal(true)}>
-          + New Client
-        </button>
-      </div>
 
-      {/* Filters */}
-      <div style={styles.filterRow}>
-        <input
-          style={styles.searchInput}
-          placeholder="Search by name or email..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        <div style={styles.tabs}>
-          {tabs.map((tab) => (
-            <button
-              key={tab}
-              style={{
-                ...styles.tab,
-                ...(activeTab === tab ? styles.tabActive : {}),
-              }}
-              onClick={() => setActiveTab(tab)}
-            >
-              {tab.charAt(0).toUpperCase() + tab.slice(1)}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Cards */}
-      {loading ? (
-        <div style={styles.emptyState}>Loading clients...</div>
-      ) : filteredClients.length === 0 ? (
-        <div style={styles.emptyState}>
-          No clients found.{' '}
-          <span style={styles.emptyLink} onClick={() => setShowModal(true)}>
-            Add your first client →
-          </span>
-        </div>
-      ) : (
-        <div style={styles.cardGrid}>
-          {filteredClients.map((client, i) => (
-            <div
-              key={client.id}
-              className="client-card"
-              style={{ ...styles.card, animationDelay: `${i * 60}ms` }}
-            >
-              {/* Avatar + Name — clicking either navigates to client detail */}
-              <div style={styles.cardTop}>
-                <Link to={`/hq/clients/${client.id}`} state={{ from: '/hq/clients' }} style={styles.avatarLink} className="client-avatar-link">
-                  <div style={styles.avatar} className="client-avatar">
-                    {client.first_name?.[0]}{client.last_name?.[0]}
-                  </div>
-                </Link>
-                <div>
-                  <Link to={`/hq/clients/${client.id}`} state={{ from: '/hq/clients' }} style={styles.nameLink} className="client-name-link">
-                    <h3 style={styles.cardName}>
-                      {client.first_name} {client.last_name}
-                    </h3>
-                  </Link>
-                  {client.email && <p style={styles.cardEmail}>{client.email}</p>}
-                </div>
-              </div>
-
-              {/* Vertical divider + Stats — hidden on narrow windows */}
-              {!isCompact && (
-                <>
-                  <div style={styles.cardDivider} />
-                  <div style={styles.cardStats}>
-                    <div style={styles.stat}>
-                      <span style={styles.statLabel}>Assets</span>
-                      <span style={styles.statValue}>{client.asset_level || '—'}</span>
-                    </div>
-                    <div style={styles.stat}>
-                      <span style={styles.statLabel}>Risk</span>
-                      <span style={styles.statValue}>{client.risk_tolerance || '—'}</span>
-                    </div>
-                    <div style={styles.stat}>
-                      <span style={styles.statLabel}>Next Review</span>
-                      <span style={styles.statValue}>
-                        {client.next_review_date
-                          ? new Date(client.next_review_date).toLocaleDateString()
-                          : '—'}
-                      </span>
-                    </div>
-                  </div>
-                </>
-              )}
-
-              {/* Badge always pinned to the right */}
-              {client.status && (
-                <span style={{
-                  ...styles.badge,
-                  marginLeft: 'auto',
-                  backgroundColor: STATUS_COLORS[client.status]?.bg || '#f3f4f6',
-                  color: STATUS_COLORS[client.status]?.color || '#374151',
-                }}>
-                  {client.status}
-                </span>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
-
-      <style>{`
-        @keyframes fadeUp {
-          from { opacity: 0; transform: translateY(18px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-        .client-card {
-          animation: fadeUp 0.45s ease both;
-        }
-        .client-card:hover {
-          transform: translateY(-3px) !important;
-          box-shadow: 0 20px 40px rgba(0,0,0,0.25) !important;
-        }
-        .client-avatar-link:hover .client-avatar {
-          background: ${GREEN}44 !important;
-          box-shadow: 0 0 0 2px ${GREEN}88;
-          transform: scale(1.08);
-        }
-        .client-avatar {
-          transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
-        }
-        .client-name-link {
-          text-decoration: none;
-        }
-        .client-name-link:hover h3 {
-          color: #51da83 !important;
-          text-decoration: underline;
-          text-underline-offset: 3px;
-        }
-        .client-name-link h3 {
-          transition: color 0.2s;
-        }
-      `}</style>
-
-      {/* Modal */}
-      {showModal && (
-        <div style={styles.overlay}>
-          <div style={styles.modal}>
-            <div style={styles.modalHeader}>
-              <h2 style={styles.modalTitle}>New Client</h2>
+        {/* Filters */}
+        <div style={s.filterRow}>
+          <input
+            style={s.searchInput}
+            placeholder="Search by name or email..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          <div style={s.tabs}>
+            {tabs.map((tab) => (
               <button
-                style={styles.closeButton}
-                onClick={() => {
-                  setShowModal(false);
-                  setFormData(emptyForm);
-                  setError('');
-                }}
+                key={tab}
+                style={{ ...s.tab, ...(activeTab === tab ? s.tabActive : {}) }}
+                onClick={() => setActiveTab(tab)}
               >
-                ✕
+                {tab.charAt(0).toUpperCase() + tab.slice(1)}
               </button>
-            </div>
-
-            <div style={styles.modalBody}>
-
-              {/* Core Identity */}
-              <p style={styles.sectionLabel}>Core Identity</p>
-              <div style={styles.formGrid}>
-                <FormField label="First Name *" name="first_name" value={formData.first_name} onChange={handleChange} />
-                <FormField label="Last Name *" name="last_name" value={formData.last_name} onChange={handleChange} />
-                <FormField label="Email" name="email" type="email" value={formData.email} onChange={handleChange} />
-                <FormField label="Phone" name="phone" value={formData.phone} onChange={handleChange} />
-                <FormField label="Date of Birth" name="date_of_birth" type="date" value={formData.date_of_birth} onChange={handleChange} />
-                <SelectField label="Status" name="status" value={formData.status} onChange={handleChange} options={STATUS_OPTIONS} />
-              </div>
-
-              {/* Financial Profile */}
-              <p style={styles.sectionLabel}>Financial Profile</p>
-              <div style={styles.formGrid}>
-                <SelectField label="Asset Level" name="asset_level" value={formData.asset_level} onChange={handleChange} options={ASSET_LEVEL_OPTIONS} />
-                <SelectField label="Risk Tolerance" name="risk_tolerance" value={formData.risk_tolerance} onChange={handleChange} options={RISK_TOLERANCE_OPTIONS} />
-                <SelectField label="Investment Objective" name="investment_objective" value={formData.investment_objective} onChange={handleChange} options={INVESTMENT_OBJECTIVE_OPTIONS} />
-                <SelectField label="Time Horizon" name="time_horizon" value={formData.time_horizon} onChange={handleChange} options={TIME_HORIZON_OPTIONS} />
-                <SelectField label="Tax Bracket" name="tax_bracket" value={formData.tax_bracket} onChange={handleChange} options={TAX_BRACKET_OPTIONS} />
-                <SelectField label="Liquidity Needs" name="liquidity_needs" value={formData.liquidity_needs} onChange={handleChange} options={LIQUIDITY_NEEDS_OPTIONS} />
-              </div>
-
-              {/* Relationship Management */}
-              <p style={styles.sectionLabel}>Relationship Management</p>
-              <div style={styles.formGrid}>
-                <FormField label="Relationship Manager" name="relationship_manager" value={formData.relationship_manager} onChange={handleChange} />
-                <SelectField label="Referral Source" name="referral_source" value={formData.referral_source} onChange={handleChange} options={REFERRAL_SOURCE_OPTIONS} />
-                <FormField label="Client Since" name="client_since" type="date" value={formData.client_since} onChange={handleChange} />
-                <FormField label="Next Review Date" name="next_review_date" type="date" value={formData.next_review_date} onChange={handleChange} />
-                <SelectField label="Preferred Contact" name="preferred_contact_method" value={formData.preferred_contact_method} onChange={handleChange} options={CONTACT_METHOD_OPTIONS} />
-                <SelectField label="Communication Frequency" name="communication_frequency" value={formData.communication_frequency} onChange={handleChange} options={COMMUNICATION_FREQUENCY_OPTIONS} />
-              </div>
-
-              {/* Notes */}
-              <p style={styles.sectionLabel}>Notes</p>
-              <textarea
-                name="notes"
-                value={formData.notes}
-                onChange={handleChange}
-                placeholder="Any additional context about this client..."
-                style={styles.textarea}
-              />
-
-              {error && <p style={styles.errorText}>{error}</p>}
-            </div>
-
-            <div style={styles.modalFooter}>
-              <button
-                style={styles.cancelButton}
-                onClick={() => {
-                  setShowModal(false);
-                  setFormData(emptyForm);
-                  setError('');
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                style={styles.saveButton}
-                onClick={handleAddClient}
-                disabled={saving}
-              >
-                {saving ? 'Saving...' : 'Save Client'}
-              </button>
-            </div>
+            ))}
           </div>
         </div>
-      )}
-    </div>
+
+        {/* Cards */}
+        {loading ? (
+          <div style={s.emptyState}>Loading clients...</div>
+        ) : filteredClients.length === 0 ? (
+          <div style={s.emptyState}>
+            No clients found.{' '}
+            <span style={s.emptyLink} onClick={() => setShowModal(true)}>
+              Add your first client →
+            </span>
+          </div>
+        ) : (
+          <div style={s.cardGrid}>
+            {filteredClients.map((client, i) => (
+              <div
+                key={client.id}
+                className="client-card"
+                style={{ ...s.card, animationDelay: `${i * 60}ms` }}
+              >
+                {/* Avatar + Name */}
+                <div style={s.cardTop}>
+                  <Link
+                    to={`/hq/clients/${client.id}`}
+                    state={{ from: '/hq/clients' }}
+                    style={s.avatarLink}
+                    className="client-avatar-link"
+                  >
+                    <div style={s.avatar} className="client-avatar">
+                      {client.first_name?.[0]}{client.last_name?.[0]}
+                    </div>
+                  </Link>
+                  <div>
+                    <Link
+                      to={`/hq/clients/${client.id}`}
+                      state={{ from: '/hq/clients' }}
+                      style={s.nameLink}
+                      className="client-name-link"
+                    >
+                      <h3 style={s.cardName}>
+                        {client.first_name} {client.last_name}
+                      </h3>
+                    </Link>
+                    {client.email && <p style={s.cardEmail}>{client.email}</p>}
+                  </div>
+                </div>
+
+                {/* Stats — hidden on narrow windows */}
+                {!isCompact && (
+                  <>
+                    <div style={s.cardDivider} />
+                    <div style={s.cardStats}>
+                      <div style={s.stat}>
+                        <span style={s.statLabel}>Assets</span>
+                        <span style={s.statValue}>{client.asset_level || '—'}</span>
+                      </div>
+                      <div style={s.stat}>
+                        <span style={s.statLabel}>Risk</span>
+                        <span style={s.statValue}>{client.risk_tolerance || '—'}</span>
+                      </div>
+                      <div style={s.stat}>
+                        <span style={s.statLabel}>Next Review</span>
+                        <span style={s.statValue}>
+                          {client.next_review_date
+                            ? new Date(client.next_review_date).toLocaleDateString()
+                            : '—'}
+                        </span>
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {/* Status badge */}
+                {client.status && (
+                  <span style={{
+                    ...s.badge,
+                    marginLeft: 'auto',
+                    backgroundColor: STATUS_COLORS[client.status]?.bg || ACCENT_MUTED,
+                    color: STATUS_COLORS[client.status]?.color || ACCENT,
+                  }}>
+                    {client.status}
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        <style>{`
+          @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=DM+Sans:wght@300;400;500;600&display=swap');
+          @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(18px); }
+            to   { opacity: 1; transform: translateY(0); }
+          }
+          .client-card { animation: fadeUp 0.45s ease both; }
+          .client-card:hover {
+            transform: translateY(-2px) !important;
+            border-color: ${ACCENT_BORDER} !important;
+            box-shadow: 0 8px 32px rgba(29,185,84,0.08) !important;
+          }
+          .client-avatar { transition: background 0.2s, box-shadow 0.2s, transform 0.2s; }
+          .client-avatar-link:hover .client-avatar {
+            background: ${ACCENT_MUTED} !important;
+            box-shadow: 0 0 0 2px ${ACCENT_BORDER};
+            transform: scale(1.06);
+          }
+          .client-name-link { text-decoration: none; }
+          .client-name-link:hover h3 { color: ${ACCENT} !important; }
+          .client-name-link h3 { transition: color 0.2s; }
+        `}</style>
+
+        {/* Add Client Modal */}
+        {showModal && (
+          <div style={s.overlay}>
+            <div style={s.modal}>
+              <div style={s.modalHeader}>
+                <h2 style={s.modalTitle}>New Client</h2>
+                <button
+                  style={s.closeButton}
+                  onClick={() => { setShowModal(false); setFormData(emptyForm); setError(''); }}
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div style={s.modalBody}>
+                <p style={s.sectionLabel}>Core Identity</p>
+                <div style={s.formGrid}>
+                  <FormField label="First Name *" name="first_name" value={formData.first_name} onChange={handleChange} />
+                  <FormField label="Last Name *"  name="last_name"  value={formData.last_name}  onChange={handleChange} />
+                  <FormField label="Email"         name="email"      type="email" value={formData.email} onChange={handleChange} />
+                  <FormField label="Phone"         name="phone"      value={formData.phone}      onChange={handleChange} />
+                  <FormField label="Date of Birth" name="date_of_birth" type="date" value={formData.date_of_birth} onChange={handleChange} />
+                  <SelectField label="Status" name="status" value={formData.status} onChange={handleChange} options={STATUS_OPTIONS} />
+                </div>
+
+                <p style={s.sectionLabel}>Financial Profile</p>
+                <div style={s.formGrid}>
+                  <SelectField label="Asset Level"           name="asset_level"           value={formData.asset_level}           onChange={handleChange} options={ASSET_LEVEL_OPTIONS} />
+                  <SelectField label="Risk Tolerance"        name="risk_tolerance"         value={formData.risk_tolerance}         onChange={handleChange} options={RISK_TOLERANCE_OPTIONS} />
+                  <SelectField label="Investment Objective"  name="investment_objective"   value={formData.investment_objective}   onChange={handleChange} options={INVESTMENT_OBJECTIVE_OPTIONS} />
+                  <SelectField label="Time Horizon"          name="time_horizon"           value={formData.time_horizon}           onChange={handleChange} options={TIME_HORIZON_OPTIONS} />
+                  <SelectField label="Tax Bracket"           name="tax_bracket"            value={formData.tax_bracket}            onChange={handleChange} options={TAX_BRACKET_OPTIONS} />
+                  <SelectField label="Liquidity Needs"       name="liquidity_needs"        value={formData.liquidity_needs}        onChange={handleChange} options={LIQUIDITY_NEEDS_OPTIONS} />
+                </div>
+
+                <p style={s.sectionLabel}>Relationship Management</p>
+                <div style={s.formGrid}>
+                  <FormField label="Relationship Manager"    name="relationship_manager"   value={formData.relationship_manager}   onChange={handleChange} />
+                  <SelectField label="Referral Source"       name="referral_source"        value={formData.referral_source}        onChange={handleChange} options={REFERRAL_SOURCE_OPTIONS} />
+                  <FormField label="Client Since"            name="client_since"           type="date" value={formData.client_since} onChange={handleChange} />
+                  <FormField label="Next Review Date"        name="next_review_date"       type="date" value={formData.next_review_date} onChange={handleChange} />
+                  <SelectField label="Preferred Contact"     name="preferred_contact_method" value={formData.preferred_contact_method} onChange={handleChange} options={CONTACT_METHOD_OPTIONS} />
+                  <SelectField label="Communication Frequency" name="communication_frequency" value={formData.communication_frequency} onChange={handleChange} options={COMMUNICATION_FREQUENCY_OPTIONS} />
+                </div>
+
+                <p style={s.sectionLabel}>Notes</p>
+                <textarea
+                  name="notes"
+                  value={formData.notes}
+                  onChange={handleChange}
+                  placeholder="Any additional context about this client..."
+                  style={s.textarea}
+                />
+
+                {error && <p style={s.errorText}>{error}</p>}
+              </div>
+
+              <div style={s.modalFooter}>
+                <button
+                  style={s.cancelButton}
+                  onClick={() => { setShowModal(false); setFormData(emptyForm); setError(''); }}
+                >
+                  Cancel
+                </button>
+                <button style={s.saveButton} onClick={handleAddClient} disabled={saving}>
+                  {saving ? 'Saving...' : 'Save Client'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+      </div>
     </div>
   );
 }
 
 function FormField({ label, name, value, onChange, type = 'text' }) {
   return (
-    <div style={styles.field}>
-      <label style={styles.label}>{label}</label>
-      <input
-        type={type}
-        name={name}
-        value={value}
-        onChange={onChange}
-        style={styles.input}
-      />
+    <div style={s.field}>
+      <label style={s.label}>{label}</label>
+      <input type={type} name={name} value={value} onChange={onChange} style={s.input} />
     </div>
   );
 }
 
 function SelectField({ label, name, value, onChange, options }) {
   return (
-    <div style={styles.field}>
-      <label style={styles.label}>{label}</label>
-      <select name={name} value={value} onChange={onChange} style={styles.input}>
+    <div style={s.field}>
+      <label style={s.label}>{label}</label>
+      <select name={name} value={value} onChange={onChange} style={s.input}>
         <option value="">— Select —</option>
-        {options.map((o) => (
-          <option key={o} value={o}>{o}</option>
-        ))}
+        {options.map((o) => <option key={o} value={o}>{o}</option>)}
       </select>
     </div>
   );
 }
 
-const styles = {
+const s = {
   pageWrapper: {
-    background: DARK,
+    background: D_BG,
     minHeight: '100vh',
     width: '100%',
   },
   page: {
-    padding: PAGE_PADDING,
+    padding: '120px 40px 80px',
     maxWidth: '1200px',
     margin: '0 auto',
-    fontFamily: PAGE_FONT,
-    color: TEXT_PRIMARY,
+    fontFamily: FONT_BODY,
+    color: D_TEXT,
   },
   header: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: '24px',
+    marginBottom: '28px',
   },
   title: {
-    fontSize: '28px',
-    fontWeight: '700',
-    margin: 0,
-    color: TEXT_PRIMARY,
+    fontFamily: FONT_DISPLAY,
+    fontSize: '44px',
+    fontWeight: '300',
+    margin: '0 0 6px',
+    color: D_TEXT,
+    letterSpacing: '0.01em',
+    lineHeight: 1.1,
   },
   subtitle: {
-    fontSize: '14px',
-    color: TEXT_MUTED,
-    margin: '4px 0 0',
+    fontSize: '13px',
+    color: D_TEXT_MUTED,
+    margin: 0,
+    fontWeight: '300',
+    letterSpacing: '0.03em',
   },
   addButton: {
     background: 'transparent',
-    color: GREEN,
-    border: `1px solid ${GREEN}`,
-    borderRadius: '8px',
+    color: ACCENT,
+    border: `1px solid ${ACCENT_BORDER}`,
+    borderRadius: RADIUS_MD,
     padding: '10px 20px',
     fontSize: '14px',
     fontWeight: '600',
     cursor: 'pointer',
+    fontFamily: FONT_BODY,
+    transition: 'background 0.15s',
   },
   filterRow: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: '16px',
+    marginBottom: '20px',
     gap: '16px',
     flexWrap: 'wrap',
   },
   searchInput: {
-    border: `1px solid ${BORDER}`,
-    borderRadius: '8px',
+    border: `1px solid ${D_BORDER}`,
+    borderRadius: RADIUS_MD,
     padding: '9px 14px',
     fontSize: '14px',
     width: '280px',
     outline: 'none',
-    color: TEXT_PRIMARY,
-    background: INPUT_BG,
+    color: D_TEXT,
+    background: D_SURFACE_ALT,
+    fontFamily: FONT_BODY,
   },
   tabs: {
     display: 'flex',
@@ -447,34 +415,36 @@ const styles = {
   },
   tab: {
     padding: '7px 16px',
-    borderRadius: '20px',
-    border: `1px solid ${BORDER}`,
+    borderRadius: RADIUS_PILL,
+    border: `1px solid ${D_BORDER}`,
     background: 'transparent',
     fontSize: '13px',
     cursor: 'pointer',
-    color: TEXT_MUTED,
+    color: D_TEXT_MUTED,
     fontWeight: '500',
+    fontFamily: FONT_BODY,
   },
   tabActive: {
-    background: `rgba(201,168,76,0.15)`,
-    color: GOLD,
-    border: `1px solid ${BORDER}`,
+    background: ACCENT_MUTED,
+    color: ACCENT,
+    border: `1px solid ${ACCENT_BORDER}`,
   },
   cardGrid: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '12px',
+    gap: '10px',
   },
   card: {
-    background: CARD_BG,
-    border: `1px solid ${BORDER}`,
-    borderRadius: '14px',
-    padding: '20px 24px',
+    background: D_SURFACE,
+    border: `1px solid ${D_BORDER}`,
+    borderRadius: RADIUS_LG,
+    padding: '18px 24px',
     cursor: 'pointer',
-    transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+    transition: 'transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease',
     display: 'flex',
     alignItems: 'center',
     gap: '24px',
+    boxShadow: SHADOW_MD,
   },
   cardTop: {
     display: 'flex',
@@ -483,50 +453,48 @@ const styles = {
     width: '260px',
     flexShrink: 0,
   },
-  avatarLink: {
-    textDecoration: 'none',
-    flexShrink: 0,
-  },
-  nameLink: {
-    textDecoration: 'none',
-  },
+  avatarLink: { textDecoration: 'none', flexShrink: 0 },
+  nameLink: { textDecoration: 'none' },
   avatar: {
-    width: '42px',
-    height: '42px',
+    width: '40px',
+    height: '40px',
     borderRadius: '50%',
-    background: `${GREEN}22`,
-    border: `1px solid ${GREEN}55`,
-    color: GREEN,
+    background: ACCENT_MUTED,
+    border: `1px solid ${ACCENT_BORDER}`,
+    color: ACCENT,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    fontSize: '14px',
-    fontWeight: '700',
+    fontSize: '13px',
+    fontWeight: '600',
     letterSpacing: '0.03em',
     flexShrink: 0,
+    fontFamily: FONT_DISPLAY,
   },
   cardName: {
-    fontSize: '15px',
-    fontWeight: '700',
-    color: TEXT_PRIMARY,
+    fontFamily: FONT_DISPLAY,
+    fontSize: '18px',
+    fontWeight: '400',
+    color: D_TEXT,
     margin: '0 0 2px',
+    letterSpacing: '0.01em',
   },
   cardEmail: {
     fontSize: '12px',
-    color: TEXT_MUTED,
+    color: D_TEXT_MUTED,
     margin: 0,
+    fontWeight: '300',
   },
   cardDivider: {
     width: '1px',
     alignSelf: 'stretch',
-    background: BORDER,
+    background: D_BORDER,
     flexShrink: 0,
   },
   cardStats: {
     display: 'flex',
     gap: '32px',
     flex: 1,
-    justifyContent: 'flex-start',
   },
   stat: {
     display: 'flex',
@@ -539,29 +507,32 @@ const styles = {
     fontSize: '10px',
     fontWeight: '600',
     textTransform: 'uppercase',
-    letterSpacing: '0.06em',
-    color: TEXT_MUTED,
+    letterSpacing: '0.08em',
+    color: D_TEXT_MUTED,
   },
   statValue: {
     fontSize: '13px',
-    color: TEXT_PRIMARY,
-    fontWeight: '500',
+    color: D_TEXT,
+    fontWeight: '400',
   },
   badge: {
     display: 'inline-block',
-    padding: '2px 10px',
-    borderRadius: '12px',
-    fontSize: '12px',
+    padding: '3px 10px',
+    borderRadius: RADIUS_PILL,
+    fontSize: '11px',
     fontWeight: '600',
+    letterSpacing: '0.06em',
+    textTransform: 'uppercase',
   },
   emptyState: {
     padding: '48px',
     textAlign: 'center',
-    color: TEXT_MUTED,
+    color: D_TEXT_MUTED,
     fontSize: '15px',
+    fontWeight: '300',
   },
   emptyLink: {
-    color: GOLD,
+    color: ACCENT,
     cursor: 'pointer',
     textDecoration: 'underline',
   },
@@ -570,7 +541,7 @@ const styles = {
   overlay: {
     position: 'fixed',
     inset: 0,
-    background: 'rgba(0,0,0,0.6)',
+    background: 'rgba(0,0,0,0.65)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -578,49 +549,51 @@ const styles = {
     padding: '20px',
   },
   modal: {
-    background: CARD_BG,
-    border: `1px solid ${BORDER}`,
-    borderRadius: '16px',
+    background: D_SURFACE,
+    border: `1px solid ${D_BORDER}`,
+    borderRadius: RADIUS_LG,
     width: '100%',
     maxWidth: '680px',
     maxHeight: '90vh',
     display: 'flex',
     flexDirection: 'column',
-    boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
+    boxShadow: '0 24px 64px rgba(0,0,0,0.5)',
   },
   modalHeader: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: '20px 24px',
-    borderBottom: `1px solid ${BORDER}`,
+    borderBottom: `1px solid ${D_BORDER}`,
   },
   modalTitle: {
     margin: 0,
-    fontSize: '18px',
-    fontWeight: '700',
-    color: TEXT_PRIMARY,
+    fontFamily: FONT_DISPLAY,
+    fontSize: '24px',
+    fontWeight: '400',
+    color: D_TEXT,
+    letterSpacing: '0.01em',
   },
   closeButton: {
     background: 'none',
     border: 'none',
     fontSize: '18px',
     cursor: 'pointer',
-    color: TEXT_MUTED,
+    color: D_TEXT_MUTED,
     padding: '4px 8px',
   },
   modalBody: {
     overflowY: 'auto',
     padding: '24px',
     flex: 1,
-    background: CARD_BG,
+    background: D_SURFACE,
   },
   sectionLabel: {
-    fontSize: '11px',
-    fontWeight: '700',
+    fontSize: '10px',
+    fontWeight: '600',
     textTransform: 'uppercase',
-    letterSpacing: '0.08em',
-    color: GOLD,
+    letterSpacing: '0.12em',
+    color: ACCENT,
     margin: '20px 0 12px',
   },
   formGrid: {
@@ -634,31 +607,33 @@ const styles = {
     gap: '4px',
   },
   label: {
-    fontSize: '13px',
+    fontSize: '12px',
     fontWeight: '500',
-    color: TEXT_MUTED,
+    color: D_TEXT_MUTED,
+    letterSpacing: '0.02em',
   },
   input: {
-    border: `1px solid ${BORDER}`,
-    borderRadius: '8px',
+    border: `1px solid ${D_BORDER}`,
+    borderRadius: RADIUS_MD,
     padding: '8px 12px',
     fontSize: '14px',
     outline: 'none',
-    color: TEXT_PRIMARY,
-    background: INPUT_BG,
+    color: D_TEXT,
+    background: D_SURFACE_ALT,
+    fontFamily: FONT_BODY,
   },
   textarea: {
     width: '100%',
-    border: `1px solid ${BORDER}`,
-    borderRadius: '8px',
+    border: `1px solid ${D_BORDER}`,
+    borderRadius: RADIUS_MD,
     padding: '10px 12px',
     fontSize: '14px',
     minHeight: '80px',
     resize: 'vertical',
     outline: 'none',
-    color: TEXT_PRIMARY,
-    background: INPUT_BG,
-    fontFamily: 'inherit',
+    color: D_TEXT,
+    background: D_SURFACE_ALT,
+    fontFamily: FONT_BODY,
     boxSizing: 'border-box',
   },
   errorText: {
@@ -668,29 +643,31 @@ const styles = {
   },
   modalFooter: {
     padding: '16px 24px',
-    borderTop: `1px solid ${BORDER}`,
+    borderTop: `1px solid ${D_BORDER}`,
     display: 'flex',
     justifyContent: 'flex-end',
     gap: '10px',
-    background: CARD_BG,
+    background: D_SURFACE,
   },
   cancelButton: {
     padding: '9px 20px',
-    borderRadius: '8px',
-    border: `1px solid ${BORDER}`,
+    borderRadius: RADIUS_MD,
+    border: `1px solid ${D_BORDER}`,
     background: 'transparent',
     fontSize: '14px',
     cursor: 'pointer',
-    color: TEXT_MUTED,
+    color: D_TEXT_MUTED,
+    fontFamily: FONT_BODY,
   },
   saveButton: {
     padding: '9px 20px',
-    borderRadius: '8px',
-    border: `1px solid ${BORDER}`,
-    background: 'transparent',
-    color: GOLD,
+    borderRadius: RADIUS_MD,
+    border: `1px solid ${ACCENT_BORDER}`,
+    background: ACCENT_MUTED,
+    color: ACCENT,
     fontSize: '14px',
     fontWeight: '600',
     cursor: 'pointer',
+    fontFamily: FONT_BODY,
   },
 };

@@ -1,7 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
-import { PAGE_PADDING } from '../utils/hqConstants';
+import {
+  ACCENT, ACCENT_MUTED, ACCENT_BORDER,
+  D_BG, D_SURFACE, D_SURFACE_ALT, D_BORDER,
+  D_TEXT, D_TEXT_MUTED, D_TEXT_SUBTLE,
+  FONT_DISPLAY, FONT_BODY,
+  RADIUS_MD, RADIUS_LG, RADIUS_PILL,
+  SHADOW_MD,
+} from '../utils/hqConstants';
 
 const features = [
   {
@@ -10,82 +17,120 @@ const features = [
     description: 'Manage your client roster, financial profiles, risk tolerances, and relationship details.',
     route: '/hq/clients',
     status: 'live',
-    icon: '👤',
     metricLabel: 'Total Clients',
     metricQuery: 'clients',
   },
   {
     id: 'notes',
-    title: 'Notes',
-    description: 'Record meeting notes, calls, and emails. Tag by client and type, with AI transcription coming soon.',
+    title: 'AI Notes',
+    description: 'Record and transcribe meetings. Extract action items, securities mentions, and compliance flags automatically.',
     route: '/hq/notes',
     status: 'live',
-    icon: '🎙️',
-    metricLabel: 'Notes',
-    metricQuery: null,
+    metricLabel: 'Total Notes',
+    metricQuery: 'notes',
   },
   {
     id: 'crm',
     title: 'CRM',
-    description: 'Track client interactions, touchpoints, and communication history in one place.',
+    description: 'Track client interactions, touchpoints, and communication history across your entire practice.',
     route: '/hq/crm',
     status: 'coming_soon',
-    icon: '🤝',
     metricLabel: 'Interactions',
     metricQuery: null,
   },
   {
     id: 'onboarding',
-    title: 'Onboarding Tracker',
+    title: 'Onboarding',
     description: 'Monitor new client onboarding progress, step completion, and outstanding tasks.',
     route: '/hq/onboarding',
     status: 'coming_soon',
-    icon: '📋',
     metricLabel: 'In Progress',
     metricQuery: null,
   },
 ];
 
+function getGreeting() {
+  const h = new Date().getHours();
+  if (h < 12) return 'Good morning';
+  if (h < 17) return 'Good afternoon';
+  return 'Good evening';
+}
+
+function formatDate(date) {
+  return date.toLocaleDateString('en-US', {
+    weekday: 'long', month: 'long', day: 'numeric', year: 'numeric',
+  });
+}
+
 export default function HQ() {
   const navigate = useNavigate();
+  const [firstName, setFirstName] = useState('');
   const [metrics, setMetrics] = useState({});
   const [metricsLoading, setMetricsLoading] = useState(true);
-  const [currentTime, setCurrentTime] = useState(new Date());
+  const [hoveredCard, setHoveredCard] = useState(null);
 
   useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 60000);
-    return () => clearInterval(timer);
-  }, []);
+    supabase.auth.getUser().then(({ data }) => {
+      const name = data?.user?.user_metadata?.display_name || '';
+      setFirstName(name.split(' ')[0]);
+    });
 
-  useEffect(() => {
     async function fetchMetrics() {
-      setMetricsLoading(true);
-      const { data: clientsData } = await supabase.from('clients').select('id');
-      setMetrics({ clients: clientsData?.length ?? 0 });
+      const [{ data: clients }, { data: notes }] = await Promise.all([
+        supabase.from('clients').select('id'),
+        supabase.from('notes').select('id'),
+      ]);
+      setMetrics({
+        clients: clients?.length ?? 0,
+        notes: notes?.length ?? 0,
+      });
       setMetricsLoading(false);
     }
     fetchMetrics();
   }, []);
 
-  const formattedDate = currentTime.toLocaleDateString('en-US', {
-    weekday: 'long', month: 'long', day: 'numeric',
-  });
-
   return (
+    <div style={s.pageWrapper}>
     <div style={s.page}>
-      <div style={s.bgTexture} />
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(16px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .hq-card {
+          animation: fadeUp 0.4s ease both;
+        }
+
+        .hq-card-live:hover {
+          border-color: ${ACCENT_BORDER} !important;
+          transform: translateY(-2px);
+          box-shadow: 0 8px 32px rgba(29, 185, 84, 0.1) !important;
+        }
+
+        .hq-card-live {
+          transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+          cursor: pointer;
+        }
+
+        .hq-open-btn:hover {
+          background: ${ACCENT} !important;
+          color: #fff !important;
+        }
+      `}</style>
 
       {/* Header */}
       <div style={s.header}>
-        <div style={s.headerLeft}>
-          <p style={s.date}>{formattedDate}</p>
+        <div>
+          <h1 style={s.title}>Allez HQ</h1>
+          <p style={s.date}>{formatDate(new Date())}</p>
         </div>
-        <div style={s.headerRight}>
-          <div style={s.roleBadge}>
-            <span style={s.roleDot} />
-            <span style={s.roleText}>Admin</span>
-            <span style={s.roleComingSoon}>· Role permissions coming soon</span>
-          </div>
+        <div style={s.roleBadge}>
+          <span style={s.roleDot} />
+          <span style={s.roleText}>Admin</span>
+          <span style={s.roleNote}>· Role permissions coming soon</span>
         </div>
       </div>
 
@@ -100,16 +145,18 @@ export default function HQ() {
           return (
             <div
               key={feature.id}
+              className={`hq-card ${isLive ? 'hq-card-live' : ''}`}
               style={{
                 ...s.card,
                 ...(isLive ? s.cardLive : s.cardDimmed),
                 animationDelay: `${i * 80}ms`,
               }}
               onClick={() => isLive && navigate(feature.route)}
-              className="hq-card"
+              onMouseEnter={() => isLive && setHoveredCard(feature.id)}
+              onMouseLeave={() => setHoveredCard(null)}
             >
+              {/* Status badge */}
               <div style={s.cardTop}>
-                <span style={s.cardIcon}>{feature.icon}</span>
                 {isLive ? (
                   <span style={s.liveBadge}>Live</span>
                 ) : (
@@ -117,27 +164,28 @@ export default function HQ() {
                 )}
               </div>
 
-              <h2 style={{ ...s.cardTitle, ...(isLive ? {} : s.cardTitleDimmed) }}>
+              {/* Title */}
+              <h2 style={{ ...s.cardTitle, ...(isLive ? {} : { color: D_TEXT_MUTED }) }}>
                 {feature.title}
               </h2>
+
+              {/* Description */}
               <p style={s.cardDesc}>{feature.description}</p>
 
+              {/* Footer */}
               <div style={s.cardFooter}>
                 {isLive && !metricsLoading && metric !== null ? (
-                  feature.id === 'notes' ? (
-                    <span style={s.metricLabel}>{metric}</span>
-                  ) : (
-                    <div style={s.metric}>
-                      <span style={s.metricNumber}>{metric}</span>
-                      <span style={s.metricLabel}>{feature.metricLabel}</span>
-                    </div>
-                  )
+                  <div style={s.metric}>
+                    <span style={s.metricNumber}>{metric}</span>
+                    <span style={s.metricLabel}>{feature.metricLabel}</span>
+                  </div>
                 ) : (
                   <div />
                 )}
                 {isLive && (
                   <button
-                    style={s.cardButton}
+                    className="hq-open-btn"
+                    style={s.openBtn}
                     onClick={(e) => { e.stopPropagation(); navigate(feature.route); }}
                   >
                     Open →
@@ -152,190 +200,156 @@ export default function HQ() {
       <p style={s.footerNote}>
         Allez HQ · Role-based access controls (Admin / Advisor / Viewer) are on the roadmap.
       </p>
-
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500&display=swap');
-
-        @keyframes fadeUp {
-          from { opacity: 0; transform: translateY(18px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-
-        .hq-card {
-          animation: fadeUp 0.45s ease both;
-        }
-
-        .hq-card:hover {
-          transform: translateY(-3px) !important;
-          box-shadow: 0 20px 40px rgba(0,0,0,0.18) !important;
-        }
-      `}</style>
+    </div>
     </div>
   );
 }
 
-const GOLD = '#c9a84c';
-const DARK = '#0f1117';
-const CARD_BG = '#181c27';
-const BORDER = 'rgba(201,168,76,0.18)';
-const TEXT_PRIMARY = '#f0ece0';
-const TEXT_MUTED = '#7a7d8a';
-
 const s = {
-  page: {
+  pageWrapper: {
+    background: D_BG,
     minHeight: '100vh',
-    background: DARK,
-    padding: PAGE_PADDING,
-    position: 'relative',
-    fontFamily: "'DM Sans', sans-serif",
-    color: TEXT_PRIMARY,
-    overflow: 'hidden',
+    width: '100%',
   },
-  bgTexture: {
-    position: 'absolute',
-    inset: 0,
-    backgroundImage: `radial-gradient(ellipse at 20% 20%, rgba(201,168,76,0.06) 0%, transparent 60%),
-                      radial-gradient(ellipse at 80% 80%, rgba(102,126,234,0.05) 0%, transparent 60%)`,
-    pointerEvents: 'none',
+  page: {
+    fontFamily: FONT_BODY,
+    color: D_TEXT,
+    padding: '120px 40px 80px',
+    maxWidth: '1200px',
+    margin: '0 auto',
   },
   header: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'flex-end',
-    maxWidth: '1100px',
-    margin: '0 auto',
-    position: 'relative',
-  },
-  headerLeft: {},
-  headerRight: {
-    paddingBottom: '8px',
+    marginBottom: '28px',
   },
   greeting: {
+    fontFamily: FONT_BODY,
     fontSize: '14px',
-    color: TEXT_MUTED,
-    margin: '0 0 6px',
-    fontWeight: 300,
-    letterSpacing: '0.04em',
+    fontWeight: 400,
+    color: D_TEXT_MUTED,
+    marginBottom: '8px',
+    letterSpacing: '0.02em',
   },
   title: {
-    fontFamily: "'Playfair Display', serif",
-    fontSize: '42px',
-    fontWeight: 700,
-    margin: '0 0 8px',
-    color: TEXT_PRIMARY,
-    letterSpacing: '-0.5px',
+    fontFamily: FONT_DISPLAY,
+    fontSize: '44px',
+    fontWeight: 300,
+    color: D_TEXT,
+    margin: '0 0 6px',
+    letterSpacing: '0.01em',
+    lineHeight: 1.1,
   },
   date: {
     fontSize: '13px',
-    color: TEXT_MUTED,
-    margin: 0,
+    color: D_TEXT_SUBTLE,
     fontWeight: 300,
+    letterSpacing: '0.03em',
   },
   roleBadge: {
     display: 'flex',
     alignItems: 'center',
     gap: '6px',
-    background: 'rgba(201,168,76,0.08)',
-    border: `1px solid ${BORDER}`,
-    borderRadius: '20px',
+    background: D_SURFACE,
+    border: `1px solid ${D_BORDER}`,
+    borderRadius: RADIUS_PILL,
     padding: '6px 14px',
-    fontSize: '12px',
+    marginBottom: '4px',
   },
   roleDot: {
-    width: '7px',
-    height: '7px',
+    width: '6px',
+    height: '6px',
     borderRadius: '50%',
-    background: GOLD,
+    background: ACCENT,
     display: 'inline-block',
+    flexShrink: 0,
   },
   roleText: {
-    color: GOLD,
-    fontWeight: 500,
+    fontSize: '12px',
+    fontWeight: 600,
+    color: D_TEXT,
+    letterSpacing: '0.04em',
   },
-  roleComingSoon: {
-    color: TEXT_MUTED,
+  roleNote: {
+    fontSize: '11px',
+    color: D_TEXT_MUTED,
     fontWeight: 300,
   },
   divider: {
-    maxWidth: '1100px',
-    margin: '28px auto 36px',
     height: '1px',
-    background: `linear-gradient(to right, ${BORDER}, transparent)`,
+    background: D_BORDER,
+    marginBottom: '36px',
   },
   grid: {
-    maxWidth: '1100px',
-    margin: '0 auto',
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
     gap: '20px',
+    marginBottom: '48px',
   },
   card: {
-    background: CARD_BG,
-    border: `1px solid ${BORDER}`,
-    borderRadius: '16px',
-    padding: '28px 26px 22px',
-    transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-    cursor: 'pointer',
+    background: D_SURFACE,
+    border: `1px solid ${D_BORDER}`,
+    borderRadius: RADIUS_LG,
+    padding: '24px',
     display: 'flex',
     flexDirection: 'column',
+    minHeight: '220px',
+    boxShadow: SHADOW_MD,
   },
   cardLive: {
-    borderColor: BORDER,
+    background: D_SURFACE,
   },
   cardDimmed: {
-    opacity: 0.55,
-    cursor: 'default',
+    background: D_SURFACE_ALT,
+    opacity: 0.6,
   },
   cardTop: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
     marginBottom: '16px',
   },
-  cardIcon: {
-    fontSize: '26px',
-  },
   liveBadge: {
-    background: 'rgba(52,211,153,0.12)',
-    color: '#34d399',
-    fontSize: '11px',
+    fontSize: '10px',
     fontWeight: 600,
+    letterSpacing: '0.1em',
+    textTransform: 'uppercase',
+    color: ACCENT,
+    background: ACCENT_MUTED,
+    border: `1px solid ${ACCENT_BORDER}`,
     padding: '3px 10px',
-    borderRadius: '12px',
-    letterSpacing: '0.04em',
+    borderRadius: RADIUS_PILL,
   },
   soonBadge: {
-    background: 'rgba(255,255,255,0.05)',
-    color: TEXT_MUTED,
-    fontSize: '11px',
+    fontSize: '10px',
     fontWeight: 500,
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase',
+    color: D_TEXT_MUTED,
+    background: 'rgba(255,255,255,0.04)',
     padding: '3px 10px',
-    borderRadius: '12px',
-    letterSpacing: '0.04em',
+    borderRadius: RADIUS_PILL,
   },
   cardTitle: {
-    fontFamily: "'Playfair Display', serif",
-    fontSize: '20px',
-    fontWeight: 600,
+    fontFamily: FONT_DISPLAY,
+    fontSize: '22px',
+    fontWeight: 400,
+    color: D_TEXT,
     margin: '0 0 10px',
-    color: TEXT_PRIMARY,
-  },
-  cardTitleDimmed: {
-    color: TEXT_MUTED,
+    letterSpacing: '0.01em',
+    lineHeight: 1.2,
   },
   cardDesc: {
     fontSize: '13px',
-    color: TEXT_MUTED,
-    lineHeight: '1.6',
-    margin: '0',
+    color: D_TEXT_MUTED,
+    lineHeight: 1.65,
     fontWeight: 300,
     flex: 1,
+    margin: '0 0 20px',
   },
   cardFooter: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'flex-end',
-    marginTop: '20px',
+    marginTop: 'auto',
   },
   metric: {
     display: 'flex',
@@ -343,35 +357,36 @@ const s = {
     gap: '2px',
   },
   metricNumber: {
-    fontSize: '26px',
-    fontWeight: 600,
-    color: GOLD,
+    fontFamily: FONT_DISPLAY,
+    fontSize: '32px',
+    fontWeight: 400,
+    color: ACCENT,
     lineHeight: 1,
-    fontFamily: "'Playfair Display', serif",
   },
   metricLabel: {
-    fontSize: '11px',
-    color: TEXT_MUTED,
-    letterSpacing: '0.05em',
+    fontSize: '10px',
+    color: D_TEXT_MUTED,
+    letterSpacing: '0.08em',
     textTransform: 'uppercase',
+    fontWeight: 500,
   },
-  cardButton: {
+  openBtn: {
     background: 'transparent',
-    border: `1px solid ${BORDER}`,
-    color: GOLD,
-    borderRadius: '8px',
+    border: `1px solid ${D_BORDER}`,
+    color: ACCENT,
+    borderRadius: RADIUS_MD,
     padding: '7px 16px',
     fontSize: '13px',
     fontWeight: 500,
     cursor: 'pointer',
+    transition: 'background 0.15s, color 0.15s',
+    fontFamily: FONT_BODY,
   },
   footerNote: {
-    maxWidth: '1100px',
-    margin: '48px auto 0',
     fontSize: '12px',
-    color: TEXT_MUTED,
+    color: D_TEXT_SUBTLE,
     textAlign: 'center',
     fontWeight: 300,
-    letterSpacing: '0.03em',
+    letterSpacing: '0.04em',
   },
 };

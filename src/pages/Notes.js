@@ -3,20 +3,25 @@ import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { useOrg } from '../context/OrgContext';
 import {
-  GOLD, DARK, CARD_BG, BORDER, TEXT_PRIMARY, TEXT_MUTED, INPUT_BG,
-  STATUS_COLORS, PAGE_PADDING, PAGE_FONT,
+  ACCENT, ACCENT_MUTED, ACCENT_BORDER,
+  D_BG, D_SURFACE, D_SURFACE_ALT, D_BORDER,
+  D_TEXT, D_TEXT_MUTED,
+  FONT_DISPLAY, FONT_BODY,
+  RADIUS_MD, RADIUS_LG, RADIUS_PILL,
+  SHADOW_MD,
+  STATUS_COLORS,
 } from '../utils/hqConstants';
 
 const NOTE_TYPES = ['Meeting', 'Call', 'Email', 'General'];
 
 const s = {
-  pageWrapper: { background: DARK, minHeight: '100vh', width: '100%' },
+  pageWrapper: { background: D_BG, minHeight: '100vh', width: '100%' },
   page: {
-    maxWidth: '1000px',
+    maxWidth: '1200px',
     margin: '0 auto',
-    padding: PAGE_PADDING,
-    fontFamily: PAGE_FONT,
-    color: TEXT_PRIMARY,
+    padding: '120px 40px 80px',
+    fontFamily: FONT_BODY,
+    color: D_TEXT,
   },
   header: {
     display: 'flex',
@@ -25,108 +30,110 @@ const s = {
     marginBottom: '32px',
   },
   title: {
-    fontSize: '28px',
-    fontWeight: '700',
-    margin: '0 0 4px',
-    color: TEXT_PRIMARY,
-    fontFamily: "'Playfair Display', serif",
+    fontFamily: FONT_DISPLAY,
+    fontSize: '44px',
+    fontWeight: '300',
+    margin: '0 0 6px',
+    color: D_TEXT,
+    letterSpacing: '0.01em',
+    lineHeight: 1.1,
   },
-  subtitle: { fontSize: '14px', color: TEXT_MUTED, margin: 0 },
+  subtitle: { fontSize: '13px', color: D_TEXT_MUTED, margin: 0, fontWeight: '300', letterSpacing: '0.03em' },
   addButton: {
     background: 'transparent',
-    color: GOLD,
-    border: `1px solid ${BORDER}`,
-    borderRadius: '8px',
+    color: ACCENT,
+    border: `1px solid ${ACCENT_BORDER}`,
+    borderRadius: RADIUS_MD,
     padding: '10px 20px',
     fontSize: '14px',
     fontWeight: '600',
     cursor: 'pointer',
     whiteSpace: 'nowrap',
+    fontFamily: FONT_BODY,
   },
-  // Compose form card
   composeCard: {
-    background: CARD_BG,
-    border: `1px solid ${BORDER}`,
-    borderRadius: '14px',
+    background: D_SURFACE,
+    border: `1px solid ${D_BORDER}`,
+    borderRadius: RADIUS_LG,
     padding: '24px',
     marginBottom: '32px',
+    boxShadow: SHADOW_MD,
   },
   composeTitle: {
-    fontSize: '13px',
-    fontWeight: '700',
+    fontSize: '10px',
+    fontWeight: '600',
     textTransform: 'uppercase',
-    letterSpacing: '0.08em',
-    color: GOLD,
+    letterSpacing: '0.12em',
+    color: ACCENT,
     margin: '0 0 16px',
   },
   formRow: { display: 'flex', gap: '12px', marginBottom: '12px', flexWrap: 'wrap' },
   formField: { display: 'flex', flexDirection: 'column', gap: '4px', flex: 1, minWidth: '180px' },
-  label: { fontSize: '12px', fontWeight: '500', color: TEXT_MUTED },
+  label: { fontSize: '12px', fontWeight: '500', color: D_TEXT_MUTED, letterSpacing: '0.02em' },
   input: {
-    border: `1px solid ${BORDER}`,
-    borderRadius: '8px',
+    border: `1px solid ${D_BORDER}`,
+    borderRadius: RADIUS_MD,
     padding: '8px 12px',
     fontSize: '14px',
     outline: 'none',
-    color: TEXT_PRIMARY,
-    background: INPUT_BG,
-    fontFamily: 'inherit',
+    color: D_TEXT,
+    background: D_SURFACE_ALT,
+    fontFamily: FONT_BODY,
   },
   textarea: {
     width: '100%',
-    border: `1px solid ${BORDER}`,
-    borderRadius: '8px',
+    border: `1px solid ${D_BORDER}`,
+    borderRadius: RADIUS_MD,
     padding: '10px 12px',
     fontSize: '14px',
     minHeight: '100px',
     resize: 'vertical',
     outline: 'none',
-    color: TEXT_PRIMARY,
-    background: INPUT_BG,
-    fontFamily: 'inherit',
+    color: D_TEXT,
+    background: D_SURFACE_ALT,
+    fontFamily: FONT_BODY,
     boxSizing: 'border-box',
     marginBottom: '12px',
   },
   composeFooter: { display: 'flex', justifyContent: 'flex-end', gap: '10px' },
   cancelButton: {
     padding: '8px 18px',
-    borderRadius: '8px',
-    border: `1px solid ${BORDER}`,
+    borderRadius: RADIUS_MD,
+    border: `1px solid ${D_BORDER}`,
     background: 'transparent',
     fontSize: '13px',
     cursor: 'pointer',
-    color: TEXT_MUTED,
-    fontFamily: 'inherit',
+    color: D_TEXT_MUTED,
+    fontFamily: FONT_BODY,
   },
   saveButton: {
     padding: '8px 18px',
-    borderRadius: '8px',
-    border: `1px solid ${BORDER}`,
-    background: 'transparent',
-    color: GOLD,
+    borderRadius: RADIUS_MD,
+    border: `1px solid ${ACCENT_BORDER}`,
+    background: ACCENT_MUTED,
+    color: ACCENT,
     fontSize: '13px',
     fontWeight: '600',
     cursor: 'pointer',
-    fontFamily: 'inherit',
+    fontFamily: FONT_BODY,
   },
   errorText: { color: '#f87171', fontSize: '13px', marginBottom: '10px' },
-  // Date group
   dateGroup: { marginBottom: '28px' },
   dateLabel: {
     fontSize: '11px',
-    fontWeight: '700',
+    fontWeight: '600',
     textTransform: 'uppercase',
     letterSpacing: '0.08em',
-    color: TEXT_MUTED,
+    color: D_TEXT_MUTED,
     marginBottom: '10px',
   },
-  // Note card
   noteCard: {
-    background: CARD_BG,
-    border: `1px solid ${BORDER}`,
-    borderRadius: '12px',
+    background: D_SURFACE,
+    border: `1px solid ${D_BORDER}`,
+    borderRadius: RADIUS_LG,
     padding: '18px 20px',
     marginBottom: '10px',
+    boxShadow: SHADOW_MD,
   },
   noteHeader: {
     display: 'flex',
@@ -135,21 +142,30 @@ const s = {
     marginBottom: '8px',
     flexWrap: 'wrap',
   },
-  noteTitle: { fontSize: '15px', fontWeight: '600', color: TEXT_PRIMARY, flex: 1 },
+  noteTitle: {
+    fontFamily: FONT_DISPLAY,
+    fontSize: '17px',
+    fontWeight: '400',
+    color: D_TEXT,
+    flex: 1,
+    letterSpacing: '0.01em',
+  },
   noteTypeBadge: {
-    fontSize: '11px',
+    fontSize: '10px',
     fontWeight: '600',
     padding: '2px 10px',
-    borderRadius: '10px',
-    background: `rgba(201,168,76,0.12)`,
-    color: GOLD,
-    border: `1px solid rgba(201,168,76,0.2)`,
+    borderRadius: RADIUS_PILL,
+    background: ACCENT_MUTED,
+    color: ACCENT,
+    border: `1px solid ${ACCENT_BORDER}`,
+    letterSpacing: '0.06em',
+    textTransform: 'uppercase',
   },
   clientBadge: {
     fontSize: '11px',
     fontWeight: '600',
     padding: '2px 10px',
-    borderRadius: '10px',
+    borderRadius: RADIUS_PILL,
     background: `rgba(96,165,250,0.12)`,
     color: '#60a5fa',
     border: `1px solid rgba(96,165,250,0.2)`,
@@ -158,10 +174,11 @@ const s = {
   },
   noteBody: {
     fontSize: '14px',
-    color: TEXT_MUTED,
+    color: D_TEXT_MUTED,
     lineHeight: '1.65',
     margin: '0 0 10px',
     whiteSpace: 'pre-wrap',
+    fontWeight: '300',
   },
   noteActions: { display: 'flex', gap: '12px' },
   noteAction: {
@@ -169,42 +186,49 @@ const s = {
     border: 'none',
     cursor: 'pointer',
     fontSize: '12px',
-    color: TEXT_MUTED,
+    color: D_TEXT_MUTED,
     padding: 0,
-    fontFamily: 'inherit',
+    fontFamily: FONT_BODY,
   },
   emptyState: {
-    background: CARD_BG,
-    border: `1px solid ${BORDER}`,
-    borderRadius: '14px',
+    background: D_SURFACE,
+    border: `1px solid ${D_BORDER}`,
+    borderRadius: RADIUS_LG,
     padding: '48px',
     textAlign: 'center',
-    color: TEXT_MUTED,
+    color: D_TEXT_MUTED,
     fontSize: '14px',
+    fontWeight: '300',
   },
-  // Edit modal
   overlay: {
-    position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)',
+    position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.65)',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
     zIndex: 1000, padding: '20px',
   },
   modal: {
-    background: CARD_BG, border: `1px solid ${BORDER}`,
-    borderRadius: '16px', width: '100%', maxWidth: '580px',
-    boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
+    background: D_SURFACE, border: `1px solid ${D_BORDER}`,
+    borderRadius: RADIUS_LG, width: '100%', maxWidth: '580px',
+    boxShadow: '0 24px 64px rgba(0,0,0,0.5)',
   },
   modalHeader: {
     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-    padding: '18px 22px', borderBottom: `1px solid ${BORDER}`,
+    padding: '18px 22px', borderBottom: `1px solid ${D_BORDER}`,
   },
-  modalTitle: { margin: 0, fontSize: '16px', fontWeight: '700', color: TEXT_PRIMARY },
+  modalTitle: {
+    margin: 0,
+    fontFamily: FONT_DISPLAY,
+    fontSize: '22px',
+    fontWeight: '400',
+    color: D_TEXT,
+    letterSpacing: '0.01em',
+  },
   closeButton: {
     background: 'none', border: 'none', fontSize: '16px',
-    cursor: 'pointer', color: TEXT_MUTED, padding: '2px 6px',
+    cursor: 'pointer', color: D_TEXT_MUTED, padding: '2px 6px',
   },
   modalBody: { padding: '20px 22px' },
   modalFooter: {
-    padding: '14px 22px', borderTop: `1px solid ${BORDER}`,
+    padding: '14px 22px', borderTop: `1px solid ${D_BORDER}`,
     display: 'flex', justifyContent: 'flex-end', gap: '10px',
   },
 };
@@ -321,16 +345,11 @@ export default function Notes() {
       note_type: editForm.note_type,
       updated_at: new Date().toISOString(),
     }).eq('id', editingNote.id);
-    if (!error) {
-      setEditingNote(null);
-      fetchData();
-    }
+    if (!error) { setEditingNote(null); fetchData(); }
   }
 
   async function handleDelete(id) {
-    await supabase.from('notes')
-      .update({ deleted_at: new Date().toISOString() })
-      .eq('id', id);
+    await supabase.from('notes').update({ deleted_at: new Date().toISOString() }).eq('id', id);
     fetchData();
   }
 
@@ -339,6 +358,32 @@ export default function Notes() {
   return (
     <div style={s.pageWrapper}>
       <div style={s.page}>
+
+        <style>{`
+          @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=DM+Sans:wght@300;400;500;600&display=swap');
+          @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(18px); }
+            to   { opacity: 1; transform: translateY(0); }
+          }
+          .note-card { animation: fadeUp 0.4s ease both; }
+          .note-card:hover {
+            transform: translateY(-2px) !important;
+            border-color: ${ACCENT_BORDER} !important;
+            box-shadow: 0 8px 32px rgba(29,185,84,0.08) !important;
+          }
+          .client-name-badge:hover {
+            background: rgba(96,165,250,0.25) !important;
+            box-shadow: 0 0 0 2px rgba(96,165,250,0.3);
+          }
+          .expand-triangle {
+            display: inline-block;
+            transition: transform 0.2s ease;
+            font-size: 9px;
+            margin-left: 4px;
+            vertical-align: middle;
+          }
+          .expand-triangle.open { transform: rotate(90deg); }
+        `}</style>
 
         {/* Header */}
         <div style={s.header}>
@@ -355,9 +400,7 @@ export default function Notes() {
         {showCompose && (
           <div style={s.composeCard}>
             <p style={s.composeTitle}>New Note</p>
-
             <div style={s.formRow}>
-              {/* Client selector */}
               <div style={{ ...s.formField, minWidth: '220px' }}>
                 <label style={s.label}>Client *</label>
                 <select name="client_id" value={formData.client_id} onChange={handleChange} style={s.input}>
@@ -367,23 +410,17 @@ export default function Notes() {
                   ))}
                 </select>
               </div>
-
-              {/* Note type */}
               <div style={s.formField}>
                 <label style={s.label}>Type</label>
                 <select name="note_type" value={formData.note_type} onChange={handleChange} style={s.input}>
                   {NOTE_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
                 </select>
               </div>
-
-              {/* Title */}
               <div style={{ ...s.formField, flex: 2 }}>
                 <label style={s.label}>Title *</label>
                 <input name="title" value={formData.title} onChange={handleChange} placeholder="e.g. Q1 Review Meeting" style={s.input} />
               </div>
             </div>
-
-            {/* Body */}
             <textarea
               name="body"
               value={formData.body}
@@ -391,9 +428,7 @@ export default function Notes() {
               placeholder="Note content, key discussion points, action items..."
               style={s.textarea}
             />
-
             {error && <p style={s.errorText}>{error}</p>}
-
             <div style={s.composeFooter}>
               <button style={s.cancelButton} onClick={() => { setShowCompose(false); setError(''); setFormData(emptyForm); navigate('/hq/notes', { replace: true }); }}>
                 Cancel
@@ -405,118 +440,75 @@ export default function Notes() {
           </div>
         )}
 
-        {/* Notes list grouped by date */}
+        {/* Notes list */}
         {loading ? (
           <div style={s.emptyState}>Loading notes...</div>
         ) : notes.length === 0 ? (
           <div style={s.emptyState}>No notes yet. Create your first note above.</div>
         ) : (
-          <>
-            <style>{`
-              @keyframes fadeUp {
-                from { opacity: 0; transform: translateY(18px); }
-                to   { opacity: 1; transform: translateY(0); }
-              }
-              .note-card {
-                animation: fadeUp 0.4s ease both;
-              }
-              .note-card:hover {
-                transform: translateY(-2px) !important;
-                box-shadow: 0 12px 30px rgba(0,0,0,0.2) !important;
-              }
-              .client-name-badge:hover {
-                background: rgba(96,165,250,0.25) !important;
-                box-shadow: 0 0 0 2px rgba(96,165,250,0.3);
-              }
-              .expand-triangle {
-                display: inline-block;
-                transition: transform 0.2s ease;
-                font-size: 9px;
-                margin-left: 4px;
-                vertical-align: middle;
-              }
-              .expand-triangle.open {
-                transform: rotate(90deg);
-              }
-            `}</style>
-            {grouped.map(([date, dateNotes]) => (
-              <div key={date} style={s.dateGroup}>
-                <p style={s.dateLabel}>{formatDateLabel(date)}</p>
-                {dateNotes.map((note, i) => {
-                  const status = clientStatus(note.client_id);
-                  const clientId = note.client_id;
-                  const isExpanded = expandedNotes[note.id];
-                  const bodyLines = note.body ? note.body.split('\n') : [];
-                  const isLong = note.body && (note.body.length > 80 || bodyLines.length > 1);
-                  return (
-                    <div
-                      key={note.id}
-                      className="note-card"
-                      style={{ ...s.noteCard, animationDelay: `${i * 60}ms`, transition: 'transform 0.2s ease, box-shadow 0.2s ease' }}
-                    >
-                      <div style={s.noteHeader}>
-                        <span style={s.noteTitle}>{note.title}</span>
-                        {note.note_type && <span style={s.noteTypeBadge}>{note.note_type}</span>}
-                        <Link
-                          to={`/hq/clients/${clientId}`}
-                          state={{ from: '/hq/notes' }}
-                          className="client-name-badge"
-                          style={{
-                            ...s.clientBadge,
-                            backgroundColor: STATUS_COLORS?.[status]?.bg || 'rgba(96,165,250,0.12)',
-                            color: STATUS_COLORS?.[status]?.color || '#60a5fa',
-                            border: `1px solid ${STATUS_COLORS?.[status]?.color || '#60a5fa'}33`,
-                          }}
-                        >
-                          {clientName(note.client_id)}
-                        </Link>
-                      </div>
-
-                      {note.body && (
-                        <div style={{ marginBottom: '10px' }}>
-                          <div style={{
-                            maxHeight: isExpanded ? '600px' : '1.4em',
-                            overflow: 'hidden',
-                            transition: isExpanded
-                              ? 'max-height 0.35s ease-in-out'
-                              : 'max-height 0.3s ease-in-out',
-                          }}>
-                            <p style={{
-                              ...s.noteBody,
-                              marginBottom: 0,
-                              whiteSpace: 'pre-wrap',
-                            }}>
-                              {note.body}
-                            </p>
-                          </div>
-                          {/* Always reserve space for the toggle row */}
-                          <div style={{ height: '24px', display: 'flex', alignItems: 'center', marginTop: '4px' }}>
-                            {isLong && (
-                              <button
-                                style={{ ...s.noteAction }}
-                                onClick={() => toggleExpand(note.id)}
-                              >
-                                {isExpanded ? 'Show less' : 'Read more'}
-                                <span className={`expand-triangle${isExpanded ? ' open' : ''}`}>▶</span>
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Reserve body space even when there's no body */}
-                      {!note.body && <div style={{ height: '58px' }} />}
-
-                      <div style={s.noteActions}>
-                        <button style={s.noteAction} onClick={() => openEdit(note)}>Edit</button>
-                        <button style={{ ...s.noteAction, color: '#f87171' }} onClick={() => handleDelete(note.id)}>Delete</button>
-                      </div>
+          grouped.map(([date, dateNotes]) => (
+            <div key={date} style={s.dateGroup}>
+              <p style={s.dateLabel}>{formatDateLabel(date)}</p>
+              {dateNotes.map((note, i) => {
+                const status = clientStatus(note.client_id);
+                const isExpanded = expandedNotes[note.id];
+                const bodyLines = note.body ? note.body.split('\n') : [];
+                const isLong = note.body && (note.body.length > 80 || bodyLines.length > 1);
+                return (
+                  <div
+                    key={note.id}
+                    className="note-card"
+                    style={{ ...s.noteCard, animationDelay: `${i * 60}ms`, transition: 'transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease' }}
+                  >
+                    <div style={s.noteHeader}>
+                      <span style={s.noteTitle}>{note.title}</span>
+                      {note.note_type && <span style={s.noteTypeBadge}>{note.note_type}</span>}
+                      <Link
+                        to={`/hq/clients/${note.client_id}`}
+                        state={{ from: '/hq/notes' }}
+                        className="client-name-badge"
+                        style={{
+                          ...s.clientBadge,
+                          backgroundColor: STATUS_COLORS?.[status]?.bg || 'rgba(96,165,250,0.12)',
+                          color: STATUS_COLORS?.[status]?.color || '#60a5fa',
+                          border: `1px solid ${STATUS_COLORS?.[status]?.color || '#60a5fa'}33`,
+                        }}
+                      >
+                        {clientName(note.client_id)}
+                      </Link>
                     </div>
-                  );
-                })}
-              </div>
-            ))}
-          </>
+
+                    {note.body && (
+                      <div style={{ marginBottom: '10px' }}>
+                        <div style={{
+                          maxHeight: isExpanded ? '600px' : '1.4em',
+                          overflow: 'hidden',
+                          transition: isExpanded ? 'max-height 0.35s ease-in-out' : 'max-height 0.3s ease-in-out',
+                        }}>
+                          <p style={{ ...s.noteBody, marginBottom: 0 }}>{note.body}</p>
+                        </div>
+                        <div style={{ height: '24px', display: 'flex', alignItems: 'center', marginTop: '4px' }}>
+                          {isLong && (
+                            <button style={s.noteAction} onClick={() => toggleExpand(note.id)}>
+                              {isExpanded ? 'Show less' : 'Read more'}
+                              <span className={`expand-triangle${isExpanded ? ' open' : ''}`}>▶</span>
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {!note.body && <div style={{ height: '58px' }} />}
+
+                    <div style={s.noteActions}>
+                      <button style={s.noteAction} onClick={() => openEdit(note)}>Edit</button>
+                      <button style={{ ...s.noteAction, color: '#f87171' }} onClick={() => handleDelete(note.id)}>Delete</button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ))
         )}
 
         {/* Edit modal */}
