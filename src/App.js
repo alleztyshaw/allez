@@ -6,7 +6,6 @@ import Footer from './components/Footer';
 import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
-import About from './pages/About';
 import Contact from './pages/Contact';
 import Clients from './pages/Clients';
 import ClientDetail from './pages/ClientDetail';
@@ -37,8 +36,7 @@ function App() {
             <Routes>
               <Route path="/" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
-              <Route path="/about" element={<ProtectedLayout><About /></ProtectedLayout>} />
-              <Route path="/contact" element={<ProtectedLayout><Contact /></ProtectedLayout>} />
+                <Route path="/contact" element={<ProtectedLayout><Contact /></ProtectedLayout>} />
               <Route path="/welcome" element={<Welcome />} />
               <Route path="/hq" element={<ProtectedLayout><HQ /></ProtectedLayout>} />
               <Route path="/hq/clients" element={<ProtectedLayout><Clients /></ProtectedLayout>} />

@@ -48,7 +48,6 @@ export default function HQ() {
     pageWrapper: { background: t.BG, minHeight: '100vh', width: '100%' },
     page: { fontFamily: FONT_BODY, color: t.TEXT, padding: '120px 40px 80px', maxWidth: '1200px', margin: '0 auto' },
     header: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '28px' },
-    title: { fontFamily: FONT_DISPLAY, fontSize: '44px', fontWeight: 300, color: t.TEXT, margin: '0 0 6px', letterSpacing: '0.01em', lineHeight: 1.1 },
     date: { fontSize: '13px', color: t.TEXT_SUBTLE, fontWeight: 300, letterSpacing: '0.03em' },
     roleBadge: { display: 'flex', alignItems: 'center', gap: '6px', background: t.SURFACE, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_PILL, padding: '6px 14px', marginBottom: '4px' },
     roleDot: { width: '6px', height: '6px', borderRadius: '50%', background: ACCENT, display: 'inline-block', flexShrink: 0 },
@@ -84,14 +83,14 @@ export default function HQ() {
         `}</style>
 
         <div style={s.header}>
-          <div>
-            <h1 style={s.title}>Allez HQ</h1>
+          <div />
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
             <p style={s.date}>{formatDate(new Date())}</p>
-          </div>
-          <div style={s.roleBadge}>
-            <span style={s.roleDot} />
-            <span style={s.roleText}>Admin</span>
-            <span style={s.roleNote}>· Role permissions coming soon</span>
+            <div style={s.roleBadge}>
+              <span style={s.roleDot} />
+              <span style={s.roleText}>Admin</span>
+              <span style={s.roleNote}>· Role permissions coming soon</span>
+            </div>
           </div>
         </div>
 

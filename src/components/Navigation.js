@@ -5,20 +5,10 @@ import { useOrg } from '../context/OrgContext';
 import { useTheme } from '../context/ThemeContext';
 import '../App.css';
 
-const HQ_SUBMENU = [
-  { label: 'Clients', path: '/hq/clients' },
-  { label: 'Notes', path: '/hq/notes' },
-  { label: 'CRM', path: '/hq/crm', comingSoon: true },
-];
-
 function Navigation() {
   const [displayName, setDisplayName] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
-  const [hqHovered, setHqHovered] = useState(false);
-  const [submenuLeft, setSubmenuLeft] = useState(false);
-  const hqHoverTimeout = useRef(null);
   const menuRef = useRef(null);
-  const hqRef = useRef(null);
   const { isAdmin, isPlatformAdmin, orgLoading } = useOrg();
   const { theme } = useTheme();
   const navigate = useNavigate();
@@ -44,52 +34,40 @@ function Navigation() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [menuOpen]);
 
-  const handleHqEnter = () => {
-    clearTimeout(hqHoverTimeout.current);
-    setHqHovered(true);
-  };
-
-  const handleHqLeave = () => {
-    hqHoverTimeout.current = setTimeout(() => setHqHovered(false), 150);
-  };
-
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) setDisplayName(session.user.user_metadata.display_name);
     });
   }, []);
 
-  useEffect(() => {
-    if (hqHovered && hqRef.current) {
-      const rect = hqRef.current.getBoundingClientRect();
-      const wouldOverflow = rect.right + 180 > window.innerWidth - 16;
-      setSubmenuLeft(wouldOverflow);
-    }
-  }, [hqHovered]);
-
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate('/');
   };
 
+  const close = () => setMenuOpen(false);
+
   return (
     <header className="header" style={{ background: 'transparent', boxShadow: 'none', borderBottom: 'none' }}>
       <div className="container">
         <h1 style={{ margin: 0 }}>
-          <Link to="/hq" style={{ color: linkColor, textDecoration: 'none', fontSize: '26px', fontWeight: '700', fontFamily: "'Playfair Display', serif", letterSpacing: '0.02em' }}>
+          <Link to="/hq" style={{
+            color: linkColor, textDecoration: 'none',
+            fontSize: '26px', fontWeight: '300',
+            fontFamily: "'Cormorant Garamond', serif",
+            letterSpacing: '0.04em',
+          }}>
             Allez HQ
           </Link>
         </h1>
 
         <div className="nav-right">
-          {/* Greeting */}
           {displayName && (
             <span className="welcome-message" style={{ color: linkColor, opacity: 0.8, fontSize: '16px' }}>
               {getGreeting()}, {displayName}
             </span>
           )}
 
-          {/* Hamburger menu */}
           <div ref={menuRef} style={{ position: 'relative', display: 'inline-block' }}>
             <button className="hamburger" onClick={() => setMenuOpen(!menuOpen)}>
               <span style={{ background: linkColor }}></span>
@@ -99,71 +77,19 @@ function Navigation() {
 
             {menuOpen && (
               <nav className="dropdown-menu">
-                <div
-                  ref={hqRef}
-                  style={styles.menuItemWrapper}
-                  onMouseEnter={handleHqEnter}
-                  onMouseLeave={handleHqLeave}
-                >
-                  <Link
-                    to="/hq"
-                    onClick={() => setMenuOpen(false)}
-                    style={{ ...styles.menuLinkWithArrow, color: linkColor }}
-                  >
-                    HQ
-                  </Link>
-
-                  {hqHovered && (
-                    <div
-                      style={{
-                        ...styles.submenu,
-                        ...(submenuLeft ? styles.submenuLeft : styles.submenuRight),
-                      }}
-                      onMouseEnter={handleHqEnter}
-                      onMouseLeave={handleHqLeave}
-                    >
-                      {HQ_SUBMENU.map((item) =>
-                        item.comingSoon ? (
-                          <span key={item.path} style={styles.submenuItemDisabled}>
-                            {item.label}
-                            <span style={styles.soonTag}>Soon</span>
-                          </span>
-                        ) : (
-                          <Link
-                            key={item.path}
-                            to={item.path}
-                            onClick={() => { setMenuOpen(false); setHqHovered(false); }}
-                            style={{ ...styles.submenuItem, color: linkColor }}
-                          >
-                            {item.label}
-                          </Link>
-                        )
-                      )}
-                      {!orgLoading && isAdmin && (
-                        <Link
-                          to="/hq/team"
-                          onClick={() => { setMenuOpen(false); setHqHovered(false); }}
-                          style={{ ...styles.submenuItem, color: linkColor }}
-                        >
-                          Team
-                        </Link>
-                      )}
-                      {!orgLoading && isPlatformAdmin && (
-                        <Link
-                          to="/hq/orgs"
-                          onClick={() => { setMenuOpen(false); setHqHovered(false); }}
-                          style={{ ...styles.submenuItem, color: linkColor }}
-                        >
-                          Orgs
-                        </Link>
-                      )}
-                    </div>
-                  )}
-                </div>
-
-                <Link to="/hq/settings" onClick={() => setMenuOpen(false)} style={{ ...styles.menuLink, color: linkColor }}>Settings</Link>
-                <Link to="/about" onClick={() => setMenuOpen(false)} style={{ ...styles.menuLink, color: linkColor }}>About</Link>
-                <Link to="/contact" onClick={() => setMenuOpen(false)} style={{ ...styles.menuLink, color: linkColor }}>Contact</Link>
+                <Link to="/hq/clients"  onClick={close} style={{ ...styles.menuLink, color: linkColor }}>Clients</Link>
+                <Link to="/hq/notes"    onClick={close} style={{ ...styles.menuLink, color: linkColor }}>Notes</Link>
+                <span style={{ ...styles.menuLink, color: linkColor, opacity: 0.4, cursor: 'default', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '8px' }}>
+                  CRM <span style={styles.soonTag}>Soon</span>
+                </span>
+                {!orgLoading && isAdmin && (
+                  <Link to="/hq/team" onClick={close} style={{ ...styles.menuLink, color: linkColor }}>Team</Link>
+                )}
+                {!orgLoading && isPlatformAdmin && (
+                  <Link to="/hq/orgs" onClick={close} style={{ ...styles.menuLink, color: linkColor }}>Orgs</Link>
+                )}
+                <Link to="/hq/settings" onClick={close} style={{ ...styles.menuLink, color: linkColor }}>Settings</Link>
+                <Link to="/contact"     onClick={close} style={{ ...styles.menuLink, color: linkColor }}>Contact</Link>
                 <button onClick={handleLogout} className="logout-link">Log Out</button>
               </nav>
             )}
@@ -175,31 +101,12 @@ function Navigation() {
 }
 
 const styles = {
-  menuLink: { color: '#f0ece0', textDecoration: 'none', display: 'block' },
-  menuLinkWithArrow: { color: '#f0ece0', textDecoration: 'none', display: 'block', position: 'relative' },
-  menuItemWrapper: { position: 'relative' },
-  submenu: {
-    position: 'absolute', top: 0,
-    background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(8px)',
-    borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.15)',
-    display: 'flex', flexDirection: 'column',
-    padding: '1rem', gap: '0.5rem', minWidth: '180px', zIndex: 200, fontSize: '1rem',
-  },
-  submenuRight: { left: '170px' },
-  submenuLeft: { right: '170px' },
-  submenuItem: {
-    display: 'block', padding: '0.5rem 1rem', color: '#444',
-    textDecoration: 'none', borderRadius: '6px', fontWeight: '500',
-    textAlign: 'right', transition: 'background 0.2s',
-  },
-  submenuItemDisabled: {
-    display: 'flex', alignItems: 'center', justifyContent: 'flex-end',
-    padding: '0.5rem 1rem', color: '#999', fontSize: '1rem',
-    cursor: 'default', borderRadius: '6px',
+  menuLink: {
+    color: '#f0ece0', textDecoration: 'none', display: 'block',
   },
   soonTag: {
     fontSize: '10px', background: 'rgba(255,255,255,0.08)',
-    color: '#6b7280', padding: '2px 7px', borderRadius: '8px', marginLeft: '8px',
+    color: '#6b7280', padding: '2px 7px', borderRadius: '8px',
   },
 };
 
