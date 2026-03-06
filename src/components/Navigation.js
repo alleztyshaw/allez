@@ -19,7 +19,7 @@ function Navigation() {
   const hqHoverTimeout = useRef(null);
   const menuRef = useRef(null);
   const hqRef = useRef(null);
-  const { isAdmin, orgLoading } = useOrg();
+  const { isAdmin, isPlatformAdmin, orgLoading } = useOrg();
   const { theme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
@@ -146,6 +146,15 @@ function Navigation() {
                           style={{ ...styles.submenuItem, color: linkColor }}
                         >
                           Team
+                        </Link>
+                      )}
+                      {!orgLoading && isPlatformAdmin && (
+                        <Link
+                          to="/hq/orgs"
+                          onClick={() => { setMenuOpen(false); setHqHovered(false); }}
+                          style={{ ...styles.submenuItem, color: linkColor }}
+                        >
+                          Orgs
                         </Link>
                       )}
                     </div>

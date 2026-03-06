@@ -15,6 +15,7 @@ import HQ from './pages/HQ';
 import Team from './pages/Team';
 import Welcome from './pages/Welcome';
 import Settings from './pages/Settings';
+import Orgs from './pages/Orgs';
 import './App.css';
 
 function ProtectedLayout({ children }) {
@@ -45,6 +46,7 @@ function App() {
               <Route path="/hq/notes" element={<ProtectedLayout><Notes /></ProtectedLayout>} />
               <Route path="/hq/team" element={<ProtectedLayout><Team /></ProtectedLayout>} />
             <Route path="/hq/settings" element={<ProtectedLayout><Settings /></ProtectedLayout>} />
+            <Route path="/hq/orgs" element={<ProtectedLayout><Orgs /></ProtectedLayout>} />
             </Routes>
           </div>
         </Router>
