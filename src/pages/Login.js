@@ -55,19 +55,32 @@ export default function Login() {
           to   { opacity: 1; transform: translateY(0); }
         }
         @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(16px); }
+          from { opacity: 0; transform: translateY(20px); }
           to   { opacity: 1; transform: translateY(0); }
         }
-        .sign-in-btn:hover  { background: rgba(0,0,0,0.06) !important; }
-        .close-btn:hover    { opacity: 0.4 !important; }
-        .submit-btn:hover   { filter: brightness(1.06); }
-        .login-input:focus  {
+        @keyframes scrollBounce {
+          0%, 100% { transform: translateY(0); opacity: 0.5; }
+          50%       { transform: translateY(6px); opacity: 1; }
+        }
+
+        .sign-in-btn:hover    { background: rgba(0,0,0,0.08) !important; }
+        .close-btn:hover      { opacity: 0.4 !important; }
+        .submit-btn:hover     { filter: brightness(1.06); }
+        .login-input:focus    {
           border-color: #6366f1 !important;
           outline: none;
           box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
         }
+        .feature-card:hover {
+          background: rgba(255,255,255,0.18) !important;
+          transform: translateY(-2px);
+        }
+        .scroll-cue {
+          animation: scrollBounce 2s ease-in-out infinite;
+        }
       `}</style>
 
+      {/* Orbs — untouched */}
       <div style={s.meshWrap}>
         <div style={s.mesh1} />
         <div style={s.mesh2} />
@@ -75,6 +88,7 @@ export default function Login() {
         <div style={s.mesh4} />
       </div>
 
+      {/* Header */}
       <header style={s.header}>
         <span style={s.logo}>Allez</span>
         <button className="sign-in-btn" style={s.signInBtn} onClick={() => setShowLogin(!showLogin)}>
@@ -82,12 +96,11 @@ export default function Login() {
         </button>
       </header>
 
+      {/* Login card */}
       {showLogin && (
         <div style={s.cardWrapper}>
           <div style={s.card}>
-            <button className="close-btn" style={s.closeBtn} onClick={() => { setShowLogin(false); setError(''); }}>
-              ✕
-            </button>
+            <button className="close-btn" style={s.closeBtn} onClick={() => { setShowLogin(false); setError(''); }}>✕</button>
             <p style={s.cardEyebrow}>Welcome back</p>
             <h2 style={s.cardTitle}>Sign in</h2>
             <form onSubmit={handleLogin} style={s.form}>
@@ -108,25 +121,120 @@ export default function Login() {
         </div>
       )}
 
+      {/* Hero — viewport-height, centred */}
       <main style={s.hero}>
-        <p style={s.eyebrow}>Private client platform</p>
-        <p style={s.tagline}>Relationships, refined.</p>
+        <div style={{ animation: 'fadeIn 1s ease 0.2s both' }}>
+          <p style={s.eyebrow}>Private client platform</p>
+          <p style={s.tagline}>Relationships,<br />refined.</p>
+        </div>
+
+        {/* Scroll cue */}
+        <div className="scroll-cue" style={s.scrollCue}>
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <path d="M5 7.5L10 12.5L15 7.5" stroke="rgba(26,26,26,0.35)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </div>
       </main>
+
+      {/* ── Scroll content ── */}
+      <section style={s.scrollSection}>
+
+        {/* Pronunciation + definition */}
+        <div style={s.definitionBlock}>
+          <div style={s.phonetic}>
+            <span style={s.word}>Allez</span>
+            <span style={s.pronunciation}>&nbsp;&nbsp;/a·ˈlɛ/&nbsp;&nbsp;·&nbsp;&nbsp;ah-LAY</span>
+          </div>
+          <p style={s.partOfSpeech}>French, verb imperative</p>
+          <p style={s.definition}>
+            <em>"Go."</em> The word a coach shouts from the sideline.
+            The word a crowd roars at the finish line. A single syllable
+            that means: <em>don't wait, move forward, the moment is now.</em>
+          </p>
+          <p style={s.definitionSub}>
+            We thought it fit for a platform built around momentum —
+            keeping advisors ahead of the relationship, not behind it.
+          </p>
+        </div>
+
+        {/* Divider */}
+        <div style={s.divider} />
+
+        {/* What's inside */}
+        <div style={s.featuresBlock}>
+          <p style={s.featuresEyebrow}>What's inside</p>
+          <h2 style={s.featuresTitle}>
+            Everything a modern advisor<br />practice actually needs.
+          </h2>
+          <p style={s.featuresSubtitle}>
+            Not a spreadsheet. Not a legacy CRM built for sales teams.
+            Something built specifically for wealth management — where the
+            relationship <em>is</em> the product.
+          </p>
+
+          <div style={s.featureGrid}>
+            {[
+              {
+                label: 'Client Profiles',
+                desc: 'Every detail about every client — risk tolerance, asset levels, communication preferences, family notes — in one place.',
+                status: 'Live',
+              },
+              {
+                label: 'AI Notes',
+                desc: 'Capture meeting notes, transcribe calls, and let the platform surface what matters — action items, securities mentions, compliance flags.',
+                status: 'Live',
+              },
+              {
+                label: 'CRM',
+                desc: 'Track touchpoints, log interactions, and see the full arc of a client relationship at a glance.',
+                status: 'Coming soon',
+              },
+              {
+                label: 'Onboarding',
+                desc: 'Guide new clients through the process with progress tracking, step completion, and outstanding task visibility.',
+                status: 'Coming soon',
+              },
+            ].map((f) => (
+              <div key={f.label} className="feature-card" style={s.featureCard}>
+                <div style={s.featureCardTop}>
+                  <span style={{
+                    ...s.featureBadge,
+                    background: f.status === 'Live' ? 'rgba(29,185,84,0.12)' : 'rgba(0,0,0,0.06)',
+                    color: f.status === 'Live' ? '#1DB954' : '#999',
+                  }}>
+                    {f.status}
+                  </span>
+                </div>
+                <p style={s.featureLabel}>{f.label}</p>
+                <p style={s.featureDesc}>{f.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Footer note */}
+        <div style={s.footer}>
+          <span style={s.footerLogo}>Allez</span>
+          <p style={s.footerNote}>
+            Built for advisors who believe the relationship is the product.
+          </p>
+        </div>
+
+      </section>
     </div>
   );
 }
 
 const s = {
   root: {
-    minHeight: '100vh',
     fontFamily: "'DM Sans', sans-serif",
     position: 'relative',
-    overflow: 'hidden',
-    display: 'flex',
-    flexDirection: 'column',
     background: '#f8f8f5',
+    overflowX: 'hidden',
   },
-  meshWrap: { position: 'absolute', inset: 0, zIndex: 0 },
+
+  // ── Orbs ──────────────────────────────────────
+  meshWrap: { position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none' },
   mesh1: {
     position: 'absolute', width: '900px', height: '900px', borderRadius: '50%',
     background: 'radial-gradient(circle, rgba(99,102,241,0.55) 0%, rgba(99,102,241,0.20) 50%, transparent 70%)',
@@ -151,9 +259,11 @@ const s = {
     bottom: '-150px', right: '0%', filter: 'blur(45px)',
     animation: 'mesh4 22s ease-in-out infinite',
   },
+
+  // ── Header ────────────────────────────────────
   header: {
     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-    padding: '32px 48px', position: 'relative', zIndex: 10,
+    padding: '32px 48px', position: 'fixed', top: 0, left: 0, right: 0, zIndex: 10,
   },
   logo: {
     fontFamily: "'Cormorant Garamond', serif", fontSize: '28px',
@@ -165,23 +275,21 @@ const s = {
     fontSize: '14px', fontWeight: '500', color: '#1a1a1a',
     cursor: 'pointer', transition: 'background 0.2s', letterSpacing: '0.02em',
   },
+
+  // ── Login card ────────────────────────────────
   cardWrapper: {
-    position: 'absolute', top: '80px', right: '48px',
+    position: 'fixed', top: '80px', right: '48px',
     zIndex: 100, animation: 'fadeDown 0.22s ease both',
   },
   card: {
-    background: 'rgba(255,255,255,0.1)',
-    backdropFilter: 'blur(8px)',
-    WebkitBackdropFilter: 'blur(8px)',
-    border: '1px solid rgba(255,255,255,0.2)',
+    background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(8px)',
+    WebkitBackdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.2)',
     borderRadius: '20px', padding: '36px 40px', width: '320px',
-    boxShadow: '0 10px 25px rgba(0,0,0,0.15)',
-    position: 'relative',
+    boxShadow: '0 10px 25px rgba(0,0,0,0.15)', position: 'relative',
   },
   closeBtn: {
-    position: 'absolute', top: '16px', right: '18px',
-    background: 'none', border: 'none', fontSize: '13px',
-    color: '#555', cursor: 'pointer', transition: 'opacity 0.15s',
+    position: 'absolute', top: '16px', right: '18px', background: 'none',
+    border: 'none', fontSize: '13px', color: '#555', cursor: 'pointer', transition: 'opacity 0.15s',
   },
   cardEyebrow: {
     fontSize: '11px', fontWeight: '500', textTransform: 'uppercase',
@@ -210,19 +318,142 @@ const s = {
     fontFamily: "'DM Sans', sans-serif", letterSpacing: '0.03em',
     transition: 'filter 0.2s', marginTop: '4px',
   },
+
+  // ── Hero ──────────────────────────────────────
   hero: {
-    flex: 1, display: 'flex', flexDirection: 'column',
+    height: '100vh', display: 'flex', flexDirection: 'column',
     justifyContent: 'center', alignItems: 'center', textAlign: 'center',
-    padding: '0 40px 120px', position: 'relative', zIndex: 1,
-    animation: 'fadeIn 1s ease 0.2s both',
+    padding: '0 40px', position: 'relative', zIndex: 1,
   },
   eyebrow: {
-    fontSize: '12px', fontWeight: '500', textTransform: 'uppercase',
-    letterSpacing: '0.2em', color: '#aaa', margin: '0 0 16px',
+    fontSize: '11px', fontWeight: '500', textTransform: 'uppercase',
+    letterSpacing: '0.22em', color: 'rgba(26,26,26,0.45)', margin: '0 0 20px',
   },
   tagline: {
     fontFamily: "'Cormorant Garamond', serif",
-    fontSize: 'clamp(36px, 5vw, 64px)', fontStyle: 'italic',
-    fontWeight: '300', color: '#1a1a1a', margin: 0, letterSpacing: '0.02em',
+    fontSize: 'clamp(48px, 6.5vw, 88px)', fontStyle: 'italic',
+    fontWeight: '300', color: '#1a1a1a', margin: 0,
+    letterSpacing: '0.01em', lineHeight: 1.1,
+  },
+  scrollCue: {
+    position: 'absolute', bottom: '40px',
+    left: '50%', transform: 'translateX(-50%)',
+    cursor: 'default',
+  },
+
+  // ── Scroll section ────────────────────────────
+  scrollSection: {
+    position: 'relative', zIndex: 1,
+    background: 'rgba(248,248,245,0.7)',
+    backdropFilter: 'blur(24px)',
+    WebkitBackdropFilter: 'blur(24px)',
+    borderTop: '1px solid rgba(0,0,0,0.06)',
+  },
+
+  // Definition block
+  definitionBlock: {
+    maxWidth: '1100px', margin: '0 auto',
+    padding: '100px 40px 80px',
+  },
+  phonetic: {
+    display: 'flex', alignItems: 'baseline', flexWrap: 'wrap',
+    marginBottom: '8px',
+  },
+  word: {
+    fontFamily: "'Cormorant Garamond', serif",
+    fontSize: '52px', fontWeight: '300',
+    color: '#1a1a1a', letterSpacing: '0.02em',
+  },
+  pronunciation: {
+    fontFamily: "'DM Sans', sans-serif",
+    fontSize: '16px', fontWeight: '300',
+    color: 'rgba(26,26,26,0.45)', letterSpacing: '0.04em',
+  },
+  partOfSpeech: {
+    fontSize: '11px', fontWeight: '500', textTransform: 'uppercase',
+    letterSpacing: '0.14em', color: '#6366f1',
+    margin: '0 0 28px',
+  },
+  definition: {
+    fontFamily: "'Cormorant Garamond', serif",
+    fontSize: '26px', fontWeight: '300', lineHeight: 1.6,
+    color: '#1a1a1a', margin: '0 0 20px',
+  },
+  definitionSub: {
+    fontSize: '15px', fontWeight: '300', lineHeight: 1.75,
+    color: 'rgba(26,26,26,0.55)', margin: 0,
+  },
+
+  divider: {
+    height: '1px',
+    background: 'rgba(0,0,0,0.07)',
+    margin: '0 40px',
+  },
+
+  // Features block
+  featuresBlock: {
+    maxWidth: '1100px', margin: '0 auto',
+    padding: '80px 40px 100px',
+  },
+  featuresEyebrow: {
+    fontSize: '11px', fontWeight: '500', textTransform: 'uppercase',
+    letterSpacing: '0.18em', color: '#6366f1',
+    margin: '0 0 16px',
+  },
+  featuresTitle: {
+    fontFamily: "'Cormorant Garamond', serif",
+    fontSize: 'clamp(28px, 3.5vw, 44px)', fontWeight: '300',
+    color: '#1a1a1a', margin: '0 0 20px', lineHeight: 1.2,
+    letterSpacing: '0.01em',
+  },
+  featuresSubtitle: {
+    fontSize: '15px', fontWeight: '300', lineHeight: 1.75,
+    color: 'rgba(26,26,26,0.55)',
+    maxWidth: '560px', margin: '0 0 56px',
+  },
+  featureGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
+    gap: '16px',
+  },
+  featureCard: {
+    background: 'rgba(255,255,255,0.55)',
+    backdropFilter: 'blur(8px)',
+    WebkitBackdropFilter: 'blur(8px)',
+    border: '1px solid rgba(255,255,255,0.7)',
+    borderRadius: '16px', padding: '28px',
+    transition: 'background 0.2s, transform 0.2s',
+  },
+  featureCardTop: { marginBottom: '16px' },
+  featureBadge: {
+    fontSize: '10px', fontWeight: '600', textTransform: 'uppercase',
+    letterSpacing: '0.1em', padding: '3px 10px',
+    borderRadius: '999px',
+  },
+  featureLabel: {
+    fontFamily: "'Cormorant Garamond', serif",
+    fontSize: '22px', fontWeight: '400',
+    color: '#1a1a1a', margin: '0 0 10px',
+    letterSpacing: '0.01em',
+  },
+  featureDesc: {
+    fontSize: '13px', fontWeight: '300', lineHeight: 1.7,
+    color: 'rgba(26,26,26,0.6)', margin: 0,
+  },
+
+  // Footer
+  footer: {
+    borderTop: '1px solid rgba(0,0,0,0.07)',
+    padding: '40px 48px',
+    display: 'flex', alignItems: 'center', gap: '20px',
+  },
+  footerLogo: {
+    fontFamily: "'Cormorant Garamond', serif",
+    fontSize: '20px', fontWeight: '600',
+    color: 'rgba(26,26,26,0.35)', letterSpacing: '0.06em',
+  },
+  footerNote: {
+    fontSize: '13px', fontWeight: '300',
+    color: 'rgba(26,26,26,0.35)', margin: 0,
   },
 };
