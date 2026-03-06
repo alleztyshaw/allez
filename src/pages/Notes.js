@@ -56,6 +56,7 @@ export default function Notes() {
   const [editingNote, setEditingNote] = useState(null);
   const [editForm, setEditForm] = useState({});
   const [expandedNotes, setExpandedNotes] = useState({});
+  const [clientFilter, setClientFilter] = useState('');
 
   function toggleExpand(noteId) {
     setExpandedNotes((prev) => ({ ...prev, [noteId]: !prev[noteId] }));
@@ -66,6 +67,7 @@ export default function Notes() {
     if (clientId) {
       setFormData((f) => ({ ...f, client_id: clientId }));
       setShowCompose(true);
+      setClientFilter(clientId);
     }
   }, [searchParams]);
 
@@ -140,7 +142,9 @@ export default function Notes() {
     fetchData();
   }
 
-  const grouped = groupByDate(notes);
+  const filteredNotes = clientFilter ? notes.filter(n => n.client_id === clientFilter) : notes;
+  const noteCounts = notes.reduce((acc, n) => { acc[n.client_id] = (acc[n.client_id] || 0) + 1; return acc; }, {});
+  const grouped = groupByDate(filteredNotes);
 
 
   const s = {
@@ -396,12 +400,38 @@ export default function Notes() {
         <div style={s.header}>
           <div>
             <h1 style={s.title}>Notes</h1>
-            <p style={s.subtitle}>{notes.length} total across {clients.length} clients</p>
+            <p style={s.subtitle}>{clientFilter ? `${filteredNotes.length} note${filteredNotes.length !== 1 ? 's' : ''} for ${clientName(clientFilter)}` : `${notes.length} total across ${clients.length} clients`}</p>
           </div>
           {!showCompose && (
             <button style={s.addButton} onClick={() => setShowCompose(true)}>+ New Note</button>
           )}
         </div>
+
+        {/* Client filter */}
+        {!showCompose && clients.length > 0 && (
+          <div style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <select
+              value={clientFilter}
+              onChange={e => setClientFilter(e.target.value)}
+              style={{ ...s.input, maxWidth: '280px', padding: '8px 12px' }}
+            >
+              <option value="">All clients</option>
+              {clients.map(c => (
+                <option key={c.id} value={c.id}>
+                  {c.first_name} {c.last_name} ({noteCounts[c.id] || 0})
+                </option>
+              ))}
+            </select>
+            {clientFilter && (
+              <button
+                onClick={() => { setClientFilter(''); navigate('/hq/notes', { replace: true }); }}
+                style={{ ...s.cancelButton, padding: '6px 14px', fontSize: '12px' }}
+              >
+                Clear
+              </button>
+            )}
+          </div>
+        )}
 
         {/* Compose form */}
         {showCompose && (
@@ -451,7 +481,7 @@ export default function Notes() {
         {loading ? (
           <div style={s.emptyState}>Loading notes...</div>
         ) : notes.length === 0 ? (
-          <div style={s.emptyState}>No notes yet. Create your first note above.</div>
+          <div style={s.emptyState}>{clientFilter ? `No notes found for ${clientName(clientFilter)}.` : 'No notes yet. Create your first note above.'}</div>
         ) : (
           grouped.map(([date, dateNotes]) => (
             <div key={date} style={s.dateGroup}>

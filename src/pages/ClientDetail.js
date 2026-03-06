@@ -435,6 +435,10 @@ export default function ClientDetail() {
   const [error, setError] = useState('');
   const [clientNotes, setClientNotes] = useState([]);
   const [editingNote, setEditingNote] = useState(null);
+  const [showNoteCompose, setShowNoteCompose] = useState(false);
+  const [inlineNoteForm, setInlineNoteForm] = useState({ title: '', body: '', note_type: 'General' });
+  const [inlineNoteSaving, setInlineNoteSaving] = useState(false);
+  const [inlineNoteError, setInlineNoteError] = useState('');
   const [editNoteForm, setEditNoteForm] = useState({});
   const [advisors, setAdvisors] = useState([]);
   const [orgMembers, setOrgMembers] = useState([]);
@@ -473,6 +477,26 @@ export default function ClientDetail() {
     }
     if (orgId) { fetchClient(); loadNotes(); loadAdvisors(); loadOrgMembers(); }
   }, [id, orgId]);
+
+  async function handleInlineNoteSave() {
+    if (!inlineNoteForm.title.trim()) { setInlineNoteError('Please enter a title.'); return; }
+    setInlineNoteSaving(true); setInlineNoteError('');
+    const { error } = await supabase.from('notes').insert([{
+      client_id: id,
+      title: inlineNoteForm.title,
+      body: inlineNoteForm.body,
+      note_type: inlineNoteForm.note_type,
+      source: 'manual',
+      org_id: orgId,
+    }]);
+    if (error) { setInlineNoteError('Something went wrong.'); }
+    else {
+      setInlineNoteForm({ title: '', body: '', note_type: 'General' });
+      setShowNoteCompose(false);
+      fetchNotes();
+    }
+    setInlineNoteSaving(false);
+  }
 
   async function fetchNotes() {
     const { data } = await supabase
@@ -734,15 +758,44 @@ export default function ClientDetail() {
         <div style={{ marginTop: '36px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
             <p style={{ ...s.sectionLabel, margin: 0 }}>Notes ({clientNotes.length})</p>
-            <button style={s.editButton} onClick={() => navigate(`/hq/notes?client_id=${id}`)}>
-              + Record Note
+            <button style={s.editButton} onClick={() => setShowNoteCompose(v => !v)}>
+              {showNoteCompose ? 'Cancel' : '+ Record Note'}
             </button>
           </div>
+
+          {showNoteCompose && (
+            <div style={{ ...s.notesCard, marginBottom: '16px' }}>
+              <p style={{ fontSize: '10px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.12em', color: ACCENT, margin: '0 0 14px' }}>New Note</p>
+              <div style={{ display: 'flex', gap: '10px', marginBottom: '10px', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1, minWidth: '140px' }}>
+                  <label style={s.label}>Type</label>
+                  <select value={inlineNoteForm.note_type} onChange={e => setInlineNoteForm({ ...inlineNoteForm, note_type: e.target.value })} style={s.input}>
+                    {['Meeting', 'Call', 'Email', 'General'].map(t => <option key={t} value={t}>{t}</option>)}
+                  </select>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 3, minWidth: '200px' }}>
+                  <label style={s.label}>Title *</label>
+                  <input value={inlineNoteForm.title} onChange={e => setInlineNoteForm({ ...inlineNoteForm, title: e.target.value })} placeholder="e.g. Q1 Review Meeting" style={s.input} />
+                </div>
+              </div>
+              <textarea
+                value={inlineNoteForm.body}
+                onChange={e => setInlineNoteForm({ ...inlineNoteForm, body: e.target.value })}
+                placeholder="Key discussion points, action items..."
+                style={{ ...s.input, width: '100%', minHeight: '90px', resize: 'vertical', fontFamily: FONT_BODY, boxSizing: 'border-box', marginBottom: '10px' }}
+              />
+              {inlineNoteError && <p style={{ color: '#f87171', fontSize: '12px', marginBottom: '8px' }}>{inlineNoteError}</p>}
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+                <button style={s.cancelButton} onClick={() => { setShowNoteCompose(false); setInlineNoteError(''); setInlineNoteForm({ title: '', body: '', note_type: 'General' }); }}>Cancel</button>
+                <button style={s.saveButton} onClick={handleInlineNoteSave} disabled={inlineNoteSaving}>{inlineNoteSaving ? 'Saving…' : 'Save Note'}</button>
+              </div>
+            </div>
+          )}
 
           {clientNotes.length === 0 ? (
             <div style={{ ...s.notesCard, textAlign: 'center', color: t.TEXT_MUTED, fontSize: '14px' }}>
               No notes yet.{' '}
-              <span style={{ color: ACCENT, cursor: 'pointer' }} onClick={() => navigate(`/hq/notes?client_id=${id}`)}>
+              <span style={{ color: ACCENT, cursor: 'pointer' }} onClick={() => setShowNoteCompose(true)}>
                 Add the first note →
               </span>
             </div>
