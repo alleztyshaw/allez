@@ -26,8 +26,10 @@ export default async function handler(req, res) {
   }
 
   try {
-    // 1. Send magic link invite via Supabase Admin API
-    const inviteRes = await fetch(`${supabaseUrl}/auth/v1/invite`, {
+    const redirectTo = `${process.env.REACT_APP_SITE_URL || 'https://allezcapital.com'}/welcome`;
+
+    // Send magic link invite via Supabase Admin API
+    const inviteRes = await fetch(`${supabaseUrl}/auth/v1/invite?redirect_to=${encodeURIComponent(redirectTo)}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

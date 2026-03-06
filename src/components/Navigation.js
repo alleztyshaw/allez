@@ -15,7 +15,7 @@ function Navigation() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [hqHovered, setHqHovered] = useState(false);
   const hqHoverTimeout = useRef(null);
-  const { canManageUsers } = useOrg();
+  const { isAdmin, orgLoading } = useOrg();
 
   const getGreeting = () => {
     const h = new Date().getHours();
@@ -142,7 +142,7 @@ function Navigation() {
                           </Link>
                         )
                       )}
-                      {canManageUsers && (
+                      {!orgLoading && isAdmin && (
                         <Link
                           to="/hq/team"
                           onClick={() => { setMenuOpen(false); setHqHovered(false); }}

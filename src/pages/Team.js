@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { useOrg } from '../context/OrgContext';
 import {
@@ -25,19 +26,30 @@ const ROLE_COLORS = {
 };
 
 export default function Team() {
-  const { orgId, isPlatformAdmin, canManageUsers } = useOrg();
+  const { orgId, isPlatformAdmin, isAdmin, orgLoading } = useOrg();
+  const navigate = useNavigate();
+
+  // Wait for org to load before checking role
+  useEffect(() => {
+    if (!orgLoading && !isAdmin) navigate('/hq');
+  }, [isAdmin, orgLoading, navigate]);
   const [orgs, setOrgs]           = useState([]);
   const [selectedOrg, setSelectedOrg] = useState(null);
   const [members, setMembers]     = useState([]);
   const [loading, setLoading]     = useState(true);
-  const [saving, setSaving]       = useState(null); // user_id of member being saved
-  const [editingRole, setEditingRole] = useState(null); // user_id of member being edited
+  const [saving, setSaving]       = useState(null);
+  const [editingRole, setEditingRole] = useState(null);
   const [pendingRole, setPendingRole] = useState('');
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole]   = useState('advisor');
   const [showInvite, setShowInvite]   = useState(false);
   const [inviteError, setInviteError] = useState('');
-  const [inviteSuccess, setInviteSuccess] = useState('');
+  const [toast, setToast]         = useState(null); // { message, type: 'success'|'error' }
+
+  function showToast(message, type = 'success') {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 4000);
+  }
 
   // Platform admins can see all orgs; regular admins see only their own
   useEffect(() => {
@@ -69,11 +81,11 @@ export default function Team() {
 
   async function fetchMembers(targetOrgId) {
     setLoading(true);
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('org_members')
-      .select('user_id, role, display_name, first_name, last_name')
-      .eq('org_id', targetOrgId)
-      .order('role');
+      .select('user_id, role, first_name, last_name, display_name')
+      .eq('org_id', targetOrgId);
+    if (error) console.error('fetchMembers error:', error);
     setMembers(data || []);
     setLoading(false);
   }
@@ -205,13 +217,30 @@ export default function Team() {
   return (
     <div style={s.page}>
 
+      {/* Toast notification */}
+      {toast && (
+        <div style={{
+          position: 'fixed', bottom: '32px', right: '32px',
+          background: toast.type === 'success' ? 'rgba(81,218,131,0.15)' : 'rgba(248,113,113,0.15)',
+          border: `1px solid ${toast.type === 'success' ? '#51da83' : '#f87171'}`,
+          color: toast.type === 'success' ? '#51da83' : '#f87171',
+          borderRadius: '12px', padding: '14px 20px',
+          fontSize: '14px', fontFamily: PAGE_FONT,
+          zIndex: 1000, backdropFilter: 'blur(8px)',
+          boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
+          animation: 'fadeIn 0.2s ease',
+        }}>
+          {toast.type === 'success' ? '✓ ' : '✕ '}{toast.message}
+        </div>
+      )}
+
       {/* Header */}
       <div style={s.header}>
         <div>
           <h1 style={s.title}>Team</h1>
           <p style={s.subtitle}>Manage members and roles</p>
         </div>
-        {canManageUsers && (
+        {isAdmin && (
           <button style={s.addButton} onClick={() => setShowInvite(!showInvite)}>
             + Invite Member
           </button>
@@ -234,7 +263,7 @@ export default function Team() {
       )}
 
       {/* Invite form */}
-      {showInvite && canManageUsers && (
+      {showInvite && isAdmin && (
         <div style={s.inviteSection}>
           <p style={s.inviteTitle}>Invite New Member</p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -272,7 +301,7 @@ export default function Team() {
                     if (!res.ok) {
                       setInviteError(data.error || 'Invite failed');
                     } else {
-                      setInviteSuccess(`Invite sent to ${inviteEmail}`);
+                      showToast(`Invite sent to ${inviteEmail}`);
                       setInviteEmail('');
                       setShowInvite(false);
                     }
@@ -287,8 +316,7 @@ export default function Team() {
                 Cancel
               </button>
             </div>
-            {inviteError   && <p style={{ color: '#f87171', fontSize: '13px', margin: 0 }}>{inviteError}</p>}
-            {inviteSuccess && <p style={{ color: '#51da83', fontSize: '13px', margin: 0 }}>{inviteSuccess}</p>}
+            {inviteError && <p style={{ color: '#f87171', fontSize: '13px', margin: 0 }}>{inviteError}</p>}
             <p style={s.roleDesc}>{ROLE_DESCRIPTIONS[inviteRole]}</p>
           </div>
         </div>
@@ -346,7 +374,7 @@ export default function Team() {
                       <span style={s.roleBadge(m.role)}>
                         {m.role.charAt(0).toUpperCase() + m.role.slice(1)}
                       </span>
-                      {canManageUsers && (
+                      {isAdmin && (
                         <button
                           style={s.editButton}
                           onClick={() => { setEditingRole(m.user_id); setPendingRole(m.role); }}
