@@ -123,14 +123,16 @@ export default function Login() {
 
       {/* Hero — viewport-height, centred */}
       <main style={s.hero}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
         <div style={{ animation: 'fadeIn 1s ease 0.2s both' }}>
           <p style={s.eyebrow}>Private client platform</p>
           <p style={s.tagline}>Relationships,<br />refined.</p>
         </div>
+        </div>
 
         {/* Scroll cue */}
         <div className="scroll-cue" style={s.scrollCue}>
-          <svg width="32" height="32" viewBox="0 0 20 20" fill="none">
+          <svg width="36" height="36" viewBox="0 0 20 20" fill="none">
             <path d="M5 7.5L10 12.5L15 7.5" stroke="rgba(26,26,26,0.35)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         </div>
@@ -322,9 +324,10 @@ const s = {
 
   // ── Hero ──────────────────────────────────────
   hero: {
-    height: 'calc(100vh - 64px)', display: 'flex', flexDirection: 'column',
-    justifyContent: 'center', alignItems: 'center', textAlign: 'center',
-    padding: '0 40px 60px', position: 'relative', zIndex: 1,
+    height: 'calc(100svh - 64px)', minHeight: 'calc(100vh - 64px)',
+    display: 'flex', flexDirection: 'column',
+    justifyContent: 'space-between', alignItems: 'center', textAlign: 'center',
+    padding: '0 40px 40px', position: 'relative', zIndex: 1,
   },
   eyebrow: {
     fontSize: '11px', fontWeight: '500', textTransform: 'uppercase',
@@ -337,9 +340,8 @@ const s = {
     letterSpacing: '0.01em', lineHeight: 1.1,
   },
   scrollCue: {
-    position: 'absolute', bottom: 'clamp(32px, 8vh, 100px)',
-    left: 0, right: 0,
     display: 'flex', justifyContent: 'center',
+    width: '100%', flexShrink: 0,
     cursor: 'default',
   },
 
