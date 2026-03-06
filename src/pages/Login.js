@@ -324,10 +324,10 @@ const s = {
 
   // ── Hero ──────────────────────────────────────
   hero: {
-    height: 'calc(100svh - 64px)', minHeight: 'calc(100vh - 64px)',
+    height: 'calc(100dvh - 64px)', minHeight: 'calc(100svh - 64px)',
     display: 'flex', flexDirection: 'column',
     justifyContent: 'space-between', alignItems: 'center', textAlign: 'center',
-    padding: '0 40px 40px', position: 'relative', zIndex: 1,
+    padding: '0 40px 80px', position: 'relative', zIndex: 1,
   },
   eyebrow: {
     fontSize: '11px', fontWeight: '500', textTransform: 'uppercase',
