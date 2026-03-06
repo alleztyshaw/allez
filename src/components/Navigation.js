@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { useOrg } from '../context/OrgContext';
+import { useTheme } from '../context/ThemeContext';
 import '../App.css';
 
 const HQ_SUBMENU = [
@@ -14,8 +15,17 @@ function Navigation() {
   const [displayName, setDisplayName] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
   const [hqHovered, setHqHovered] = useState(false);
+  const [submenuLeft, setSubmenuLeft] = useState(false);
   const hqHoverTimeout = useRef(null);
+  const menuRef = useRef(null);
+  const hqRef = useRef(null);
   const { isAdmin, orgLoading } = useOrg();
+  const { theme } = useTheme();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const isDarkPage = location.pathname.startsWith('/hq');
+  const linkColor = (isDarkPage && theme === 'dark') ? '#f0ece0' : '#1a1a2e';
 
   const getGreeting = () => {
     const h = new Date().getHours();
@@ -24,17 +34,13 @@ function Navigation() {
     return 'Good evening';
   };
 
-  const menuRef = useRef(null);
-
   useEffect(() => {
     function handleClickOutside(e) {
       if (menuRef.current && !menuRef.current.contains(e.target)) {
         setMenuOpen(false);
       }
     }
-    if (menuOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
+    if (menuOpen) document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [menuOpen]);
 
@@ -46,29 +52,17 @@ function Navigation() {
   const handleHqLeave = () => {
     hqHoverTimeout.current = setTimeout(() => setHqHovered(false), 150);
   };
-  const [submenuLeft, setSubmenuLeft] = useState(false);
-  const hqRef = useRef(null);
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  // Use light text on dark pages (HQ and nested), dark text everywhere else
-  const isDarkPage = location.pathname.startsWith('/hq');
-  const linkColor = isDarkPage ? '#f0ece0' : '#1a1a2e';
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        setDisplayName(session.user.user_metadata.display_name);
-      }
+      if (session) setDisplayName(session.user.user_metadata.display_name);
     });
   }, []);
 
-  // Detect if submenu would overflow off the right edge of the window
   useEffect(() => {
     if (hqHovered && hqRef.current) {
       const rect = hqRef.current.getBoundingClientRect();
-      const submenuWidth = 180;
-      const wouldOverflow = rect.right + submenuWidth > window.innerWidth - 16;
+      const wouldOverflow = rect.right + 180 > window.innerWidth - 16;
       setSubmenuLeft(wouldOverflow);
     }
   }, [hqHovered]);
@@ -86,22 +80,25 @@ function Navigation() {
             Allez HQ
           </Link>
         </h1>
+
         <div className="nav-right">
+          {/* Greeting */}
           {displayName && (
             <span className="welcome-message" style={{ color: linkColor, opacity: 0.8, fontSize: '16px' }}>
               {getGreeting()}, {displayName}
             </span>
           )}
+
+          {/* Hamburger menu */}
           <div ref={menuRef} style={{ position: 'relative', display: 'inline-block' }}>
             <button className="hamburger" onClick={() => setMenuOpen(!menuOpen)}>
-              <span></span>
-              <span></span>
-              <span></span>
+              <span style={{ background: linkColor }}></span>
+              <span style={{ background: linkColor }}></span>
+              <span style={{ background: linkColor }}></span>
             </button>
 
             {menuOpen && (
               <nav className="dropdown-menu">
-                {/* HQ with flyout submenu */}
                 <div
                   ref={hqRef}
                   style={styles.menuItemWrapper}
@@ -111,7 +108,7 @@ function Navigation() {
                   <Link
                     to="/hq"
                     onClick={() => setMenuOpen(false)}
-                    style={{...styles.menuLinkWithArrow, color: linkColor}}
+                    style={{ ...styles.menuLinkWithArrow, color: linkColor }}
                   >
                     HQ
                   </Link>
@@ -136,7 +133,7 @@ function Navigation() {
                             key={item.path}
                             to={item.path}
                             onClick={() => { setMenuOpen(false); setHqHovered(false); }}
-                            style={{...styles.submenuItem, color: linkColor}}
+                            style={{ ...styles.submenuItem, color: linkColor }}
                           >
                             {item.label}
                           </Link>
@@ -146,7 +143,7 @@ function Navigation() {
                         <Link
                           to="/hq/team"
                           onClick={() => { setMenuOpen(false); setHqHovered(false); }}
-                          style={{...styles.submenuItem, color: linkColor}}
+                          style={{ ...styles.submenuItem, color: linkColor }}
                         >
                           Team
                         </Link>
@@ -155,15 +152,10 @@ function Navigation() {
                   )}
                 </div>
 
-                <Link to="/about" onClick={() => setMenuOpen(false)} style={{...styles.menuLink, color: linkColor}}>
-                  About
-                </Link>
-                <Link to="/contact" onClick={() => setMenuOpen(false)} style={{...styles.menuLink, color: linkColor}}>
-                  Contact
-                </Link>
-                <button onClick={handleLogout} className="logout-link">
-                  Log Out
-                </button>
+                <Link to="/hq/settings" onClick={() => setMenuOpen(false)} style={{ ...styles.menuLink, color: linkColor }}>Settings</Link>
+                <Link to="/about" onClick={() => setMenuOpen(false)} style={{ ...styles.menuLink, color: linkColor }}>About</Link>
+                <Link to="/contact" onClick={() => setMenuOpen(false)} style={{ ...styles.menuLink, color: linkColor }}>Contact</Link>
+                <button onClick={handleLogout} className="logout-link">Log Out</button>
               </nav>
             )}
           </div>
@@ -174,68 +166,31 @@ function Navigation() {
 }
 
 const styles = {
-  menuLink: {
-    color: '#f0ece0',
-    textDecoration: 'none',
-    display: 'block',
-  },
-  menuLinkWithArrow: {
-    color: '#f0ece0',
-    textDecoration: 'none',
-    display: 'block',
-    position: 'relative',
-  },
-  menuItemWrapper: {
-    position: 'relative',
-  },
+  menuLink: { color: '#f0ece0', textDecoration: 'none', display: 'block' },
+  menuLinkWithArrow: { color: '#f0ece0', textDecoration: 'none', display: 'block', position: 'relative' },
+  menuItemWrapper: { position: 'relative' },
   submenu: {
-    position: 'absolute',
-    top: 0,
-    background: 'rgba(255, 255, 255, 0.1)',
-    backdropFilter: 'blur(8px)',
-    borderRadius: '12px',
-    boxShadow: '0 10px 25px rgba(0,0,0,0.15)',
-    display: 'flex',
-    flexDirection: 'column',
-    padding: '1rem',
-    gap: '0.5rem',
-    minWidth: '180px',
-    zIndex: 200,
-    fontSize: '1rem',
+    position: 'absolute', top: 0,
+    background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(8px)',
+    borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.15)',
+    display: 'flex', flexDirection: 'column',
+    padding: '1rem', gap: '0.5rem', minWidth: '180px', zIndex: 200, fontSize: '1rem',
   },
-  submenuRight: {
-    left: '170px',
-  },
-  submenuLeft: {
-    right: '170px',
-  },
+  submenuRight: { left: '170px' },
+  submenuLeft: { right: '170px' },
   submenuItem: {
-    display: 'block',
-    padding: '0.5rem 1rem',
-    color: '#444',
-    textDecoration: 'none',
-    borderRadius: '6px',
-    fontWeight: '500',
-    textAlign: 'right',
-    transition: 'background 0.2s',
+    display: 'block', padding: '0.5rem 1rem', color: '#444',
+    textDecoration: 'none', borderRadius: '6px', fontWeight: '500',
+    textAlign: 'right', transition: 'background 0.2s',
   },
   submenuItemDisabled: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    padding: '0.5rem 1rem',
-    color: '#999',
-    fontSize: '1rem',
-    cursor: 'default',
-    borderRadius: '6px',
+    display: 'flex', alignItems: 'center', justifyContent: 'flex-end',
+    padding: '0.5rem 1rem', color: '#999', fontSize: '1rem',
+    cursor: 'default', borderRadius: '6px',
   },
   soonTag: {
-    fontSize: '10px',
-    background: 'rgba(255,255,255,0.08)',
-    color: '#6b7280',
-    padding: '2px 7px',
-    borderRadius: '8px',
-    marginLeft: '8px',
+    fontSize: '10px', background: 'rgba(255,255,255,0.08)',
+    color: '#6b7280', padding: '2px 7px', borderRadius: '8px', marginLeft: '8px',
   },
 };
 

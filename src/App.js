@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { OrgProvider } from './context/OrgContext';
+import { ThemeProvider } from './context/ThemeContext';
 import Navigation from './components/Navigation';
 import Footer from './components/Footer';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -13,6 +14,7 @@ import Notes from './pages/Notes';
 import HQ from './pages/HQ';
 import Team from './pages/Team';
 import Welcome from './pages/Welcome';
+import Settings from './pages/Settings';
 import './App.css';
 
 function ProtectedLayout({ children }) {
@@ -27,24 +29,27 @@ function ProtectedLayout({ children }) {
 
 function App() {
   return (
-    <OrgProvider>
-      <Router>
-        <div className="App">
-          <Routes>
-            <Route path="/" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
-            <Route path="/about" element={<ProtectedLayout><About /></ProtectedLayout>} />
-            <Route path="/contact" element={<ProtectedLayout><Contact /></ProtectedLayout>} />
-            <Route path="/welcome" element={<Welcome />} />
-            <Route path="/hq" element={<ProtectedLayout><HQ /></ProtectedLayout>} />
-            <Route path="/hq/clients" element={<ProtectedLayout><Clients /></ProtectedLayout>} />
-            <Route path="/hq/clients/:id" element={<ProtectedLayout><ClientDetail /></ProtectedLayout>} />
-            <Route path="/hq/notes" element={<ProtectedLayout><Notes /></ProtectedLayout>} />
-            <Route path="/hq/team" element={<ProtectedLayout><Team /></ProtectedLayout>} />
-          </Routes>
-        </div>
-      </Router>
-    </OrgProvider>
+    <ThemeProvider>
+      <OrgProvider>
+        <Router>
+          <div className="App">
+            <Routes>
+              <Route path="/" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
+              <Route path="/about" element={<ProtectedLayout><About /></ProtectedLayout>} />
+              <Route path="/contact" element={<ProtectedLayout><Contact /></ProtectedLayout>} />
+              <Route path="/welcome" element={<Welcome />} />
+              <Route path="/hq" element={<ProtectedLayout><HQ /></ProtectedLayout>} />
+              <Route path="/hq/clients" element={<ProtectedLayout><Clients /></ProtectedLayout>} />
+              <Route path="/hq/clients/:id" element={<ProtectedLayout><ClientDetail /></ProtectedLayout>} />
+              <Route path="/hq/notes" element={<ProtectedLayout><Notes /></ProtectedLayout>} />
+              <Route path="/hq/team" element={<ProtectedLayout><Team /></ProtectedLayout>} />
+            <Route path="/hq/settings" element={<ProtectedLayout><Settings /></ProtectedLayout>} />
+            </Routes>
+          </div>
+        </Router>
+      </OrgProvider>
+    </ThemeProvider>
   );
 }
 

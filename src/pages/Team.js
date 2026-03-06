@@ -3,13 +3,17 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { useOrg } from '../context/OrgContext';
 import {
-  ACCENT, ACCENT_MUTED, ACCENT_BORDER,
-  D_BG, D_SURFACE, D_SURFACE_ALT, D_BORDER,
-  D_TEXT, D_TEXT_MUTED,
-  FONT_DISPLAY, FONT_BODY,
-  RADIUS_MD, RADIUS_LG, RADIUS_PILL,
+  ACCENT,
+  ACCENT_BORDER,
+  ACCENT_MUTED,
+  FONT_BODY,
+  FONT_DISPLAY,
+  RADIUS_LG,
+  RADIUS_MD,
+  RADIUS_PILL,
   SHADOW_MD,
 } from '../utils/hqConstants';
+import { useTokens } from '../context/ThemeContext';
 
 const ROLES = ['admin', 'manager', 'advisor', 'associate', 'compliance'];
 
@@ -30,6 +34,7 @@ const ROLE_COLORS = {
 };
 
 export default function Team() {
+  const t = useTokens();
   const { orgId, isPlatformAdmin, isAdmin, orgLoading } = useOrg();
   const navigate = useNavigate();
 
@@ -105,6 +110,125 @@ export default function Team() {
     if (m.display_name) return m.display_name;
     return m.user_id.slice(0, 8) + '…';
   }
+
+
+  const s = {
+    pageWrapper: {
+      background: t.BG,
+      minHeight: '100vh',
+      width: '100%',
+    },
+    page: {
+      maxWidth: '1200px',
+      margin: '0 auto',
+      padding: '120px 40px 80px',
+      fontFamily: FONT_BODY,
+      color: t.TEXT,
+    },
+    header: {
+      display: 'flex', justifyContent: 'space-between',
+      alignItems: 'flex-start', marginBottom: '32px',
+    },
+    title: {
+      fontFamily: FONT_DISPLAY,
+      fontSize: '44px',
+      fontWeight: '300',
+      color: t.TEXT,
+      margin: '0 0 6px',
+      letterSpacing: '0.01em',
+      lineHeight: 1.1,
+    },
+    subtitle: { fontSize: '13px', color: t.TEXT_MUTED, margin: 0, fontWeight: '300', letterSpacing: '0.03em' },
+    orgTabs: {
+      display: 'flex', gap: '8px', marginBottom: '32px', flexWrap: 'wrap',
+    },
+    orgTab: {
+      padding: '6px 16px', borderRadius: RADIUS_PILL, fontSize: '13px',
+      border: `1px solid ${t.BORDER}`,
+      background: 'transparent',
+      color: t.TEXT_MUTED,
+      cursor: 'pointer', fontFamily: FONT_BODY,
+    },
+    orgTabActive: {
+      border: `1px solid ${ACCENT_BORDER}`,
+      background: ACCENT_MUTED,
+      color: ACCENT,
+    },
+    card: {
+      background: t.SURFACE,
+      border: `1px solid ${t.BORDER}`,
+      borderRadius: RADIUS_LG,
+      overflow: 'hidden',
+      boxShadow: SHADOW_MD,
+    },
+    memberRow: {
+      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      padding: '16px 20px', gap: '16px',
+    },
+    avatar: {
+      width: '38px', height: '38px', borderRadius: '50%',
+      background: ACCENT_MUTED,
+      border: `1px solid ${ACCENT_BORDER}`,
+      color: ACCENT,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      fontFamily: FONT_DISPLAY,
+      fontSize: '16px', fontWeight: '400', flexShrink: 0,
+    },
+    memberInfo: { flex: 1 },
+    memberName: { fontSize: '14px', color: t.TEXT, margin: '0 0 2px', fontWeight: '400' },
+    memberId: { fontSize: '11px', color: t.TEXT_MUTED, margin: 0, fontWeight: '300' },
+    editButton: {
+      background: 'none', border: `1px solid ${t.BORDER}`,
+      borderRadius: RADIUS_MD, padding: '4px 12px',
+      fontSize: '12px', color: t.TEXT_MUTED,
+      cursor: 'pointer', fontFamily: FONT_BODY,
+    },
+    select: {
+      background: t.SURFACE_ALT, border: `1px solid ${t.BORDER}`,
+      borderRadius: RADIUS_MD, padding: '6px 10px',
+      fontSize: '13px', color: t.TEXT,
+      fontFamily: FONT_BODY, cursor: 'pointer',
+    },
+    saveButton: {
+      background: ACCENT_MUTED, border: `1px solid ${ACCENT_BORDER}`,
+      borderRadius: RADIUS_MD, padding: '6px 14px',
+      fontSize: '12px', color: ACCENT, fontWeight: '600',
+      cursor: 'pointer', fontFamily: FONT_BODY,
+    },
+    cancelButton: {
+      background: 'none', border: `1px solid ${t.BORDER}`,
+      borderRadius: RADIUS_MD, padding: '6px 14px',
+      fontSize: '12px', color: t.TEXT_MUTED,
+      cursor: 'pointer', fontFamily: FONT_BODY,
+    },
+    roleDesc: {
+      fontSize: '11px', color: t.TEXT_MUTED,
+      margin: '4px 0 0', fontStyle: 'italic', fontWeight: '300',
+    },
+    inviteSection: {
+      background: t.SURFACE, border: `1px solid ${t.BORDER}`,
+      borderRadius: RADIUS_LG, padding: '24px',
+      marginBottom: '28px', boxShadow: SHADOW_MD,
+    },
+    inviteTitle: {
+      fontSize: '10px', fontWeight: '600',
+      textTransform: 'uppercase', letterSpacing: '0.12em',
+      color: ACCENT, margin: '0 0 16px',
+    },
+    input: {
+      background: t.SURFACE_ALT, border: `1px solid ${t.BORDER}`,
+      borderRadius: RADIUS_MD, padding: '10px 14px',
+      fontSize: '14px', color: t.TEXT,
+      fontFamily: FONT_BODY, width: '100%',
+      boxSizing: 'border-box', outline: 'none',
+    },
+    addButton: {
+      background: 'transparent', border: `1px solid ${ACCENT_BORDER}`,
+      borderRadius: RADIUS_MD, padding: '10px 20px',
+      fontSize: '14px', color: ACCENT, fontWeight: '600',
+      cursor: 'pointer', fontFamily: FONT_BODY,
+    },
+  };
 
   return (
     <div style={s.pageWrapper}>
@@ -223,7 +347,7 @@ export default function Team() {
 
         {/* Member list */}
         {loading ? (
-          <p style={{ color: D_TEXT_MUTED, fontWeight: '300' }}>Loading team...</p>
+          <p style={{ color: t.TEXT_MUTED, fontWeight: '300' }}>Loading team...</p>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {members.map((m) => (
@@ -278,7 +402,7 @@ export default function Team() {
                         borderRadius: RADIUS_PILL, letterSpacing: '0.06em',
                         textTransform: 'uppercase',
                         background: ROLE_COLORS[m.role]?.bg || 'rgba(255,255,255,0.05)',
-                        color: ROLE_COLORS[m.role]?.color || D_TEXT_MUTED,
+                        color: ROLE_COLORS[m.role]?.color || t.TEXT_MUTED,
                       }}>
                         {m.role.charAt(0).toUpperCase() + m.role.slice(1)}
                       </span>
@@ -303,121 +427,3 @@ export default function Team() {
     </div>
   );
 }
-
-const s = {
-  pageWrapper: {
-    background: D_BG,
-    minHeight: '100vh',
-    width: '100%',
-  },
-  page: {
-    maxWidth: '1200px',
-    margin: '0 auto',
-    padding: '120px 40px 80px',
-    fontFamily: FONT_BODY,
-    color: D_TEXT,
-  },
-  header: {
-    display: 'flex', justifyContent: 'space-between',
-    alignItems: 'flex-start', marginBottom: '32px',
-  },
-  title: {
-    fontFamily: FONT_DISPLAY,
-    fontSize: '44px',
-    fontWeight: '300',
-    color: D_TEXT,
-    margin: '0 0 6px',
-    letterSpacing: '0.01em',
-    lineHeight: 1.1,
-  },
-  subtitle: { fontSize: '13px', color: D_TEXT_MUTED, margin: 0, fontWeight: '300', letterSpacing: '0.03em' },
-  orgTabs: {
-    display: 'flex', gap: '8px', marginBottom: '32px', flexWrap: 'wrap',
-  },
-  orgTab: {
-    padding: '6px 16px', borderRadius: RADIUS_PILL, fontSize: '13px',
-    border: `1px solid ${D_BORDER}`,
-    background: 'transparent',
-    color: D_TEXT_MUTED,
-    cursor: 'pointer', fontFamily: FONT_BODY,
-  },
-  orgTabActive: {
-    border: `1px solid ${ACCENT_BORDER}`,
-    background: ACCENT_MUTED,
-    color: ACCENT,
-  },
-  card: {
-    background: D_SURFACE,
-    border: `1px solid ${D_BORDER}`,
-    borderRadius: RADIUS_LG,
-    overflow: 'hidden',
-    boxShadow: SHADOW_MD,
-  },
-  memberRow: {
-    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-    padding: '16px 20px', gap: '16px',
-  },
-  avatar: {
-    width: '38px', height: '38px', borderRadius: '50%',
-    background: ACCENT_MUTED,
-    border: `1px solid ${ACCENT_BORDER}`,
-    color: ACCENT,
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    fontFamily: FONT_DISPLAY,
-    fontSize: '16px', fontWeight: '400', flexShrink: 0,
-  },
-  memberInfo: { flex: 1 },
-  memberName: { fontSize: '14px', color: D_TEXT, margin: '0 0 2px', fontWeight: '400' },
-  memberId: { fontSize: '11px', color: D_TEXT_MUTED, margin: 0, fontWeight: '300' },
-  editButton: {
-    background: 'none', border: `1px solid ${D_BORDER}`,
-    borderRadius: RADIUS_MD, padding: '4px 12px',
-    fontSize: '12px', color: D_TEXT_MUTED,
-    cursor: 'pointer', fontFamily: FONT_BODY,
-  },
-  select: {
-    background: D_SURFACE_ALT, border: `1px solid ${D_BORDER}`,
-    borderRadius: RADIUS_MD, padding: '6px 10px',
-    fontSize: '13px', color: D_TEXT,
-    fontFamily: FONT_BODY, cursor: 'pointer',
-  },
-  saveButton: {
-    background: ACCENT_MUTED, border: `1px solid ${ACCENT_BORDER}`,
-    borderRadius: RADIUS_MD, padding: '6px 14px',
-    fontSize: '12px', color: ACCENT, fontWeight: '600',
-    cursor: 'pointer', fontFamily: FONT_BODY,
-  },
-  cancelButton: {
-    background: 'none', border: `1px solid ${D_BORDER}`,
-    borderRadius: RADIUS_MD, padding: '6px 14px',
-    fontSize: '12px', color: D_TEXT_MUTED,
-    cursor: 'pointer', fontFamily: FONT_BODY,
-  },
-  roleDesc: {
-    fontSize: '11px', color: D_TEXT_MUTED,
-    margin: '4px 0 0', fontStyle: 'italic', fontWeight: '300',
-  },
-  inviteSection: {
-    background: D_SURFACE, border: `1px solid ${D_BORDER}`,
-    borderRadius: RADIUS_LG, padding: '24px',
-    marginBottom: '28px', boxShadow: SHADOW_MD,
-  },
-  inviteTitle: {
-    fontSize: '10px', fontWeight: '600',
-    textTransform: 'uppercase', letterSpacing: '0.12em',
-    color: ACCENT, margin: '0 0 16px',
-  },
-  input: {
-    background: D_SURFACE_ALT, border: `1px solid ${D_BORDER}`,
-    borderRadius: RADIUS_MD, padding: '10px 14px',
-    fontSize: '14px', color: D_TEXT,
-    fontFamily: FONT_BODY, width: '100%',
-    boxSizing: 'border-box', outline: 'none',
-  },
-  addButton: {
-    background: 'transparent', border: `1px solid ${ACCENT_BORDER}`,
-    borderRadius: RADIUS_MD, padding: '10px 20px',
-    fontSize: '14px', color: ACCENT, fontWeight: '600',
-    cursor: 'pointer', fontFamily: FONT_BODY,
-  },
-};
