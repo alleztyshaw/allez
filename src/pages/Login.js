@@ -272,7 +272,7 @@ const s = {
   signInBtn: {
     background: 'none', border: 'none', padding: 0,
     fontFamily: "'DM Sans', sans-serif",
-    fontSize: '16px', fontWeight: '400', color: '#1a1a1a',
+    fontSize: '14px', fontWeight: '400', color: '#1a1a1a',
     cursor: 'pointer', letterSpacing: '0.04em', opacity: 0.6,
     transition: 'opacity 0.2s',
   },
@@ -327,7 +327,7 @@ const s = {
     padding: '0 40px', position: 'relative', zIndex: 1,
   },
   eyebrow: {
-    fontSize: '12px', fontWeight: '500', textTransform: 'uppercase',
+    fontSize: '11px', fontWeight: '500', textTransform: 'uppercase',
     letterSpacing: '0.22em', color: 'rgba(26,26,26,0.45)', margin: '0 0 20px',
   },
   tagline: {
@@ -338,7 +338,8 @@ const s = {
   },
   scrollCue: {
     position: 'absolute', bottom: '100px',
-    left: '50%', transform: 'translateX(-50%)',
+    left: 0, right: 0,
+    display: 'flex', justifyContent: 'center',
     cursor: 'default',
   },
 
