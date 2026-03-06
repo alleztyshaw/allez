@@ -1,11 +1,19 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { useOrg } from '../context/OrgContext';
 import {
-  GOLD, DARK, CARD_BG, BORDER, TEXT_PRIMARY, TEXT_MUTED,
-  INPUT_BG, PAGE_PADDING, PAGE_FONT
+  ACCENT,
+  ACCENT_BORDER,
+  ACCENT_MUTED,
+  FONT_BODY,
+  FONT_DISPLAY,
+  RADIUS_LG,
+  RADIUS_MD,
+  RADIUS_PILL,
+  SHADOW_MD,
 } from '../utils/hqConstants';
+import { useTokens } from '../context/ThemeContext';
 
 const ROLES = ['admin', 'manager', 'advisor', 'associate', 'compliance'];
 
@@ -18,60 +26,52 @@ const ROLE_DESCRIPTIONS = {
 };
 
 const ROLE_COLORS = {
-  admin:      { bg: 'rgba(201,168,76,0.15)',   color: GOLD },
-  manager:    { bg: 'rgba(96,165,250,0.15)',   color: '#60a5fa' },
-  advisor:    { bg: 'rgba(81,218,131,0.15)',   color: '#51da83' },
-  associate:  { bg: 'rgba(167,139,250,0.15)',  color: '#a78bfa' },
-  compliance: { bg: 'rgba(251,191,36,0.15)',   color: '#fbbf24' },
+  admin:      { bg: ACCENT_MUTED,                    color: ACCENT },
+  manager:    { bg: 'rgba(96,165,250,0.15)',          color: '#60a5fa' },
+  advisor:    { bg: 'rgba(167,139,250,0.15)',         color: '#a78bfa' },
+  associate:  { bg: 'rgba(251,191,36,0.15)',          color: '#fbbf24' },
+  compliance: { bg: 'rgba(248,113,113,0.15)',         color: '#f87171' },
 };
 
 export default function Team() {
+  const t = useTokens();
   const { orgId, isPlatformAdmin, isAdmin, orgLoading } = useOrg();
   const navigate = useNavigate();
-  const location = useLocation();
 
-  // If coming from Orgs page with ?org= param, use that org
-  const queryOrg = new URLSearchParams(location.search).get('org');
-
-  // Wait for org to load before checking role
   useEffect(() => {
     if (!orgLoading && !isAdmin) navigate('/hq');
   }, [isAdmin, orgLoading, navigate]);
-  const [orgs, setOrgs]           = useState([]);
-  const [selectedOrg, setSelectedOrg] = useState(queryOrg || null);
-  const [members, setMembers]     = useState([]);
-  const [loading, setLoading]     = useState(true);
-  const [saving, setSaving]       = useState(null);
+
+  const [orgs, setOrgs]               = useState([]);
+  const [selectedOrg, setSelectedOrg] = useState(null);
+  const [members, setMembers]         = useState([]);
+  const [loading, setLoading]         = useState(true);
+  const [saving, setSaving]           = useState(null);
   const [editingRole, setEditingRole] = useState(null);
   const [pendingRole, setPendingRole] = useState('');
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole]   = useState('advisor');
   const [showInvite, setShowInvite]   = useState(false);
   const [inviteError, setInviteError] = useState('');
-  const [toast, setToast]         = useState(null); // { message, type: 'success'|'error' }
+  const [toast, setToast]             = useState(null);
 
   function showToast(message, type = 'success') {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
   }
 
-  // Platform admins can see all orgs; regular admins see only their own
   useEffect(() => {
     async function fetchOrgs() {
       if (!orgId) return;
       if (isPlatformAdmin) {
         const { data } = await supabase
-          .from('organizations')
-          .select('org_id, name, is_platform_org')
-          .order('name');
+          .from('organizations').select('org_id, name, is_platform_org').order('name');
         setOrgs(data || []);
         setSelectedOrg(orgId);
       } else {
         const { data } = await supabase
-          .from('organizations')
-          .select('org_id, name, is_platform_org')
-          .eq('org_id', orgId)
-          .single();
+          .from('organizations').select('org_id, name, is_platform_org')
+          .eq('org_id', orgId).single();
         setOrgs(data ? [data] : []);
         setSelectedOrg(orgId);
       }
@@ -86,9 +86,7 @@ export default function Team() {
   async function fetchMembers(targetOrgId) {
     setLoading(true);
     const { data, error } = await supabase
-      .from('org_members')
-      .select('user_id, role, first_name, last_name, display_name')
-      .eq('org_id', targetOrgId);
+      .rpc('get_org_members', { target_org_id: targetOrgId });
     if (error) console.error('fetchMembers error:', error);
     setMembers(data || []);
     setLoading(false);
@@ -96,11 +94,9 @@ export default function Team() {
 
   async function handleRoleChange(userId) {
     setSaving(userId);
-    await supabase
-      .from('org_members')
+    await supabase.from('org_members')
       .update({ role: pendingRole })
-      .eq('user_id', userId)
-      .eq('org_id', selectedOrg);
+      .eq('user_id', userId).eq('org_id', selectedOrg);
     setEditingRole(null);
     setPendingRole('');
     setSaving(null);
@@ -113,227 +109,250 @@ export default function Team() {
     return m.user_id.slice(0, 8) + '…';
   }
 
+
   const s = {
-    page: {
-      padding: PAGE_PADDING,
-      fontFamily: PAGE_FONT,
-      background: DARK,
+    pageWrapper: {
+      background: t.BG,
       minHeight: '100vh',
-      color: TEXT_PRIMARY,
+      width: '100%',
+    },
+    page: {
+      maxWidth: '1200px',
+      margin: '0 auto',
+      padding: '120px 40px 80px',
+      fontFamily: FONT_BODY,
+      color: t.TEXT,
     },
     header: {
       display: 'flex', justifyContent: 'space-between',
       alignItems: 'flex-start', marginBottom: '32px',
     },
     title: {
-      fontFamily: "'Cormorant Garamond', serif",
-      fontSize: '32px', fontWeight: '600',
-      color: TEXT_PRIMARY, margin: '0 0 6px',
+      fontFamily: FONT_DISPLAY,
+      fontSize: '44px',
+      fontWeight: '300',
+      color: t.TEXT,
+      margin: '0 0 6px',
+      letterSpacing: '0.01em',
+      lineHeight: 1.1,
     },
-    subtitle: { fontSize: '14px', color: TEXT_MUTED, margin: 0 },
+    subtitle: { fontSize: '13px', color: t.TEXT_MUTED, margin: 0, fontWeight: '300', letterSpacing: '0.03em' },
     orgTabs: {
-      display: 'flex', gap: '8px', marginBottom: '32px',
-      flexWrap: 'wrap',
+      display: 'flex', gap: '8px', marginBottom: '32px', flexWrap: 'wrap',
     },
-    orgTab: (active) => ({
-      padding: '6px 16px', borderRadius: '20px', fontSize: '13px',
-      border: `1px solid ${active ? GOLD : BORDER}`,
-      background: active ? 'rgba(201,168,76,0.1)' : 'transparent',
-      color: active ? GOLD : TEXT_MUTED,
-      cursor: 'pointer', fontFamily: PAGE_FONT,
-    }),
+    orgTab: {
+      padding: '6px 16px', borderRadius: RADIUS_PILL, fontSize: '13px',
+      border: `1px solid ${t.BORDER}`,
+      background: 'transparent',
+      color: t.TEXT_MUTED,
+      cursor: 'pointer', fontFamily: FONT_BODY,
+    },
+    orgTabActive: {
+      border: `1px solid ${ACCENT_BORDER}`,
+      background: ACCENT_MUTED,
+      color: ACCENT,
+    },
     card: {
-      background: CARD_BG, border: `1px solid ${BORDER}`,
-      borderRadius: '16px', overflow: 'hidden', marginBottom: '12px',
+      background: t.SURFACE,
+      border: `1px solid ${t.BORDER}`,
+      borderRadius: RADIUS_LG,
+      overflow: 'hidden',
+      boxShadow: SHADOW_MD,
     },
     memberRow: {
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       padding: '16px 20px', gap: '16px',
     },
     avatar: {
-      width: '36px', height: '36px', borderRadius: '50%',
-      background: 'rgba(201,168,76,0.15)', color: GOLD,
+      width: '38px', height: '38px', borderRadius: '50%',
+      background: ACCENT_MUTED,
+      border: `1px solid ${ACCENT_BORDER}`,
+      color: ACCENT,
       display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontSize: '14px', fontWeight: '600', flexShrink: 0,
+      fontFamily: FONT_DISPLAY,
+      fontSize: '16px', fontWeight: '400', flexShrink: 0,
     },
     memberInfo: { flex: 1 },
-    memberName: { fontSize: '14px', color: TEXT_PRIMARY, margin: '0 0 2px' },
-    memberId: { fontSize: '11px', color: TEXT_MUTED, margin: 0 },
-    roleBadge: (role) => ({
-      fontSize: '11px', fontWeight: '500', padding: '3px 10px',
-      borderRadius: '20px', letterSpacing: '0.04em',
-      background: ROLE_COLORS[role]?.bg || 'rgba(255,255,255,0.05)',
-      color: ROLE_COLORS[role]?.color || TEXT_MUTED,
-    }),
+    memberName: { fontSize: '14px', color: t.TEXT, margin: '0 0 2px', fontWeight: '400' },
+    memberId: { fontSize: '11px', color: t.TEXT_MUTED, margin: 0, fontWeight: '300' },
     editButton: {
-      background: 'none', border: `1px solid ${BORDER}`,
-      borderRadius: '6px', padding: '4px 12px',
-      fontSize: '12px', color: TEXT_MUTED,
-      cursor: 'pointer', fontFamily: PAGE_FONT,
+      background: 'none', border: `1px solid ${t.BORDER}`,
+      borderRadius: RADIUS_MD, padding: '4px 12px',
+      fontSize: '12px', color: t.TEXT_MUTED,
+      cursor: 'pointer', fontFamily: FONT_BODY,
     },
     select: {
-      background: INPUT_BG, border: `1px solid ${BORDER}`,
-      borderRadius: '8px', padding: '6px 10px',
-      fontSize: '13px', color: TEXT_PRIMARY,
-      fontFamily: PAGE_FONT, cursor: 'pointer',
+      background: t.SURFACE_ALT, border: `1px solid ${t.BORDER}`,
+      borderRadius: RADIUS_MD, padding: '6px 10px',
+      fontSize: '13px', color: t.TEXT,
+      fontFamily: FONT_BODY, cursor: 'pointer',
     },
     saveButton: {
-      background: GOLD, border: 'none', borderRadius: '6px',
-      padding: '6px 14px', fontSize: '12px',
-      color: DARK, fontWeight: '600',
-      cursor: 'pointer', fontFamily: PAGE_FONT,
+      background: ACCENT_MUTED, border: `1px solid ${ACCENT_BORDER}`,
+      borderRadius: RADIUS_MD, padding: '6px 14px',
+      fontSize: '12px', color: ACCENT, fontWeight: '600',
+      cursor: 'pointer', fontFamily: FONT_BODY,
     },
     cancelButton: {
-      background: 'none', border: `1px solid ${BORDER}`,
-      borderRadius: '6px', padding: '6px 14px',
-      fontSize: '12px', color: TEXT_MUTED,
-      cursor: 'pointer', fontFamily: PAGE_FONT,
+      background: 'none', border: `1px solid ${t.BORDER}`,
+      borderRadius: RADIUS_MD, padding: '6px 14px',
+      fontSize: '12px', color: t.TEXT_MUTED,
+      cursor: 'pointer', fontFamily: FONT_BODY,
     },
     roleDesc: {
-      fontSize: '11px', color: TEXT_MUTED,
-      margin: '4px 0 0', fontStyle: 'italic',
+      fontSize: '11px', color: t.TEXT_MUTED,
+      margin: '4px 0 0', fontStyle: 'italic', fontWeight: '300',
     },
-    divider: { height: '1px', background: BORDER, margin: '0' },
     inviteSection: {
-      background: CARD_BG, border: `1px solid ${BORDER}`,
-      borderRadius: '16px', padding: '24px',
-      marginTop: '24px',
+      background: t.SURFACE, border: `1px solid ${t.BORDER}`,
+      borderRadius: RADIUS_LG, padding: '24px',
+      marginBottom: '28px', boxShadow: SHADOW_MD,
     },
     inviteTitle: {
-      fontSize: '15px', fontWeight: '600',
-      color: TEXT_PRIMARY, margin: '0 0 16px',
+      fontSize: '10px', fontWeight: '600',
+      textTransform: 'uppercase', letterSpacing: '0.12em',
+      color: ACCENT, margin: '0 0 16px',
     },
     input: {
-      background: INPUT_BG, border: `1px solid ${BORDER}`,
-      borderRadius: '8px', padding: '10px 14px',
-      fontSize: '14px', color: TEXT_PRIMARY,
-      fontFamily: PAGE_FONT, width: '100%',
-      boxSizing: 'border-box',
+      background: t.SURFACE_ALT, border: `1px solid ${t.BORDER}`,
+      borderRadius: RADIUS_MD, padding: '10px 14px',
+      fontSize: '14px', color: t.TEXT,
+      fontFamily: FONT_BODY, width: '100%',
+      boxSizing: 'border-box', outline: 'none',
     },
     addButton: {
-      background: GOLD, border: 'none', borderRadius: '10px',
-      padding: '10px 24px', fontSize: '14px',
-      color: DARK, fontWeight: '600',
-      cursor: 'pointer', fontFamily: PAGE_FONT,
+      background: 'transparent', border: `1px solid ${ACCENT_BORDER}`,
+      borderRadius: RADIUS_MD, padding: '10px 20px',
+      fontSize: '14px', color: ACCENT, fontWeight: '600',
+      cursor: 'pointer', fontFamily: FONT_BODY,
     },
   };
 
   return (
-    <div style={s.page}>
+    <div style={s.pageWrapper}>
+      <style>{`
+          @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=DM+Sans:wght@300;400;500;600&display=swap');
+          @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+          .member-card { transition: border-color 0.2s ease, box-shadow 0.2s ease; }
+          .member-card:hover { border-color: ${ACCENT_BORDER} !important; box-shadow: 0 4px 20px rgba(29,185,84,0.07) !important; }
+        `}</style>
+      <div style={s.page}>
 
-      {/* Toast notification */}
-      {toast && (
-        <div style={{
-          position: 'fixed', bottom: '32px', right: '32px',
-          background: toast.type === 'success' ? 'rgba(81,218,131,0.15)' : 'rgba(248,113,113,0.15)',
-          border: `1px solid ${toast.type === 'success' ? '#51da83' : '#f87171'}`,
-          color: toast.type === 'success' ? '#51da83' : '#f87171',
-          borderRadius: '12px', padding: '14px 20px',
-          fontSize: '14px', fontFamily: PAGE_FONT,
-          zIndex: 1000, backdropFilter: 'blur(8px)',
-          boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
-          animation: 'fadeIn 0.2s ease',
-        }}>
-          {toast.type === 'success' ? '✓ ' : '✕ '}{toast.message}
-        </div>
-      )}
-
-      {/* Header */}
-      <div style={s.header}>
-        <div>
-          <h1 style={s.title}>Team</h1>
-          <p style={s.subtitle}>Manage members and roles</p>
-        </div>
-        {isAdmin && (
-          <button style={s.addButton} onClick={() => setShowInvite(!showInvite)}>
-            + Invite Member
-          </button>
-        )}
-      </div>
-
-      {/* Org selector — platform admin only */}
-      {isPlatformAdmin && orgs.length > 1 && (
-        <div style={s.orgTabs}>
-          {orgs.map(o => (
-            <button
-              key={o.org_id}
-              style={s.orgTab(selectedOrg === o.org_id)}
-              onClick={() => setSelectedOrg(o.org_id)}
-            >
-              {o.name} {o.is_platform_org && '★'}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {/* Invite form */}
-      {showInvite && isAdmin && (
-        <div style={s.inviteSection}>
-          <p style={s.inviteTitle}>Invite New Member</p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <input
-              style={s.input}
-              placeholder="Email address"
-              value={inviteEmail}
-              onChange={e => { setInviteEmail(e.target.value); setInviteError(''); }}
-            />
-            <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-              <select
-                style={{ ...s.select, flex: 1 }}
-                value={inviteRole}
-                onChange={e => setInviteRole(e.target.value)}
-              >
-                {ROLES.map(r => (
-                  <option key={r} value={r}>{r.charAt(0).toUpperCase() + r.slice(1)}</option>
-                ))}
-              </select>
-              <button
-                style={s.saveButton}
-                onClick={async () => {
-                  if (!inviteEmail.trim()) { setInviteError('Email is required'); return; }
-                  try {
-                    const res = await fetch('/api/invite', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({
-                        email: inviteEmail.trim(),
-                        role: inviteRole,
-                        org_id: selectedOrg,
-                      }),
-                    });
-                    const data = await res.json();
-                    if (!res.ok) {
-                      setInviteError(data.error || 'Invite failed');
-                    } else {
-                      showToast(`Invite sent to ${inviteEmail}`);
-                      setInviteEmail('');
-                      setShowInvite(false);
-                    }
-                  } catch {
-                    setInviteError('Network error — please try again');
-                  }
-                }}
-              >
-                Send Invite
-              </button>
-              <button style={s.cancelButton} onClick={() => { setShowInvite(false); setInviteError(''); }}>
-                Cancel
-              </button>
-            </div>
-            {inviteError && <p style={{ color: '#f87171', fontSize: '13px', margin: 0 }}>{inviteError}</p>}
-            <p style={s.roleDesc}>{ROLE_DESCRIPTIONS[inviteRole]}</p>
+        {/* Toast */}
+        {toast && (
+          <div style={{
+            position: 'fixed', bottom: '32px', right: '32px',
+            background: toast.type === 'success' ? ACCENT_MUTED : 'rgba(248,113,113,0.15)',
+            border: `1px solid ${toast.type === 'success' ? ACCENT_BORDER : '#f87171'}`,
+            color: toast.type === 'success' ? ACCENT : '#f87171',
+            borderRadius: RADIUS_LG, padding: '14px 20px',
+            fontSize: '14px', fontFamily: FONT_BODY,
+            zIndex: 1000, backdropFilter: 'blur(8px)',
+            boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
+            animation: 'fadeIn 0.2s ease',
+          }}>
+            {toast.type === 'success' ? '✓ ' : '✕ '}{toast.message}
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Member list */}
-      {loading ? (
-        <p style={{ color: TEXT_MUTED }}>Loading team...</p>
-      ) : (
-        <div>
-          {members.map((m, i) => (
-            <div key={m.user_id}>
-              <div style={s.card}>
+        {/* Header */}
+        <div style={s.header}>
+          <div>
+            <h1 style={s.title}>Team</h1>
+            <p style={s.subtitle}>Manage members and roles</p>
+          </div>
+          {isAdmin && (
+            <button style={s.addButton} onClick={() => setShowInvite(!showInvite)}>
+              + Invite Member
+            </button>
+          )}
+        </div>
+
+        {/* Org selector — platform admin only */}
+        {isPlatformAdmin && orgs.length > 1 && (
+          <div style={s.orgTabs}>
+            {orgs.map(o => (
+              <button
+                key={o.org_id}
+                style={{
+                  ...s.orgTab,
+                  ...(selectedOrg === o.org_id ? s.orgTabActive : {}),
+                }}
+                onClick={() => setSelectedOrg(o.org_id)}
+              >
+                {o.name} {o.is_platform_org && '★'}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Invite form */}
+        {showInvite && isAdmin && (
+          <div style={s.inviteSection}>
+            <p style={s.inviteTitle}>Invite New Member</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <input
+                style={s.input}
+                placeholder="Email address"
+                value={inviteEmail}
+                onChange={e => { setInviteEmail(e.target.value); setInviteError(''); }}
+              />
+              <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                <select
+                  style={{ ...s.select, flex: 1 }}
+                  value={inviteRole}
+                  onChange={e => setInviteRole(e.target.value)}
+                >
+                  {ROLES.map(r => (
+                    <option key={r} value={r}>{r.charAt(0).toUpperCase() + r.slice(1)}</option>
+                  ))}
+                </select>
+                <button
+                  style={s.saveButton}
+                  onClick={async () => {
+                    if (!inviteEmail.trim()) { setInviteError('Email is required'); return; }
+                    try {
+                      const res = await fetch('/api/invite', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email: inviteEmail.trim(), role: inviteRole, org_id: selectedOrg }),
+                      });
+                      const data = await res.json();
+                      if (!res.ok) {
+                        setInviteError(data.error || 'Invite failed');
+                      } else {
+                        showToast(`Invite sent to ${inviteEmail}`);
+                        setInviteEmail('');
+                        setShowInvite(false);
+                      }
+                    } catch {
+                      setInviteError('Network error — please try again');
+                    }
+                  }}
+                >
+                  Send Invite
+                </button>
+                <button style={s.cancelButton} onClick={() => { setShowInvite(false); setInviteError(''); }}>
+                  Cancel
+                </button>
+              </div>
+              {inviteError && <p style={{ color: '#f87171', fontSize: '13px', margin: 0 }}>{inviteError}</p>}
+              <p style={s.roleDesc}>{ROLE_DESCRIPTIONS[inviteRole]}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Member list */}
+        {loading ? (
+          <p style={{ color: t.TEXT_MUTED, fontWeight: '300' }}>Loading team...</p>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {members.map((m) => (
+              <div
+                key={m.user_id}
+                className="member-card"
+                style={s.card}
+              >
                 <div style={s.memberRow}>
 
                   {/* Avatar */}
@@ -341,10 +360,9 @@ export default function Team() {
                     {m.first_name?.[0] || m.display_name?.[0] || '?'}
                   </div>
 
-                  {/* Name + ID */}
+                  {/* Name */}
                   <div style={s.memberInfo}>
                     <p style={s.memberName}>{memberName(m)}</p>
-                    <p style={s.memberId}>{m.user_id.slice(0, 16)}…</p>
                   </div>
 
                   {/* Role display or edit */}
@@ -375,7 +393,13 @@ export default function Team() {
                     </div>
                   ) : (
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <span style={s.roleBadge(m.role)}>
+                      <span style={{
+                        fontSize: '11px', fontWeight: '600', padding: '3px 10px',
+                        borderRadius: RADIUS_PILL, letterSpacing: '0.06em',
+                        textTransform: 'uppercase',
+                        background: ROLE_COLORS[m.role]?.bg || 'rgba(255,255,255,0.05)',
+                        color: ROLE_COLORS[m.role]?.color || t.TEXT_MUTED,
+                      }}>
                         {m.role.charAt(0).toUpperCase() + m.role.slice(1)}
                       </span>
                       {isAdmin && (
@@ -391,10 +415,11 @@ export default function Team() {
 
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
-      )}
+            ))}
+          </div>
+        )}
+
+      </div>
     </div>
   );
 }
