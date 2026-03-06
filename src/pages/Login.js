@@ -263,7 +263,7 @@ const s = {
   // ── Header ────────────────────────────────────
   header: {
     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-    padding: '32px 48px', position: 'fixed', top: 0, left: 0, right: 0, zIndex: 10,
+    padding: '32px 48px', position: 'relative', zIndex: 10,
   },
   logo: {
     fontFamily: "'Cormorant Garamond', serif", fontSize: '28px',
@@ -272,7 +272,7 @@ const s = {
   signInBtn: {
     background: 'none', border: 'none', padding: 0,
     fontFamily: "'DM Sans', sans-serif",
-    fontSize: '14px', fontWeight: '400', color: '#1a1a1a',
+    fontSize: '16px', fontWeight: '400', color: '#1a1a1a',
     cursor: 'pointer', letterSpacing: '0.04em', opacity: 0.6,
     transition: 'opacity 0.2s',
   },
@@ -322,7 +322,7 @@ const s = {
 
   // ── Hero ──────────────────────────────────────
   hero: {
-    height: '100vh', display: 'flex', flexDirection: 'column',
+    height: 'calc(100vh - 92px)', display: 'flex', flexDirection: 'column',
     justifyContent: 'center', alignItems: 'center', textAlign: 'center',
     padding: '0 40px', position: 'relative', zIndex: 1,
   },
