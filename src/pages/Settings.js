@@ -22,7 +22,6 @@ export default function Settings() {
 
   // Password
   const [passwordEditing, setPasswordEditing] = useState(false);
-  const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordSaving, setPasswordSaving] = useState(false);
@@ -72,8 +71,7 @@ export default function Settings() {
       setPasswordError(error.message);
     } else {
       setPasswordEditing(false);
-      setCurrentPassword('');
-      setNewPassword('');
+            setNewPassword('');
       setConfirmPassword('');
       setPasswordSuccess(true);
       setTimeout(() => setPasswordSuccess(false), 3000);
