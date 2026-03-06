@@ -37,7 +37,7 @@ export default function Orgs() {
     setLoading(true);
     const { data, error } = await supabase
       .from('organizations')
-      .select('org_id, name, is_platform_org, created_at')
+      .select('org_id, name, is_platform_org, created_at, status')
       .order('name');
     if (error) console.error('fetchOrgs error:', error);
     setOrgs(data || []);
@@ -49,17 +49,18 @@ export default function Orgs() {
     setStatsLoading(prev => ({ ...prev, [orgId]: true }));
 
     const [
-      { count: members },
+      { data: membersData },
       { count: clients },
       { count: activeClients },
       { count: notes },
     ] = await Promise.all([
-      supabase.from('org_members').select('*', { count: 'exact', head: true }).eq('org_id', orgId),
+      supabase.rpc('get_org_members', { target_org_id: orgId }),
       supabase.from('clients').select('*', { count: 'exact', head: true }).eq('org_id', orgId).is('deleted_at', null),
       supabase.from('clients').select('*', { count: 'exact', head: true }).eq('org_id', orgId).eq('status', 'Active').is('deleted_at', null),
       supabase.from('notes').select('*', { count: 'exact', head: true }).eq('org_id', orgId),
     ]);
 
+    const members = membersData?.length ?? 0;
     setOrgStats(prev => ({ ...prev, [orgId]: { members, clients, activeClients, notes } }));
     setStatsLoading(prev => ({ ...prev, [orgId]: false }));
   }
@@ -186,6 +187,19 @@ export default function Orgs() {
       letterSpacing: '0.08em', padding: '3px 10px', borderRadius: RADIUS_PILL,
       background: t.SURFACE_ALT, color: t.TEXT_MUTED,
     },
+    statusBadge: (status) => {
+      const map = {
+        active:     { bg: 'rgba(29,185,84,0.12)',   color: '#1DB954' },
+        onboarding: { bg: 'rgba(251,191,36,0.15)',  color: '#fbbf24' },
+        former:     { bg: 'rgba(156,163,175,0.15)', color: '#9ca3af' },
+      };
+      const c = map[status] || map.active;
+      return {
+        fontSize: '10px', fontWeight: '600', textTransform: 'uppercase',
+        letterSpacing: '0.08em', padding: '3px 10px', borderRadius: RADIUS_PILL,
+        background: c.bg, color: c.color,
+      };
+    },
     chevron: {
       fontSize: '11px', color: t.TEXT_MUTED,
       transition: 'transform 0.2s ease',
@@ -301,6 +315,9 @@ export default function Orgs() {
                       <p style={s.orgName}>{org.name}</p>
                     </div>
                     <div style={s.rowRight}>
+                      <span style={s.statusBadge(org.status)}>
+                        {org.status ? org.status.charAt(0).toUpperCase() + org.status.slice(1) : 'Active'}
+                      </span>
                       <span style={org.is_platform_org ? s.platformBadge : s.regularBadge}>
                         {org.is_platform_org ? '★ Platform' : 'Client'}
                       </span>

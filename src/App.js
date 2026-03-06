@@ -1,8 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { OrgProvider } from './context/OrgContext';
-import { ThemeProvider } from './context/ThemeContext';
+import { ThemeProvider, useTokens } from './context/ThemeContext';
 import Navigation from './components/Navigation';
-import Footer from './components/Footer';
 import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
@@ -18,11 +17,20 @@ import Orgs from './pages/Orgs';
 import './App.css';
 
 function ProtectedLayout({ children }) {
+  const t = useTokens();
   return (
     <ProtectedRoute>
       <Navigation />
       <main className="main">{children}</main>
-      <Footer />
+      <p style={{
+        position: 'fixed', bottom: '24px', left: 0, right: 0,
+        textAlign: 'center', fontSize: '12px', fontWeight: 300,
+        color: t.TEXT_SUBTLE, letterSpacing: '0.04em',
+        zIndex: 5, pointerEvents: 'none', margin: 0,
+        fontFamily: "'DM Sans', sans-serif",
+      }}>
+        © 2026 Allez HQ · Built for wealth management professionals
+      </p>
     </ProtectedRoute>
   );
 }

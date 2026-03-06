@@ -66,7 +66,6 @@ export default function HQ() {
     metricNumber: { fontFamily: FONT_DISPLAY, fontSize: '32px', fontWeight: 400, color: ACCENT, lineHeight: 1 },
     metricLabel: { fontSize: '10px', color: t.TEXT_MUTED, letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 500 },
     openBtn: { background: 'transparent', border: `1px solid ${t.BORDER}`, color: ACCENT, borderRadius: RADIUS_MD, padding: '7px 16px', fontSize: '13px', fontWeight: 500, cursor: 'pointer', fontFamily: FONT_BODY },
-    footerNote: { fontSize: '12px', color: t.TEXT_SUBTLE, textAlign: 'center', fontWeight: 300, letterSpacing: '0.04em', position: 'fixed', bottom: '24px', left: 0, right: 0, zIndex: 5, pointerEvents: 'none' },
   };
 
   return (
@@ -130,9 +129,6 @@ export default function HQ() {
           })}
         </div>
 
-        <p style={s.footerNote}>
-          © 2026 Allez HQ · Built for wealth management professionals
-        </p>
       </div>
     </div>
   );
