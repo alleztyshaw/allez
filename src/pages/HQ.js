@@ -52,7 +52,6 @@ export default function HQ() {
     roleBadge: { display: 'flex', alignItems: 'center', gap: '6px', background: t.SURFACE, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_PILL, padding: '6px 14px', marginBottom: '4px' },
     roleDot: { width: '6px', height: '6px', borderRadius: '50%', background: ACCENT, display: 'inline-block', flexShrink: 0 },
     roleText: { fontSize: '12px', fontWeight: 600, color: t.TEXT, letterSpacing: '0.04em' },
-    roleNote: { fontSize: '11px', color: t.TEXT_MUTED, fontWeight: 300 },
     divider: { height: '1px', background: t.BORDER, marginBottom: '36px' },
     grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '20px', marginBottom: '48px' },
     card: { background: t.SURFACE, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_LG, padding: '24px', display: 'flex', flexDirection: 'column', minHeight: '220px', boxShadow: SHADOW_MD },
@@ -67,7 +66,7 @@ export default function HQ() {
     metricNumber: { fontFamily: FONT_DISPLAY, fontSize: '32px', fontWeight: 400, color: ACCENT, lineHeight: 1 },
     metricLabel: { fontSize: '10px', color: t.TEXT_MUTED, letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 500 },
     openBtn: { background: 'transparent', border: `1px solid ${t.BORDER}`, color: ACCENT, borderRadius: RADIUS_MD, padding: '7px 16px', fontSize: '13px', fontWeight: 500, cursor: 'pointer', fontFamily: FONT_BODY },
-    footerNote: { fontSize: '12px', color: t.TEXT_SUBTLE, textAlign: 'center', fontWeight: 300, letterSpacing: '0.04em' },
+    footerNote: { fontSize: '12px', color: t.TEXT_SUBTLE, textAlign: 'center', fontWeight: 300, letterSpacing: '0.04em', position: 'fixed', bottom: '24px', left: 0, right: 0, zIndex: 5, pointerEvents: 'none' },
   };
 
   return (
@@ -89,7 +88,6 @@ export default function HQ() {
             <div style={s.roleBadge}>
               <span style={s.roleDot} />
               <span style={s.roleText}>Admin</span>
-              <span style={s.roleNote}>· Role permissions coming soon</span>
             </div>
           </div>
         </div>
@@ -133,7 +131,7 @@ export default function HQ() {
         </div>
 
         <p style={s.footerNote}>
-          Allez HQ · Role-based access controls (Admin / Advisor / Viewer) are on the roadmap.
+          © 2026 Allez HQ · Built for wealth management professionals
         </p>
       </div>
     </div>
