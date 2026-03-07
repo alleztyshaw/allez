@@ -16,6 +16,16 @@ import {
 } from '../utils/hqConstants';
 import { useTokens } from '../context/ThemeContext';
 
+function useWindowWidth() {
+  const [width, setWidth] = useState(window.innerWidth);
+  useEffect(() => {
+    const handler = () => setWidth(window.innerWidth);
+    window.addEventListener('resize', handler);
+    return () => window.removeEventListener('resize', handler);
+  }, []);
+  return width;
+}
+
 const NOTE_TYPES = ['Meeting', 'Call', 'Email', 'General'];
 
 
@@ -43,6 +53,8 @@ const emptyForm = { client_id: '', title: '', body: '', note_type: 'General' };
 
 export default function Notes() {
   const t = useTokens();
+  const windowWidth = useWindowWidth();
+  const isMobile = windowWidth < 600;
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { orgId } = useOrg();
@@ -152,7 +164,7 @@ export default function Notes() {
     page: {
       maxWidth: '1200px',
       margin: '0 auto',
-      padding: '120px 40px 80px',
+      padding: isMobile ? '100px 16px 60px' : '120px 40px 80px',
       fontFamily: FONT_BODY,
       color: t.TEXT,
     },
