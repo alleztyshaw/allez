@@ -128,11 +128,16 @@ export default function Clients() {
       setError('Something went wrong. Please try again.');
       console.error(error);
     } else {
-      if (selectedAdvisor && inserted?.id) {
+      // Determine which user_id to assign as primary advisor
+      const { data: { user } } = await supabase.auth.getUser();
+      const advisorToAssign = selectedAdvisor
+        || (['advisor', 'associate'].includes(userRole) ? user?.id : null);
+
+      if (advisorToAssign && inserted?.id) {
         await supabase.from('client_advisors').insert([{
           org_id: orgId,
           client_id: inserted.id,
-          user_id: selectedAdvisor,
+          user_id: advisorToAssign,
           is_primary: true,
         }]);
       }
