@@ -62,24 +62,27 @@ export default function Welcome() {
       return;
     }
 
-    // Token is present — sign out any existing session first, then exchange
+    // Token is present — handle the exchange.
+    // CRITICAL: For hash flow, Supabase processes #access_token on page load
+    // and fires SIGNED_IN almost immediately. We MUST register the listener
+    // before doing anything else — especially before any signOut call —
+    // otherwise the event fires and we miss it, and the token is consumed and gone.
     async function setupSession() {
       log('Token detected. code=' + !!code + ' hash=' + hasHashToken);
 
-      const { data: { session: existing } } = await supabase.auth.getSession();
-      log('Existing session: ' + (existing ? existing.user?.email : 'none'));
-
-      if (existing) {
-        log('Signing out existing session...');
-        await supabase.auth.signOut();
-        log('Signed out.');
-      }
-
       if (code) {
+        // PKCE flow — safe to sign out first, then exchange the code explicitly
+        const { data: { session: existing } } = await supabase.auth.getSession();
+        log('Existing session: ' + (existing ? existing.user?.email : 'none'));
+        if (existing) {
+          log('Signing out existing session...');
+          await supabase.auth.signOut();
+          log('Signed out.');
+        }
         log('Calling exchangeCodeForSession...');
         const { data, error } = await supabase.auth.exchangeCodeForSession(code);
         if (error) {
-          log('exchangeCodeForSession ERROR: ' + error.message + ' | status: ' + error.status);
+          log('exchangeCodeForSession ERROR: ' + error.message);
           setLinkError(true);
           setLoading(false);
           return;
@@ -101,10 +104,14 @@ export default function Welcome() {
       }
 
       if (hasHashToken) {
-        log('Hash token flow — waiting for onAuthStateChange...');
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-          log('onAuthStateChange: ' + event);
+        // Hash/implicit flow — register listener FIRST before touching anything.
+        // Supabase fires SIGNED_IN almost immediately as it processes the hash.
+        // Any signOut before this point consumes the token and loses the event.
+        log('Hash flow — registering listener before anything else...');
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+          log('onAuthStateChange: ' + event + (session ? ' (' + session.user?.email + ')' : ' (no session)'));
           if (event === 'SIGNED_IN' && session) {
+            log('SIGNED_IN — session established');
             if (session.user?.user_metadata?.onboarding_complete) {
               navigate('/hq');
               return;
@@ -113,12 +120,14 @@ export default function Welcome() {
             setLoading(false);
           }
         });
+
         setTimeout(() => {
           setLoading(prev => {
-            if (prev) { log('Timeout — no session established'); setLinkError(true); return false; }
+            if (prev) { log('Timeout — SIGNED_IN never fired'); setLinkError(true); return false; }
             return prev;
           });
         }, 8000);
+
         return () => subscription.unsubscribe();
       }
     }
