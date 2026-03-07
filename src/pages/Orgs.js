@@ -230,8 +230,8 @@ export default function Orgs() {
     },
     statBlock: { display: 'flex', flexDirection: 'column', gap: '4px' },
     statNumber: {
-      fontFamily: FONT_DISPLAY, fontSize: '32px',
-      fontWeight: '400', color: ACCENT, lineHeight: 1,
+      fontFamily: FONT_BODY, fontSize: '24px',
+      fontWeight: '300', color: ACCENT, lineHeight: 1,
     },
     statLabel: {
       fontSize: '10px', color: t.TEXT_MUTED, fontWeight: '500',
