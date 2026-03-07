@@ -116,6 +116,14 @@ export const REFERRAL_SOURCE_OPTIONS         = [
 ];
 
 // ============================================================
+// AI NOTE-TAKER
+// Prompt template mirrored here for reference and tuning.
+// The authoritative copy used at runtime lives in api/process-note.js.
+// Update both if you change the prompt.
+// ============================================================
+export const AI_NOTE_PROMPT_FIELDS = ['title', 'summary', 'decisions', 'action_items', 'follow_ups'];
+
+// ============================================================
 // ROLE TIERS
 // Single source of truth for role-based access control.
 // Update these arrays when adding new roles — changes cascade
