@@ -15,6 +15,16 @@ import {
 } from '../utils/hqConstants';
 import { useTokens } from '../context/ThemeContext';
 
+function useWindowWidth() {
+  const [width, setWidth] = useState(window.innerWidth);
+  useEffect(() => {
+    const handler = () => setWidth(window.innerWidth);
+    window.addEventListener('resize', handler);
+    return () => window.removeEventListener('resize', handler);
+  }, []);
+  return width;
+}
+
 const ROLES = ['admin', 'manager', 'advisor', 'associate', 'compliance'];
 
 const ROLE_DESCRIPTIONS = {
@@ -35,6 +45,8 @@ const ROLE_COLORS = {
 
 export default function Team() {
   const t = useTokens();
+  const windowWidth = useWindowWidth();
+  const isMobile = windowWidth < 600;
   const { orgId, isPlatformAdmin, isAdmin, orgLoading } = useOrg();
   const navigate = useNavigate();
 
@@ -119,17 +131,18 @@ export default function Team() {
     page: {
       maxWidth: '1200px',
       margin: '0 auto',
-      padding: '120px 40px 80px',
+      padding: isMobile ? '100px 16px 60px' : '120px 40px 80px',
       fontFamily: FONT_BODY,
       color: t.TEXT,
     },
     header: {
       display: 'flex', justifyContent: 'space-between',
       alignItems: 'flex-start', marginBottom: '32px',
+      flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? '16px' : '0',
     },
     title: {
       fontFamily: FONT_DISPLAY,
-      fontSize: '44px',
+      fontSize: isMobile ? '32px' : '44px',
       fontWeight: '300',
       color: t.TEXT,
       margin: '0 0 6px',

@@ -176,7 +176,7 @@ export default function Notes() {
     },
     title: {
       fontFamily: FONT_DISPLAY,
-      fontSize: '44px',
+      fontSize: isMobile ? '32px' : '44px',
       fontWeight: '300',
       margin: '0 0 6px',
       color: t.TEXT,

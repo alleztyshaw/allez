@@ -9,11 +9,21 @@ import {
 } from '../utils/hqConstants';
 import { useTokens } from '../context/ThemeContext';
 
+function useWindowWidth() {
+  const [width, setWidth] = useState(window.innerWidth);
+  useEffect(() => {
+    const handler = () => setWidth(window.innerWidth);
+    window.addEventListener('resize', handler);
+    return () => window.removeEventListener('resize', handler);
+  }, []);
+  return width;
+}
+
 export default function Settings() {
   const { theme, toggleTheme } = useTheme();
   const t = useTokens();
-
-  // Display name
+  const windowWidth = useWindowWidth();
+  const isMobile = windowWidth < 600;
   const [displayName, setDisplayName] = useState('');
   const [displayNameInput, setDisplayNameInput] = useState('');
   const [displayNameEditing, setDisplayNameEditing] = useState(false);
@@ -85,11 +95,11 @@ export default function Settings() {
     pageWrapper: { background: t.BG, minHeight: '100vh', width: '100%' },
     page: {
       maxWidth: '1200px', margin: '0 auto',
-      padding: '120px 40px 80px',
+      padding: isMobile ? '100px 16px 60px' : '120px 40px 80px',
       fontFamily: FONT_BODY, color: t.TEXT,
     },
     title: {
-      fontFamily: FONT_DISPLAY, fontSize: '44px', fontWeight: '300',
+      fontFamily: FONT_DISPLAY, fontSize: isMobile ? '32px' : '44px', fontWeight: '300',
       color: t.TEXT, margin: '0 0 6px', letterSpacing: '0.01em', lineHeight: 1.1,
     },
     subtitle: { fontSize: '13px', color: t.TEXT_MUTED, margin: '0 0 48px', fontWeight: '300' },
