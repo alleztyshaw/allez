@@ -35,42 +35,42 @@ export default function Welcome() {
       return;
     }
 
-    // If an invite token is present in the URL, sign out any existing session
-    // first. Without this, a logged-in user clicking an invite link keeps the
-    // old session — the invite token never exchanges — and the page breaks.
-    // We use a ref-style variable so the onAuthStateChange handler below knows
-    // this SIGNED_OUT event was intentional and should not show an error.
+    // If an invite token is present in the URL, we need to clear any existing
+    // session first so the invite token can exchange cleanly. We await the
+    // signOut inside an async IIFE so the listener is only set up after the
+    // sign-out is fully complete — otherwise signOut can race with the token
+    // exchange and wipe the newly established invite session.
     const searchParamsCheck = new URLSearchParams(window.location.search);
     const hasInviteToken = hash.includes('access_token') || searchParamsCheck.has('code');
-    let intentionalSignOut = false;
-    if (hasInviteToken) {
-      intentionalSignOut = true;
-      supabase.auth.signOut();
-    }
 
-    // Listen for the auth state change that fires when Supabase exchanges
-    // the invite token from the URL hash into a real session.
-    // We wait for this rather than calling getSession() immediately,
-    // because getSession() returns null until the hash token is processed.
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session) {
-        // If they've already completed onboarding, send straight to HQ
-        if (session.user?.user_metadata?.onboarding_complete) {
-          navigate('/hq');
-          return;
-        }
-        setSession(session);
-        setLoading(false);
+    let subscription;
+
+    const init = async () => {
+      if (hasInviteToken) {
+        await supabase.auth.signOut();
       }
-      if (event === 'SIGNED_OUT') {
-        // Only treat sign-out as an error if it wasn't triggered by us
-        // intentionally clearing a session before exchanging an invite token
-        if (!intentionalSignOut) {
+
+      // Listen for the auth state change that fires when Supabase exchanges
+      // the invite token from the URL hash into a real session.
+      const { data } = supabase.auth.onAuthStateChange((event, session) => {
+        if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session) {
+          // If they've already completed onboarding, send straight to HQ
+          if (session.user?.user_metadata?.onboarding_complete) {
+            navigate('/hq');
+            return;
+          }
+          setSession(session);
+          setLoading(false);
+        }
+        if (event === 'SIGNED_OUT') {
           setLinkError(true);
           setLoading(false);
         }
-      }
-    });
+      });
+      subscription = data.subscription;
+    };
+
+    init();
 
     // Fallback: check for an existing session (e.g. user refreshes the page
     // after the hash token has already been exchanged)
@@ -103,7 +103,7 @@ export default function Welcome() {
     }, 8000);
 
     return () => {
-      subscription.unsubscribe();
+      subscription?.unsubscribe();
       clearTimeout(timeout);
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
