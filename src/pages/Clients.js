@@ -84,7 +84,10 @@ export default function Clients() {
     }
     setSaving(true);
     setError('');
-    const { error } = await supabase.from('clients').insert([{ ...formData, org_id: orgId }]);
+    const payload = Object.fromEntries(
+      Object.entries({ ...formData, org_id: orgId }).map(([k, v]) => [k, v === '' ? null : v])
+    );
+    const { error } = await supabase.from('clients').insert([payload]);
     if (error) {
       setError('Something went wrong. Please try again.');
       console.error(error);
