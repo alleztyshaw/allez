@@ -9,6 +9,7 @@ import Contact from './pages/Contact';
 import Clients from './pages/Clients';
 import ClientDetail from './pages/ClientDetail';
 import Notes from './pages/Notes';
+import CRM from './pages/CRM';
 import HQ from './pages/HQ';
 import Team from './pages/Team';
 import Welcome from './pages/Welcome';
@@ -50,6 +51,7 @@ function App() {
               <Route path="/hq/clients" element={<ProtectedLayout><Clients /></ProtectedLayout>} />
               <Route path="/hq/clients/:id" element={<ProtectedLayout><ClientDetail /></ProtectedLayout>} />
               <Route path="/hq/notes" element={<ProtectedLayout><Notes /></ProtectedLayout>} />
+          <Route path="/hq/crm" element={<ProtectedLayout><CRM /></ProtectedLayout>} />
               <Route path="/hq/team" element={<ProtectedLayout><Team /></ProtectedLayout>} />
             <Route path="/hq/settings" element={<ProtectedLayout><Settings /></ProtectedLayout>} />
             <Route path="/hq/orgs" element={<ProtectedLayout><Orgs /></ProtectedLayout>} />

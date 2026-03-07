@@ -17,7 +17,7 @@ import { useTokens } from '../context/ThemeContext';
 const features = [
   { id: 'clients',    title: 'Clients',     description: 'Manage your client roster, financial profiles, risk tolerances, and relationship details.', status: 'live',        route: '/hq/clients', metricQuery: 'clients', metricLabel: 'Total Clients' },
   { id: 'notes',      title: 'AI Notes',    description: 'Record and transcribe meetings. Extract action items, securities mentions, and compliance flags automatically.', status: 'live', route: '/hq/notes', metricQuery: 'notes', metricLabel: 'Total Notes' },
-  { id: 'crm',        title: 'CRM',         description: 'Track client interactions, touchpoints, and communication history across your entire practice.', status: 'soon', route: null },
+  { id: 'crm',        title: 'CRM',         description: 'Track client interactions, touchpoints, and communication history across your entire practice.', status: 'live', route: '/hq/crm' },
   { id: 'onboarding', title: 'Onboarding',  description: 'Monitor new client onboarding progress, step completion, and outstanding tasks.', status: 'soon', route: null },
 ];
 

@@ -79,9 +79,7 @@ function Navigation() {
               <nav className="dropdown-menu">
                 <Link to="/hq/clients"  onClick={close} style={{ ...styles.menuLink, color: linkColor }}>Clients</Link>
                 <Link to="/hq/notes"    onClick={close} style={{ ...styles.menuLink, color: linkColor }}>Notes</Link>
-                <span style={{ ...styles.menuLink, color: linkColor, opacity: 0.4, cursor: 'default', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '8px' }}>
-                  CRM <span style={styles.soonTag}>Soon</span>
-                </span>
+                <Link to="/hq/crm" onClick={close} style={{ ...styles.menuLink, color: linkColor }}>CRM</Link>
                 {!orgLoading && isAdmin && (
                   <Link to="/hq/team" onClick={close} style={{ ...styles.menuLink, color: linkColor }}>Team</Link>
                 )}

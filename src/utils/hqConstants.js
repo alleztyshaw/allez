@@ -35,7 +35,7 @@ export const D_SURFACE_ALT = '#162035'; // Subtle inset areas, inputs
 export const D_BORDER      = '#1F3050'; // Dividers, card outlines
 export const D_TEXT        = '#E8F0FE'; // Primary text
 export const D_TEXT_MUTED  = '#A8C0E8'; // Labels, captions
-export const D_TEXT_SUBTLE = '#A8C0E8'; // Placeholder, disabled
+export const D_TEXT_SUBTLE = '#2E4A72'; // Placeholder, disabled
 
 // --- TYPOGRAPHY ---
 export const FONT_DISPLAY = "'Cormorant Garamond', Georgia, serif"; // Hero, client names, headlines
@@ -65,11 +65,11 @@ export const STATUS_COLORS = {
   Active:   { bg: ACCENT_MUTED,                 color: ACCENT    },
   Prospect: { bg: 'rgba(96,  165, 250, 0.15)',  color: '#60a5fa' },
   Inactive: { bg: 'rgba(251, 191, 36,  0.15)',  color: '#fbbf24' },
-  Former:   { bg: 'rgba(248, 113, 113, 0.15)',  color: '#f87171' },
+
 };
 
 // --- DROPDOWN / FORM OPTIONS ---
-export const STATUS_OPTIONS = ['Prospect', 'Active', 'Inactive', 'Former'];
+export const STATUS_OPTIONS = ['Prospect', 'Active', 'Inactive'];
 
 export const ASSET_LEVEL_OPTIONS = [
   'Under $100K',
