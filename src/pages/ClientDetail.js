@@ -421,7 +421,7 @@ export default function ClientDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const { orgId, isAdmin } = useOrg();
+  const { orgId } = useOrg();
   const [userRole, setUserRole] = useState(null);
   const canManageOrg = ORG_ADMIN_ROLES.includes(userRole);
   const canWrite = WRITE_ROLES.includes(userRole);
