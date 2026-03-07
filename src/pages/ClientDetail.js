@@ -23,18 +23,17 @@ import {
   STATUS_OPTIONS,
   TAX_BRACKET_OPTIONS,
   TIME_HORIZON_OPTIONS,
+  ORG_ADMIN_ROLES,
+  WRITE_ROLES,
 } from '../utils/hqConstants';
 import { useTokens } from '../context/ThemeContext';
 
 
 function Field({ label, value, s }) {
-  if (!value) return null;
-
-
   return (
     <div style={s.field}>
       <span style={s.fieldLabel}>{label}</span>
-      <span style={s.fieldValue}>{value}</span>
+      <span style={value ? s.fieldValue : { ...s.fieldValue, opacity: 0.35 }}>{value || '—'}</span>
     </div>
   );
 }
@@ -423,6 +422,9 @@ export default function ClientDetail() {
   const navigate = useNavigate();
   const location = useLocation();
   const { orgId, isAdmin } = useOrg();
+  const [userRole, setUserRole] = useState(null);
+  const canManageOrg = ORG_ADMIN_ROLES.includes(userRole);
+  const canWrite = WRITE_ROLES.includes(userRole);
   const backPath = location.state?.from || '/hq/clients';
   const backLabel = backPath === '/hq/notes' ? '← Back to Notes' : backPath === '/hq/crm' ? '← Back to CRM' : '← Back to Clients';
   const [client, setClient] = useState(null);
@@ -465,15 +467,16 @@ export default function ClientDetail() {
         .from('client_advisors').select('id, user_id, is_primary')
         .eq('client_id', id).eq('org_id', orgId);
       if (!data) { setAdvisors([]); return; }
-      const { data: members } = await supabase
-        .from('org_members').select('user_id, first_name, last_name, role').eq('org_id', orgId);
+      const { data: members } = await supabase.rpc('get_org_members', { target_org_id: orgId });
       const memberMap = Object.fromEntries((members || []).map(m => [m.user_id, m]));
       setAdvisors(data.map(a => ({ ...a, ...memberMap[a.user_id] })));
     }
     async function loadOrgMembers() {
-      const { data } = await supabase
-        .from('org_members').select('user_id, role, first_name, last_name').eq('org_id', orgId);
+      const { data } = await supabase.rpc('get_org_members', { target_org_id: orgId });
       setOrgMembers(data || []);
+      const { data: { user } } = await supabase.auth.getUser();
+      const me = (data || []).find(m => m.user_id === user?.id);
+      setUserRole(me?.role || null);
     }
     if (orgId) { fetchClient(); loadNotes(); loadAdvisors(); loadOrgMembers(); }
   }, [id, orgId]);
@@ -511,8 +514,7 @@ export default function ClientDetail() {
       .from('client_advisors').select('id, user_id, is_primary')
       .eq('client_id', id).eq('org_id', orgId);
     if (!data) { setAdvisors([]); return; }
-    const { data: members } = await supabase
-      .from('org_members').select('user_id, first_name, last_name, role').eq('org_id', orgId);
+    const { data: members } = await supabase.rpc('get_org_members', { target_org_id: orgId });
     const memberMap = Object.fromEntries((members || []).map(m => [m.user_id, m]));
     setAdvisors(data.map(a => ({ ...a, ...memberMap[a.user_id] })));
   }
@@ -531,9 +533,14 @@ export default function ClientDetail() {
   }
 
   async function handleSetPrimary(advisorId) {
-    await supabase.from('client_advisors').update({ is_primary: false }).eq('client_id', id);
+    // Optimistically update state immediately so animation fires
+    setAdvisors(prev => prev.map(a => ({ ...a, is_primary: a.id === advisorId })));
+    // Persist to DB
+    const current = advisors.find(a => a.id !== advisorId && a.is_primary);
+    if (current) {
+      await supabase.from('client_advisors').update({ is_primary: false }).eq('id', current.id);
+    }
     await supabase.from('client_advisors').update({ is_primary: true }).eq('id', advisorId);
-    fetchAdvisors();
   }
 
   function groupNotesByDate(notes) {
@@ -631,7 +638,7 @@ export default function ClientDetail() {
         <div style={s.topRow}>
           <Link to={backPath} style={s.backLink}>{backLabel}</Link>
           <div style={s.actionButtons}>
-            <button style={s.editButton} onClick={openEdit}>Edit Details</button>
+            {canWrite && <button style={s.editButton} onClick={openEdit}>Edit Details</button>}
           </div>
         </div>
 
@@ -661,8 +668,8 @@ export default function ClientDetail() {
         {/* Assigned Advisors */}
         <div style={{ marginBottom: '32px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-            <p style={s.sectionLabel}>Assigned Advisors</p>
-            {isAdmin && (
+            <p style={{ ...s.sectionLabel, margin: 0 }}>Assigned Advisors</p>
+            {canManageOrg && (
               <button
                 onClick={() => setShowAdvisorModal(true)}
                 style={{ background: 'none', border: `1px solid ${ACCENT_BORDER}`, borderRadius: RADIUS_MD, padding: '3px 10px', fontSize: '12px', color: ACCENT, cursor: 'pointer', fontFamily: FONT_BODY }}
@@ -674,19 +681,28 @@ export default function ClientDetail() {
           {advisors.length === 0 ? (
             <p style={{ color: t.TEXT_MUTED, fontSize: '13px', fontWeight: '300' }}>No advisors assigned yet.</p>
           ) : (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-              {advisors.map(a => (
-                <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: t.SURFACE, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_MD, padding: '6px 12px' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', transition: 'all 0.3s ease' }}>
+              {[...advisors].sort((a, b) => b.is_primary - a.is_primary).map(a => (
+                <div
+                  key={a.id}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '8px',
+                    background: a.is_primary ? ACCENT_MUTED : t.SURFACE,
+                    border: `1px solid ${a.is_primary ? ACCENT_BORDER : t.BORDER}`,
+                    borderRadius: RADIUS_MD, padding: '6px 12px',
+                    transition: 'all 0.3s ease',
+                  }}
+                >
                   <span style={{ fontSize: '13px', color: t.TEXT }}>
                     {a.first_name && a.last_name ? `${a.first_name} ${a.last_name}` : a.user_id.slice(0, 8) + '…'}
                   </span>
                   {a.is_primary && (
-                    <span style={{ fontSize: '10px', background: ACCENT_MUTED, color: ACCENT, borderRadius: '4px', padding: '1px 6px', letterSpacing: '0.06em' }}>Primary</span>
+                    <span style={{ fontSize: '10px', color: ACCENT, letterSpacing: '0.06em', fontWeight: '600' }}>Primary</span>
                   )}
-                  {isAdmin && !a.is_primary && (
+                  {canManageOrg && !a.is_primary && (
                     <button onClick={() => handleSetPrimary(a.id)} style={{ background: 'none', border: 'none', fontSize: '11px', color: t.TEXT_MUTED, cursor: 'pointer', padding: 0 }}>Set primary</button>
                   )}
-                  {isAdmin && (
+                  {canManageOrg && (
                     <button onClick={() => handleRemoveAdvisor(a.id)} style={{ background: 'none', border: 'none', fontSize: '11px', color: '#f87171', cursor: 'pointer', padding: 0 }}>✕</button>
                   )}
                 </div>
@@ -727,7 +743,6 @@ export default function ClientDetail() {
         <div style={s.grid}>
           <Section title="Core Identity" s={s}>
             <Field label="Date of Birth" value={client.date_of_birth} s={s} />
-            <Field label="Client Since" value={client.client_since} s={s} />
             <Field label="Preferred Contact" value={client.preferred_contact_method} s={s} />
             <Field label="Communication Frequency" value={client.communication_frequency} s={s} />
           </Section>
@@ -740,7 +755,7 @@ export default function ClientDetail() {
             <Field label="Liquidity Needs" value={client.liquidity_needs} s={s} />
           </Section>
           <Section title="Relationship" s={s}>
-            <Field label="Relationship Manager" value={client.relationship_manager} s={s} />
+            <Field label="Client Since" value={client.client_since} s={s} />
             <Field label="Referral Source" value={client.referral_source} s={s} />
             <Field label="Next Review Date" value={client.next_review_date} s={s} />
           </Section>
@@ -758,12 +773,14 @@ export default function ClientDetail() {
         <div style={{ marginTop: '36px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
             <p style={{ ...s.sectionLabel, margin: 0 }}>Notes ({clientNotes.length})</p>
-            <button style={s.editButton} onClick={() => setShowNoteCompose(v => !v)}>
-              {showNoteCompose ? 'Cancel' : '+ Record Note'}
-            </button>
+            {canWrite && (
+              <button style={s.editButton} onClick={() => setShowNoteCompose(v => !v)}>
+                {showNoteCompose ? 'Cancel' : '+ Record Note'}
+              </button>
+            )}
           </div>
 
-          {showNoteCompose && (
+          {canWrite && showNoteCompose && (
             <div style={{ ...s.notesCard, marginBottom: '16px' }}>
               <p style={{ fontSize: '10px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.12em', color: ACCENT, margin: '0 0 14px' }}>New Note</p>
               <div style={{ display: 'flex', gap: '10px', marginBottom: '10px', flexWrap: 'wrap' }}>
@@ -795,9 +812,11 @@ export default function ClientDetail() {
           {clientNotes.length === 0 ? (
             <div style={{ ...s.notesCard, textAlign: 'center', color: t.TEXT_MUTED, fontSize: '14px' }}>
               No notes yet.{' '}
-              <span style={{ color: ACCENT, cursor: 'pointer' }} onClick={() => setShowNoteCompose(true)}>
-                Add the first note →
-              </span>
+              {canWrite && (
+                <span style={{ color: ACCENT, cursor: 'pointer' }} onClick={() => setShowNoteCompose(true)}>
+                  Add the first note →
+                </span>
+              )}
             </div>
           ) : (
             groupNotesByDate(clientNotes).map(([date, dateNotes]) => (
@@ -899,7 +918,6 @@ export default function ClientDetail() {
                 </div>
                 <p style={s.formSectionLabel}>Relationship</p>
                 <div style={s.formGrid}>
-                  <FormField label="Relationship Manager" name="relationship_manager" value={formData.relationship_manager || ''} onChange={handleChange} s={s} />
                   <SelectField label="Referral Source"    name="referral_source"      value={formData.referral_source      || ''} onChange={handleChange} options={REFERRAL_SOURCE_OPTIONS} s={s} />
                   <FormField label="Client Since"         name="client_since"         type="date" value={formData.client_since || ''} onChange={handleChange} s={s} />
                   <FormField label="Next Review Date"     name="next_review_date"     type="date" value={formData.next_review_date || ''} onChange={handleChange} s={s} />

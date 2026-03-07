@@ -11,6 +11,7 @@ import {
   CONTACT_METHOD_OPTIONS,
   FONT_BODY,
   FONT_DISPLAY,
+  FULL_ACCESS_ROLES,
   INVESTMENT_OBJECTIVE_OPTIONS,
   LIQUIDITY_NEEDS_OPTIONS,
   RADIUS_LG,
@@ -40,7 +41,7 @@ const emptyForm = {
   first_name: '', last_name: '', email: '', phone: '',
   date_of_birth: '', status: 'Prospect', asset_level: '',
   risk_tolerance: '', investment_objective: '', time_horizon: '',
-  tax_bracket: '', liquidity_needs: '', relationship_manager: '',
+  tax_bracket: '', liquidity_needs: '',
   referral_source: '', client_since: '', next_review_date: '',
   preferred_contact_method: '', communication_frequency: '', notes: '',
 };
@@ -56,13 +57,45 @@ export default function Clients() {
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
   const [activeTab, setActiveTab] = useState('all');
+  const [orgMembers, setOrgMembers] = useState([]);
+  const [selectedAdvisor, setSelectedAdvisor] = useState('');
+  const [userRole, setUserRole] = useState(null);
+  const [primaryAdvisorMap, setPrimaryAdvisorMap] = useState({});
   const windowWidth = useWindowWidth();
   const isCompact = windowWidth < 1050;
   const isMobile = windowWidth < 600;
+  const canSeeAdvisorPill = FULL_ACCESS_ROLES.includes(userRole);
 
   useEffect(() => {
-    if (orgId) fetchClients();
+    if (orgId) { fetchClients(); fetchOrgMembers(); }
   }, [orgId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function fetchOrgMembers() {
+    const { data } = await supabase.rpc('get_org_members', { target_org_id: orgId });
+    setOrgMembers(data || []);
+    // Determine current user's role
+    const { data: { user } } = await supabase.auth.getUser();
+    const me = (data || []).find(m => m.user_id === user?.id);
+    setUserRole(me?.role || null);
+  }
+
+  async function fetchPrimaryAdvisors(clientIds) {
+    if (!clientIds.length) return;
+    const { data } = await supabase
+      .from('client_advisors')
+      .select('client_id, user_id')
+      .in('client_id', clientIds)
+      .eq('is_primary', true);
+    if (!data) return;
+    const members = await supabase.rpc('get_org_members', { target_org_id: orgId });
+    const memberMap = Object.fromEntries((members.data || []).map(m => [m.user_id, m]));
+    const map = {};
+    data.forEach(row => {
+      const m = memberMap[row.user_id];
+      map[row.client_id] = m ? `${m.first_name} ${m.last_name}` : null;
+    });
+    setPrimaryAdvisorMap(map);
+  }
 
   async function fetchClients() {
     setLoading(true);
@@ -73,7 +106,10 @@ export default function Clients() {
       .is('deleted_at', null)
       .order('last_name', { ascending: true });
     if (error) console.error('Error fetching clients:', error);
-    else setClients(data || []);
+    else {
+      setClients(data || []);
+      fetchPrimaryAdvisors((data || []).map(c => c.id));
+    }
     setLoading(false);
   }
 
@@ -87,13 +123,22 @@ export default function Clients() {
     const payload = Object.fromEntries(
       Object.entries({ ...formData, org_id: orgId }).map(([k, v]) => [k, v === '' ? null : v])
     );
-    const { error } = await supabase.from('clients').insert([payload]);
+    const { data: inserted, error } = await supabase.from('clients').insert([payload]).select().single();
     if (error) {
       setError('Something went wrong. Please try again.');
       console.error(error);
     } else {
+      if (selectedAdvisor && inserted?.id) {
+        await supabase.from('client_advisors').insert([{
+          org_id: orgId,
+          client_id: inserted.id,
+          user_id: selectedAdvisor,
+          is_primary: true,
+        }]);
+      }
       setShowModal(false);
       setFormData(emptyForm);
+      setSelectedAdvisor('');
       fetchClients();
     }
     setSaving(false);
@@ -555,17 +600,25 @@ export default function Clients() {
                   </>
                 )}
 
-                {/* Status badge */}
-                {client.status && (
-                  <span style={{
-                    ...s.badge,
-                    marginLeft: 'auto',
-                    backgroundColor: STATUS_COLORS[client.status]?.bg || ACCENT_MUTED,
-                    color: STATUS_COLORS[client.status]?.color || ACCENT,
-                  }}>
-                    {client.status}
-                  </span>
-                )}
+                {/* Status + advisor pill — stacked right aligned */}
+                <div style={{ marginLeft: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px', justifyContent: 'center' }}>
+                  {canSeeAdvisorPill && (
+                    primaryAdvisorMap[client.id] ? (
+                      <span style={{ ...s.badge, backgroundColor: 'rgba(102,126,234,0.12)', color: '#667eea', border: '1px solid rgba(102,126,234,0.3)' }}>
+                        {primaryAdvisorMap[client.id]}
+                      </span>
+                    ) : (
+                      <span style={{ ...s.badge, backgroundColor: 'rgba(251,191,36,0.12)', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.3)' }}>
+                        Unassigned
+                      </span>
+                    )
+                  )}
+                  {client.status && (
+                    <span style={{ ...s.badge, backgroundColor: STATUS_COLORS[client.status]?.bg || ACCENT_MUTED, color: STATUS_COLORS[client.status]?.color || ACCENT }}>
+                      {client.status}
+                    </span>
+                  )}
+                </div>
               </div>
             ))}
           </div>
@@ -631,7 +684,21 @@ export default function Clients() {
 
                 <p style={s.sectionLabel}>Relationship Management</p>
                 <div style={s.formGrid}>
-                  <FormField label="Relationship Manager"    name="relationship_manager"   value={formData.relationship_manager}   onChange={handleChange} s={s} />
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <label style={{ fontSize: '11px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.08em', color: t.TEXT_MUTED }}>Advisor</label>
+                    <select
+                      value={selectedAdvisor}
+                      onChange={e => setSelectedAdvisor(e.target.value)}
+                      style={s.input}
+                    >
+                      <option value=''>— Select advisor —</option>
+                      {orgMembers.map(m => (
+                        <option key={m.user_id} value={m.user_id}>
+                          {m.first_name && m.last_name ? `${m.first_name} ${m.last_name}` : m.user_id.slice(0, 8)}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                   <SelectField label="Referral Source"       name="referral_source"        value={formData.referral_source}        onChange={handleChange} options={REFERRAL_SOURCE_OPTIONS} s={s} />
                   <FormField label="Client Since"            name="client_since"           type="date" value={formData.client_since} onChange={handleChange} s={s} />
                   <FormField label="Next Review Date"        name="next_review_date"       type="date" value={formData.next_review_date} onChange={handleChange} s={s} />

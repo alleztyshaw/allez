@@ -116,6 +116,23 @@ export const REFERRAL_SOURCE_OPTIONS         = [
 ];
 
 // ============================================================
+// ROLE TIERS
+// Single source of truth for role-based access control.
+// Update these arrays when adding new roles — changes cascade
+// automatically to every page that imports them.
+// ============================================================
+
+// Roles that can see ALL clients in the org (not just assigned ones)
+export const FULL_ACCESS_ROLES = ['admin', 'manager', 'compliance'];
+
+// Roles that can write — create notes, tasks, edit client data
+// compliance is excluded (read-only)
+export const WRITE_ROLES = ['admin', 'manager', 'advisor', 'associate'];
+
+// Roles that can manage the org — invite members, assign/remove advisors, set primary
+export const ORG_ADMIN_ROLES = ['admin'];
+
+// ============================================================
 // BACKWARD-COMPATIBLE ALIASES
 // These map old token names to the new brand system so that
 // Clients.js, ClientDetail.js, Notes.js, and Team.js continue
