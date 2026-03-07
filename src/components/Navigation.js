@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { useOrg } from '../context/OrgContext';
-import { useTheme, useTokens } from '../context/ThemeContext';
+import { useTokens } from '../context/ThemeContext';
 import '../App.css';
 
 function Navigation() {
@@ -10,10 +10,8 @@ function Navigation() {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
   const { isAdmin, isPlatformAdmin, orgLoading } = useOrg();
-  const { theme } = useTheme();
   const t = useTokens();
   const navigate = useNavigate();
-  const location = useLocation();
 
   const linkColor = t.TEXT;
 
