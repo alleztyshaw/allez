@@ -38,9 +38,13 @@ export default function Welcome() {
     // If an invite token is present in the URL, sign out any existing session
     // first. Without this, a logged-in user clicking an invite link keeps the
     // old session — the invite token never exchanges — and the page breaks.
+    // We use a ref-style variable so the onAuthStateChange handler below knows
+    // this SIGNED_OUT event was intentional and should not show an error.
     const searchParamsCheck = new URLSearchParams(window.location.search);
     const hasInviteToken = hash.includes('access_token') || searchParamsCheck.has('code');
+    let intentionalSignOut = false;
     if (hasInviteToken) {
+      intentionalSignOut = true;
       supabase.auth.signOut();
     }
 
@@ -59,8 +63,12 @@ export default function Welcome() {
         setLoading(false);
       }
       if (event === 'SIGNED_OUT') {
-        setLinkError(true);
-        setLoading(false);
+        // Only treat sign-out as an error if it wasn't triggered by us
+        // intentionally clearing a session before exchanging an invite token
+        if (!intentionalSignOut) {
+          setLinkError(true);
+          setLoading(false);
+        }
       }
     });
 
