@@ -545,8 +545,8 @@ function TaskRow({ task, clientName, onComplete, onDelete, onEdit, s, t, navigat
         </div>
         {/* Badge + actions */}
         {task.due_date && (
-          <span style={{ ...s.dueBadge(today, soon, overdue), flexShrink: 0 }}>
-            {overdue ? 'Overdue' : today ? 'Due Today' : soon ? 'Due Soon' : formatDate(task.due_date)}
+          <span style={{ fontSize: '12px', color: t.TEXT_MUTED, fontWeight: '300', flexShrink: 0, whiteSpace: 'nowrap' }}>
+            Due {formatDate(task.due_date)}
           </span>
         )}
         <button style={{ ...s.deleteAction, flexShrink: 0 }} onClick={() => onEdit(task)}>Edit</button>

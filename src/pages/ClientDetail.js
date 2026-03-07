@@ -424,7 +424,7 @@ export default function ClientDetail() {
   const location = useLocation();
   const { orgId, isAdmin } = useOrg();
   const backPath = location.state?.from || '/hq/clients';
-  const backLabel = backPath === '/hq/notes' ? '← Back to Notes' : '← Back to Clients';
+  const backLabel = backPath === '/hq/notes' ? '← Back to Notes' : backPath === '/hq/crm' ? '← Back to CRM' : '← Back to Clients';
   const [client, setClient] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showEdit, setShowEdit] = useState(false);
