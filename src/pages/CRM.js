@@ -197,7 +197,7 @@ export default function CRM() {
     biBar: { display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : isTablet ? 'repeat(3, 1fr)' : 'repeat(5, 1fr)', gap: '12px', marginBottom: '32px' },
     biCard: { background: t.SURFACE, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_LG, padding: '18px 20px', boxShadow: SHADOW_MD },
     biLabel: { fontSize: '10px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.1em', color: t.TEXT_MUTED, margin: '0 0 6px' },
-    biValue: { fontSize: '22px', fontWeight: '300', fontFamily: FONT_DISPLAY, color: t.TEXT, margin: 0, letterSpacing: '0.01em' },
+    biValue: { fontSize: '18px', fontWeight: '300', fontFamily: FONT_BODY, color: t.TEXT, margin: 0, letterSpacing: '0.01em' },
     biSub: { fontSize: '11px', color: t.TEXT_SUBTLE, margin: '4px 0 0', fontWeight: '300' },
 
     // Tabs

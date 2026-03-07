@@ -63,7 +63,7 @@ export default function HQ() {
     cardDesc: { fontSize: '13px', color: t.TEXT_MUTED, lineHeight: 1.65, fontWeight: 300, flex: 1, margin: '0 0 20px' },
     cardFooter: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 'auto' },
     metric: { display: 'flex', flexDirection: 'column', gap: '2px' },
-    metricNumber: { fontFamily: FONT_DISPLAY, fontSize: '32px', fontWeight: 400, color: ACCENT, lineHeight: 1 },
+    metricNumber: { fontFamily: FONT_BODY, fontSize: '24px', fontWeight: 300, color: ACCENT, lineHeight: 1 },
     metricLabel: { fontSize: '10px', color: t.TEXT_MUTED, letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 500 },
     openBtn: { background: 'transparent', border: `1px solid ${t.BORDER}`, color: ACCENT, borderRadius: RADIUS_MD, padding: '7px 16px', fontSize: '13px', fontWeight: 500, cursor: 'pointer', fontFamily: FONT_BODY },
   };
