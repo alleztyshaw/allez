@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { useOrg } from '../context/OrgContext';
-import { useTheme } from '../context/ThemeContext';
+import { useTheme, useTokens } from '../context/ThemeContext';
 import '../App.css';
 
 function Navigation() {
@@ -11,11 +11,12 @@ function Navigation() {
   const menuRef = useRef(null);
   const { isAdmin, isPlatformAdmin, orgLoading } = useOrg();
   const { theme } = useTheme();
+  const t = useTokens();
   const navigate = useNavigate();
   const location = useLocation();
 
   const isDarkPage = location.pathname.startsWith('/hq');
-  const linkColor = (isDarkPage && theme === 'dark') ? '#f0ece0' : '#1a1a2e';
+  const linkColor = (isDarkPage && theme === 'dark') ? '#f0ece0' : t.TEXT;
 
   const getGreeting = () => {
     const h = new Date().getHours();

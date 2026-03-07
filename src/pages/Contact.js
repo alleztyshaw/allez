@@ -1,14 +1,31 @@
-import '../App.css';
 import {
-  SITE_ACCENT, SITE_ACCENT_MUTED, SITE_ACCENT_BORDER,
+  ACCENT, ACCENT_MUTED, ACCENT_BORDER,
   FONT_DISPLAY, FONT_BODY,
-  RADIUS_LG,
-  MAX_WIDTH,
+  RADIUS_LG, SHADOW_MD,
 } from '../utils/hqConstants';
+import { useTokens } from '../context/ThemeContext';
 
 function Contact() {
+  const t = useTokens();
+
+  const s = {
+    pageWrapper: { minHeight: '100vh', width: '100%', background: t.BG, fontFamily: FONT_BODY, color: t.TEXT },
+    page: { maxWidth: '1200px', margin: '0 auto', padding: '120px 40px 80px', boxSizing: 'border-box' },
+    headlineBlock: { marginBottom: '56px' },
+    eyebrow: { fontSize: '11px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.12em', color: ACCENT, margin: '0 0 16px' },
+    title: { fontFamily: FONT_DISPLAY, fontSize: '52px', fontWeight: '300', lineHeight: 1.15, margin: '0 0 20px', letterSpacing: '0.01em', color: t.TEXT },
+    subtitle: { fontSize: '16px', lineHeight: '1.7', fontWeight: '300', maxWidth: '520px', margin: 0, color: t.TEXT_MUTED },
+    optionsGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '48px', maxWidth: '720px' },
+    optionCard: { border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_LG, padding: '28px', background: t.SURFACE, boxShadow: SHADOW_MD },
+    optionLabel: { fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.12em', color: ACCENT, margin: '0 0 10px' },
+    optionValue: { fontSize: '18px', fontWeight: '500', margin: '0 0 10px', letterSpacing: '0.01em', color: t.TEXT },
+    optionNote: { fontSize: '13px', lineHeight: '1.6', fontWeight: '300', margin: 0, color: t.TEXT_MUTED },
+    footerNote: { fontSize: '12px', fontWeight: '300', margin: 0, letterSpacing: '0.02em', color: t.TEXT_SUBTLE },
+  };
+
   return (
     <div style={s.pageWrapper}>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=DM+Sans:wght@300;400;500;600&display=swap');`}</style>
       <div style={s.page}>
 
         <div style={s.headlineBlock}>
@@ -33,95 +50,11 @@ function Contact() {
           </div>
         </div>
 
-        <p style={s.footerNote}>
-          Allez Capital is based in the United States. Allez HQ is currently in early development.
-        </p>
+
 
       </div>
     </div>
   );
 }
-
-const s = {
-  pageWrapper: {
-    minHeight: '100vh',
-    width: '100%',
-    fontFamily: FONT_BODY,
-  },
-  page: {
-    maxWidth: MAX_WIDTH,
-    margin: '0 auto',
-    padding: '120px 40px 80px',
-    boxSizing: 'border-box',
-  },
-  headlineBlock: {
-    marginBottom: '56px',
-  },
-  eyebrow: {
-    fontSize: '11px',
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: '0.12em',
-    color: SITE_ACCENT,
-    margin: '0 0 16px',
-  },
-  title: {
-    fontFamily: FONT_DISPLAY,
-    fontSize: '52px',
-    fontWeight: '300',
-    lineHeight: 1.15,
-    margin: '0 0 20px',
-    letterSpacing: '0.01em',
-  },
-  subtitle: {
-    fontSize: '16px',
-    lineHeight: '1.7',
-    fontWeight: '300',
-    maxWidth: '520px',
-    margin: 0,
-    opacity: 0.75,
-  },
-  optionsGrid: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gap: '16px',
-    marginBottom: '48px',
-    maxWidth: '720px',
-  },
-  optionCard: {
-    border: `1px solid ${SITE_ACCENT_BORDER}`,
-    borderRadius: RADIUS_LG,
-    padding: '28px',
-    background: SITE_ACCENT_MUTED,
-  },
-  optionLabel: {
-    fontSize: '10px',
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    letterSpacing: '0.12em',
-    color: SITE_ACCENT,
-    margin: '0 0 10px',
-  },
-  optionValue: {
-    fontSize: '18px',
-    fontWeight: '500',
-    margin: '0 0 10px',
-    letterSpacing: '0.01em',
-  },
-  optionNote: {
-    fontSize: '13px',
-    lineHeight: '1.6',
-    fontWeight: '300',
-    margin: 0,
-    opacity: 0.6,
-  },
-  footerNote: {
-    fontSize: '12px',
-    fontWeight: '300',
-    opacity: 0.4,
-    margin: 0,
-    letterSpacing: '0.02em',
-  },
-};
 
 export default Contact;

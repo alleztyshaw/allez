@@ -105,7 +105,7 @@ export default function HQ() {
                 onClick={() => isLive && navigate(feature.route)}
               >
                 <div style={s.cardTop}>
-                  {isLive ? <span style={s.liveBadge}>Live</span> : <span style={s.soonBadge}>Coming Soon</span>}
+                  {!isLive && <span style={s.soonBadge}>Coming Soon</span>}
                 </div>
                 <h2 style={{ ...s.cardTitle, ...(!isLive ? { color: t.TEXT_MUTED } : {}) }}>
                   {feature.title}
