@@ -118,7 +118,7 @@ export default function Team() {
   function memberName(m) {
     if (m.first_name && m.last_name) return `${m.first_name} ${m.last_name}`;
     if (m.display_name) return m.display_name;
-    return m.user_id.slice(0, 8) + '…';
+    return null; // handled in JSX with a pending label
   }
 
 
@@ -370,12 +370,18 @@ export default function Team() {
 
                   {/* Avatar */}
                   <div style={s.avatar}>
-                    {m.first_name?.[0] || m.display_name?.[0] || '?'}
+                    {m.first_name?.[0] || m.display_name?.[0] || '·'}
                   </div>
 
                   {/* Name */}
                   <div style={s.memberInfo}>
-                    <p style={s.memberName}>{memberName(m)}</p>
+                    {memberName(m) ? (
+                      <p style={s.memberName}>{memberName(m)}</p>
+                    ) : (
+                      <p style={{ ...s.memberName, color: t.TEXT_MUTED, fontStyle: 'italic', fontWeight: 300 }}>
+                        Pending setup
+                      </p>
+                    )}
                   </div>
 
                   {/* Role display or edit */}

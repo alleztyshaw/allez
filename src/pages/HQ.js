@@ -13,6 +13,7 @@ import {
   SHADOW_MD,
 } from '../utils/hqConstants';
 import { useTokens } from '../context/ThemeContext';
+import { useOrg } from '../context/OrgContext';
 
 const features = [
   { id: 'clients',    title: 'Clients',     description: 'Manage your client roster, financial profiles, risk tolerances, and relationship details.', status: 'live',        route: '/hq/clients', metricQuery: 'clients', metricLabel: 'Total Clients' },
@@ -29,20 +30,30 @@ function formatDate(d) {
 export default function HQ() {
   const navigate = useNavigate();
   const t = useTokens();
+  const { orgId } = useOrg();
   const [metrics, setMetrics] = useState({});
   const [metricsLoading, setMetricsLoading] = useState(true);
+  const [orgName, setOrgName] = useState('');
+  const [userRole, setUserRole] = useState('');
 
   useEffect(() => {
+    if (!orgId) return;
     async function fetchMetrics() {
-      const [{ data: clients }, { data: notes }] = await Promise.all([
+      const { data: { user } } = await supabase.auth.getUser();
+      const [{ data: clients }, { data: notes }, { data: orgData }, { data: membersData }] = await Promise.all([
         supabase.from('clients').select('id'),
         supabase.from('notes').select('id'),
+        supabase.from('organizations').select('name').eq('org_id', orgId).single(),
+        supabase.rpc('get_org_members', { target_org_id: orgId }),
       ]);
       setMetrics({ clients: clients?.length ?? 0, notes: notes?.length ?? 0 });
+      setOrgName(orgData?.name || '');
+      const me = (membersData || []).find(m => m.user_id === user?.id);
+      setUserRole(me?.role || '');
       setMetricsLoading(false);
     }
     fetchMetrics();
-  }, []);
+  }, [orgId]);
 
   const s = {
     pageWrapper: { background: t.BG, minHeight: '100vh', width: '100%' },
@@ -82,12 +93,15 @@ export default function HQ() {
 
         <div style={s.header}>
           <div />
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px' }}>
+            {orgName && <p style={s.date}>{orgName}</p>}
             <p style={s.date}>{formatDate(new Date())}</p>
-            <div style={s.roleBadge}>
-              <span style={s.roleDot} />
-              <span style={s.roleText}>Admin</span>
-            </div>
+            {userRole && (
+              <div style={s.roleBadge}>
+                <span style={s.roleDot} />
+                <span style={s.roleText}>{userRole.charAt(0).toUpperCase() + userRole.slice(1)}</span>
+              </div>
+            )}
           </div>
         </div>
 
