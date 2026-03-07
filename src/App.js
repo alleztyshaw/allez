@@ -21,17 +21,18 @@ function ProtectedLayout({ children }) {
   const t = useTokens();
   return (
     <ProtectedRoute>
-      <Navigation />
-      <main className="main">{children}</main>
-      <p style={{
-        position: 'fixed', bottom: '24px', left: 0, right: 0,
-        textAlign: 'center', fontSize: '12px', fontWeight: 300,
-        color: t.TEXT_SUBTLE, letterSpacing: '0.04em',
-        zIndex: 5, pointerEvents: 'none', margin: 0,
-        fontFamily: "'DM Sans', sans-serif",
-      }}>
-        © 2026 Allez HQ · All rights reserved · Built for wealth management professionals
-      </p>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: t.BG }}>
+        <Navigation />
+        <main className="main" style={{ flex: 1 }}>{children}</main>
+        <p style={{
+          textAlign: 'center', fontSize: '12px', fontWeight: 300,
+          color: t.TEXT_SUBTLE, letterSpacing: '0.04em',
+          padding: '24px 20px', margin: 0,
+          fontFamily: "'DM Sans', sans-serif",
+        }}>
+          © 2026 Allez HQ · All rights reserved · Built for wealth management professionals
+        </p>
+      </div>
     </ProtectedRoute>
   );
 }

@@ -67,10 +67,23 @@ function isOverdue(dateStr) {
   return new Date(dateStr + 'T12:00:00') < new Date(localToday() + 'T00:00:00');
 }
 
+function useWindowWidth() {
+  const [width, setWidth] = useState(window.innerWidth);
+  useEffect(() => {
+    const handler = () => setWidth(window.innerWidth);
+    window.addEventListener('resize', handler);
+    return () => window.removeEventListener('resize', handler);
+  }, []);
+  return width;
+}
+
 export default function CRM() {
   const t = useTokens();
   const navigate = useNavigate();
   const { orgId } = useOrg();
+  const windowWidth = useWindowWidth();
+  const isMobile = windowWidth < 600;
+  const isTablet = windowWidth < 900;
 
   const [tab, setTab] = useState('Tasks');
   const [clients, setClients] = useState([]);
@@ -174,14 +187,14 @@ export default function CRM() {
 
   const s = {
     pageWrapper: { background: t.BG, minHeight: '100vh', width: '100%' },
-    page: { maxWidth: '1200px', margin: '0 auto', padding: '120px 40px 80px', fontFamily: FONT_BODY, color: t.TEXT },
-    pageHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '32px' },
+    page: { maxWidth: '1200px', margin: '0 auto', padding: isMobile ? '100px 16px 60px' : '120px 40px 80px', fontFamily: FONT_BODY, color: t.TEXT },
+    pageHeader: { display: 'flex', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'flex-start', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? '12px' : '0', marginBottom: '32px' },
     title: { fontFamily: FONT_DISPLAY, fontSize: '44px', fontWeight: '300', color: t.TEXT, margin: '0 0 6px', letterSpacing: '0.01em', lineHeight: 1.1 },
     subtitle: { fontSize: '13px', color: t.TEXT_MUTED, margin: 0, fontWeight: '300' },
     addButton: { background: 'transparent', color: ACCENT, border: `1px solid ${ACCENT_BORDER}`, borderRadius: RADIUS_MD, padding: '10px 20px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: FONT_BODY },
 
     // BI bar
-    biBar: { display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '16px', marginBottom: '32px' },
+    biBar: { display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : isTablet ? 'repeat(3, 1fr)' : 'repeat(5, 1fr)', gap: '12px', marginBottom: '32px' },
     biCard: { background: t.SURFACE, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_LG, padding: '18px 20px', boxShadow: SHADOW_MD },
     biLabel: { fontSize: '10px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.1em', color: t.TEXT_MUTED, margin: '0 0 6px' },
     biValue: { fontSize: '22px', fontWeight: '300', fontFamily: FONT_DISPLAY, color: t.TEXT, margin: 0, letterSpacing: '0.01em' },
@@ -199,10 +212,10 @@ export default function CRM() {
     }),
 
     // Pipeline table
-    tableWrap: { border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_LG, overflow: 'hidden', boxShadow: SHADOW_MD },
-    tableHead: { display: 'grid', gridTemplateColumns: '1fr 110px 110px 120px 110px', padding: '10px 20px', background: t.SURFACE_ALT, borderBottom: `1px solid ${t.BORDER}` },
+    tableWrap: { border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_LG, overflow: 'hidden', boxShadow: SHADOW_MD, overflowX: 'auto' },
+    tableHead: { display: 'grid', gridTemplateColumns: isMobile ? '1fr 100px' : '1fr 110px 110px 120px 110px', padding: '10px 20px', background: t.SURFACE_ALT, borderBottom: `1px solid ${t.BORDER}`, minWidth: isMobile ? 'unset' : '600px' },
     tableHeadCell: { fontSize: '10px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.1em', color: t.TEXT_MUTED },
-    tableRow: { display: 'grid', gridTemplateColumns: '1fr 110px 110px 120px 110px', padding: '14px 20px', borderBottom: `1px solid ${t.BORDER}`, background: t.SURFACE, cursor: 'pointer', transition: 'background 0.15s' },
+    tableRow: { display: 'grid', gridTemplateColumns: isMobile ? '1fr 100px' : '1fr 110px 110px 120px 110px', padding: '14px 20px', borderBottom: `1px solid ${t.BORDER}`, background: t.SURFACE, cursor: 'pointer', transition: 'background 0.15s', minWidth: isMobile ? 'unset' : '600px' },
     tableCell: { fontSize: '13px', color: t.TEXT, display: 'flex', alignItems: 'center' },
     tableCellMuted: { fontSize: '12px', color: t.TEXT_MUTED, display: 'flex', alignItems: 'center', fontWeight: '300' },
 
@@ -314,7 +327,7 @@ export default function CRM() {
           <>
             {/* PIPELINE TAB */}
             {tab === 'Pipeline' && (
-              <PipelineTable clients={clients} navigate={navigate} s={s} t={t} />
+              <PipelineTable clients={clients} navigate={navigate} s={s} t={t} isMobile={isMobile} />
             )}
 
             {/* TASKS TAB */}
@@ -564,7 +577,7 @@ function TaskRow({ task, clientName, onComplete, onDelete, onEdit, s, t, navigat
   );
 }
 
-function PipelineTable({ clients, navigate, s, t }) {
+function PipelineTable({ clients, navigate, s, t, isMobile }) {
   const [statusFilter, setStatusFilter] = useState('All');
   const [sortKey, setSortKey] = useState('last_name');
   const [sortDir, setSortDir] = useState('asc');
@@ -631,9 +644,9 @@ function PipelineTable({ clients, navigate, s, t }) {
           <div style={s.tableHead}>
             <button onClick={() => toggleSort('last_name')} style={{ ...s.tableHeadCell, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', fontFamily: FONT_BODY, padding: 0 }}>Client{arrow('last_name')}</button>
             <button onClick={() => toggleSort('status')} style={{ ...s.tableHeadCell, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', fontFamily: FONT_BODY, padding: 0 }}>Status{arrow('status')}</button>
-            <button onClick={() => toggleSort('aum')} style={{ ...s.tableHeadCell, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', fontFamily: FONT_BODY, padding: 0 }}>AUM{arrow('aum')}</button>
-            <button onClick={() => toggleSort('next_review_date')} style={{ ...s.tableHeadCell, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', fontFamily: FONT_BODY, padding: 0 }}>Next Review{arrow('next_review_date')}</button>
-            <div style={s.tableHeadCell}>Custodian</div>
+            {!isMobile && <button onClick={() => toggleSort('aum')} style={{ ...s.tableHeadCell, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', fontFamily: FONT_BODY, padding: 0 }}>AUM{arrow('aum')}</button>}
+            {!isMobile && <button onClick={() => toggleSort('next_review_date')} style={{ ...s.tableHeadCell, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', fontFamily: FONT_BODY, padding: 0 }}>Next Review{arrow('next_review_date')}</button>}
+            {!isMobile && <div style={s.tableHeadCell}>Custodian</div>}
           </div>
           {filtered.map((client, i) => {
             const sc = STATUS_COLORS?.[client.status];
@@ -657,16 +670,16 @@ function PipelineTable({ clients, navigate, s, t }) {
                     </span>
                   ) : <span style={s.tableCellMuted}>—</span>}
                 </div>
-                <div style={{ ...s.tableCell, color: client.aum ? ACCENT : t.TEXT_SUBTLE, fontWeight: client.aum ? '500' : '300' }}>
+                {!isMobile && <div style={{ ...s.tableCell, color: client.aum ? ACCENT : t.TEXT_SUBTLE, fontWeight: client.aum ? '500' : '300' }}>
                   {formatAUM(client.aum)}
                   {client.aum_source === 'api' && <span style={{ fontSize: '9px', color: t.TEXT_SUBTLE, marginLeft: '4px' }}>sync</span>}
-                </div>
-                <div style={{ ...s.tableCell, color: reviewOverdue ? '#f87171' : reviewSoon ? '#fbbf24' : t.TEXT_MUTED, fontWeight: '300', fontSize: '12px' }}>
+                </div>}
+                {!isMobile && <div style={{ ...s.tableCell, color: reviewOverdue ? '#f87171' : reviewSoon ? '#fbbf24' : t.TEXT_MUTED, fontWeight: '300', fontSize: '12px' }}>
                   {client.next_review_date ? formatDate(client.next_review_date) : <span style={{ color: t.TEXT_SUBTLE }}>—</span>}
-                </div>
-                <div style={s.tableCellMuted}>
+                </div>}
+                {!isMobile && <div style={s.tableCellMuted}>
                   {client.custodian || '—'}
-                </div>
+                </div>}
               </div>
             );
           })}

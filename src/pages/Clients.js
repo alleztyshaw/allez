@@ -58,6 +58,7 @@ export default function Clients() {
   const [activeTab, setActiveTab] = useState('all');
   const windowWidth = useWindowWidth();
   const isCompact = windowWidth < 1050;
+  const isMobile = windowWidth < 600;
 
   useEffect(() => {
     if (orgId) fetchClients();
@@ -116,7 +117,7 @@ export default function Clients() {
       width: '100%',
     },
     page: {
-      padding: '120px 40px 80px',
+      padding: isMobile ? '100px 16px 60px' : '120px 40px 80px',
       maxWidth: '1200px',
       margin: '0 auto',
       fontFamily: FONT_BODY,
@@ -125,12 +126,14 @@ export default function Clients() {
     header: {
       display: 'flex',
       justifyContent: 'space-between',
-      alignItems: 'flex-start',
+      alignItems: isMobile ? 'flex-start' : 'flex-start',
+      flexDirection: isMobile ? 'column' : 'row',
+      gap: isMobile ? '16px' : '0',
       marginBottom: '28px',
     },
     title: {
       fontFamily: FONT_DISPLAY,
-      fontSize: '44px',
+      fontSize: isMobile ? '32px' : '44px',
       fontWeight: '300',
       margin: '0 0 6px',
       color: t.TEXT,
@@ -208,15 +211,16 @@ export default function Clients() {
       cursor: 'pointer',
       transition: 'transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease',
       display: 'flex',
-      alignItems: 'center',
-      gap: '24px',
+      alignItems: isMobile ? 'flex-start' : 'center',
+      flexDirection: isMobile ? 'column' : 'row',
+      gap: isMobile ? '12px' : '24px',
       boxShadow: SHADOW_MD,
     },
     cardTop: {
       display: 'flex',
       alignItems: 'center',
       gap: '14px',
-      width: '260px',
+      width: isMobile ? '100%' : '260px',
       flexShrink: 0,
     },
     avatarLink: { textDecoration: 'none', flexShrink: 0 },
@@ -252,21 +256,23 @@ export default function Clients() {
       fontWeight: '300',
     },
     cardDivider: {
-      width: '1px',
+      width: isMobile ? '100%' : '1px',
+      height: isMobile ? '1px' : 'auto',
       alignSelf: 'stretch',
       background: t.BORDER,
       flexShrink: 0,
     },
     cardStats: {
       display: 'flex',
-      gap: '32px',
+      gap: isMobile ? '16px' : '32px',
       flex: 1,
+      flexWrap: 'wrap',
     },
     stat: {
       display: 'flex',
       flexDirection: 'column',
       gap: '3px',
-      width: '140px',
+      width: isMobile ? 'calc(50% - 8px)' : '140px',
       flexShrink: 0,
     },
     statLabel: {

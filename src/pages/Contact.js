@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import {
   ACCENT,
   FONT_DISPLAY, FONT_BODY,
@@ -5,22 +6,33 @@ import {
 } from '../utils/hqConstants';
 import { useTokens } from '../context/ThemeContext';
 
+function useWindowWidth() {
+  const [width, setWidth] = useState(window.innerWidth);
+  useEffect(() => {
+    const handler = () => setWidth(window.innerWidth);
+    window.addEventListener('resize', handler);
+    return () => window.removeEventListener('resize', handler);
+  }, []);
+  return width;
+}
+
 function Contact() {
   const t = useTokens();
+  const windowWidth = useWindowWidth();
+  const isMobile = windowWidth < 600;
 
   const s = {
     pageWrapper: { minHeight: '100vh', width: '100%', background: t.BG, fontFamily: FONT_BODY, color: t.TEXT },
-    page: { maxWidth: '1200px', margin: '0 auto', padding: '120px 40px 80px', boxSizing: 'border-box' },
+    page: { maxWidth: '1200px', margin: '0 auto', padding: isMobile ? '100px 20px 60px' : '120px 40px 80px', boxSizing: 'border-box' },
     headlineBlock: { marginBottom: '56px' },
     eyebrow: { fontSize: '11px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.12em', color: ACCENT, margin: '0 0 16px' },
-    title: { fontFamily: FONT_DISPLAY, fontSize: '52px', fontWeight: '300', lineHeight: 1.15, margin: '0 0 20px', letterSpacing: '0.01em', color: t.TEXT },
+    title: { fontFamily: FONT_DISPLAY, fontSize: isMobile ? '36px' : '52px', fontWeight: '300', lineHeight: 1.15, margin: '0 0 20px', letterSpacing: '0.01em', color: t.TEXT },
     subtitle: { fontSize: '16px', lineHeight: '1.7', fontWeight: '300', maxWidth: '520px', margin: 0, color: t.TEXT_MUTED },
-    optionsGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '48px', maxWidth: '720px' },
+    optionsGrid: { display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '16px', marginBottom: '48px', maxWidth: '720px' },
     optionCard: { border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_LG, padding: '28px', background: t.SURFACE, boxShadow: SHADOW_MD },
     optionLabel: { fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.12em', color: ACCENT, margin: '0 0 10px' },
     optionValue: { fontSize: '18px', fontWeight: '500', margin: '0 0 10px', letterSpacing: '0.01em', color: t.TEXT },
     optionNote: { fontSize: '13px', lineHeight: '1.6', fontWeight: '300', margin: 0, color: t.TEXT_MUTED },
-    footerNote: { fontSize: '12px', fontWeight: '300', margin: 0, letterSpacing: '0.02em', color: t.TEXT_SUBTLE },
   };
 
   return (
@@ -49,8 +61,6 @@ function Contact() {
             <p style={s.optionNote}>We're a small team. Email is the best way to reach us right now.</p>
           </div>
         </div>
-
-
 
       </div>
     </div>
