@@ -57,6 +57,10 @@ export default function Welcome() {
 
     // Fallback: check for an existing session (e.g. user refreshes the page
     // after the hash token has already been exchanged)
+    // Check both hash-based (implicit flow) and query-param-based (PKCE flow) tokens
+    const searchParams = new URLSearchParams(window.location.search);
+    const hasToken = hash.includes('access_token') || searchParams.has('code');
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         if (session.user?.user_metadata?.onboarding_complete) {
@@ -65,12 +69,12 @@ export default function Welcome() {
         }
         setSession(session);
         setLoading(false);
-      } else if (!hash.includes('access_token')) {
+      } else if (!hasToken) {
         // No session and no token — link is invalid or already used
         setLinkError(true);
         setLoading(false);
       }
-      // If hash has access_token, stay loading and let onAuthStateChange fire
+      // If URL has a token, stay loading and let onAuthStateChange fire
     });
 
     // Safety net — if nothing resolves in 8 seconds, show the error state
