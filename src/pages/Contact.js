@@ -1,5 +1,5 @@
 import {
-  ACCENT, ACCENT_MUTED, ACCENT_BORDER,
+  ACCENT,
   FONT_DISPLAY, FONT_BODY,
   RADIUS_LG, SHADOW_MD,
 } from '../utils/hqConstants';
