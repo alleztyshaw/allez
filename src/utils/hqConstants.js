@@ -35,7 +35,7 @@ export const D_SURFACE_ALT = '#162035'; // Subtle inset areas, inputs
 export const D_BORDER      = '#1F3050'; // Dividers, card outlines
 export const D_TEXT        = '#E8F0FE'; // Primary text
 export const D_TEXT_MUTED  = '#A8C0E8'; // Labels, captions
-export const D_TEXT_SUBTLE = '#2E4A72'; // Placeholder, disabled
+export const D_TEXT_SUBTLE = '#A8C0E8'; // Same as TEXT_MUTED in dark mode — contrast range too narrow for a third tier
 
 // --- TYPOGRAPHY ---
 export const FONT_DISPLAY = "'Cormorant Garamond', Georgia, serif"; // Hero, client names, headlines

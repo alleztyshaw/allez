@@ -15,13 +15,12 @@ function Navigation() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const isDarkPage = location.pathname.startsWith('/hq');
-  const linkColor = (isDarkPage && theme === 'dark') ? '#f0ece0' : t.TEXT;
+  const linkColor = t.TEXT;
 
   const getGreeting = () => {
     const h = new Date().getHours();
-    if (h < 12) return 'Good morning';
-    if (h < 17) return 'Good afternoon';
+    if (h >= 5 && h < 12) return 'Good morning';
+    if (h >= 12 && h < 17) return 'Good afternoon';
     return 'Good evening';
   };
 

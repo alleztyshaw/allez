@@ -232,7 +232,7 @@ export default function CRM() {
       border: `1px solid ${overdue ? 'rgba(248,113,113,0.3)' : today ? ACCENT_BORDER : soon ? 'rgba(251,191,36,0.3)' : 'rgba(96,165,250,0.3)'}`,
       flexShrink: 0,
     }),
-    deleteAction: { background: 'none', border: 'none', cursor: 'pointer', fontSize: '11px', color: t.TEXT_SUBTLE, padding: 0, fontFamily: FONT_BODY },
+    deleteAction: { background: 'none', border: 'none', cursor: 'pointer', fontSize: '11px', color: t.TEXT_MUTED, padding: 0, fontFamily: FONT_BODY },
 
     // Task form
     formCard: { background: t.SURFACE, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_LG, padding: '20px 24px', marginBottom: '20px', boxShadow: SHADOW_MD },
@@ -566,7 +566,7 @@ function TaskRow({ task, clientName, onComplete, onDelete, onEdit, s, t, navigat
                 width: 0, height: 0,
                 borderTop: '4px solid transparent',
                 borderBottom: '4px solid transparent',
-                borderLeft: `5px solid ${t.TEXT_SUBTLE}`,
+                borderLeft: `5px solid ${t.TEXT_MUTED}`,
                 transition: 'transform 0.2s ease',
                 transform: expanded ? 'rotate(90deg)' : 'rotate(0deg)',
                 flexShrink: 0,

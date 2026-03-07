@@ -36,6 +36,7 @@ export default function Orgs() {
   const [orgName, setOrgName] = useState('');
   const [isPlatformOrg, setIsPlatformOrg] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [pulsingOrgId, setPulsingOrgId] = useState(null);
   const [formError, setFormError] = useState('');
   const [toast, setToast] = useState(null);
 
@@ -84,6 +85,9 @@ export default function Orgs() {
       setExpandedOrg(orgId);
       fetchStats(orgId);
     }
+    // Trigger border pulse on every click, clear after animation completes
+    setPulsingOrgId(orgId);
+    setTimeout(() => setPulsingOrgId(null), 600);
   }
 
   function formatDate(iso) {
@@ -169,10 +173,9 @@ export default function Orgs() {
       background: t.SURFACE, border: `1px solid ${t.BORDER}`,
       borderRadius: RADIUS_LG, boxShadow: SHADOW_MD,
       marginBottom: '10px', overflow: 'hidden',
-      transition: 'border-color 0.2s ease',
-    },
-    orgCardExpanded: {
-      borderColor: ACCENT_BORDER,
+      '--pulse-color': ACCENT_BORDER,
+      '--pulse-glow': `${ACCENT}22`,
+      '--border-color': t.BORDER,
     },
     orgRow: {
       display: 'flex', alignItems: 'center',
@@ -248,6 +251,12 @@ export default function Orgs() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=DM+Sans:wght@300;400;500;600&display=swap');
         @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes borderPulse {
+          0%   { border-color: var(--pulse-color); box-shadow: 0 0 0 0 var(--pulse-glow); }
+          40%  { border-color: var(--pulse-color); box-shadow: 0 0 0 3px var(--pulse-glow); }
+          100% { border-color: var(--border-color); box-shadow: none; }
+        }
+        .org-card-pulse { animation: borderPulse 0.6s ease forwards; }
       `}</style>
 
       {toast && (
@@ -317,7 +326,8 @@ export default function Orgs() {
               return (
                 <div
                   key={org.org_id}
-                  style={{ ...s.orgCard, ...(isExpanded ? s.orgCardExpanded : {}) }}
+                  style={s.orgCard}
+                  className={pulsingOrgId === org.org_id ? 'org-card-pulse' : ''}
                 >
                   {/* Clickable header row */}
                   <div style={s.orgRow} onClick={() => handleToggle(org.org_id)}>

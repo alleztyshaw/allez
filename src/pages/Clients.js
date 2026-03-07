@@ -61,6 +61,7 @@ export default function Clients() {
   const [selectedAdvisor, setSelectedAdvisor] = useState('');
   const [userRole, setUserRole] = useState(null);
   const [primaryAdvisorMap, setPrimaryAdvisorMap] = useState({});
+  const [advisorMapLoaded, setAdvisorMapLoaded] = useState(false);
   const windowWidth = useWindowWidth();
   const isCompact = windowWidth < 1050;
   const isMobile = windowWidth < 600;
@@ -95,6 +96,7 @@ export default function Clients() {
       map[row.client_id] = m ? `${m.first_name} ${m.last_name}` : null;
     });
     setPrimaryAdvisorMap(map);
+    setAdvisorMapLoaded(true);
   }
 
   async function fetchClients() {
@@ -606,8 +608,8 @@ export default function Clients() {
                 )}
 
                 {/* Status + advisor pill — stacked right aligned */}
-                <div style={{ marginLeft: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px', justifyContent: 'center' }}>
-                  {canSeeAdvisorPill && (
+                <div style={{ marginLeft: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px', justifyContent: 'center', alignSelf: 'center' }}>
+                  {canSeeAdvisorPill && advisorMapLoaded && (
                     primaryAdvisorMap[client.id] ? (
                       <span style={{ ...s.badge, backgroundColor: 'rgba(102,126,234,0.12)', color: '#667eea', border: '1px solid rgba(102,126,234,0.3)' }}>
                         {primaryAdvisorMap[client.id]}
