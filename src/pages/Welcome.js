@@ -35,6 +35,15 @@ export default function Welcome() {
       return;
     }
 
+    // If an invite token is present in the URL, sign out any existing session
+    // first. Without this, a logged-in user clicking an invite link keeps the
+    // old session — the invite token never exchanges — and the page breaks.
+    const searchParamsCheck = new URLSearchParams(window.location.search);
+    const hasInviteToken = hash.includes('access_token') || searchParamsCheck.has('code');
+    if (hasInviteToken) {
+      supabase.auth.signOut();
+    }
+
     // Listen for the auth state change that fires when Supabase exchanges
     // the invite token from the URL hash into a real session.
     // We wait for this rather than calling getSession() immediately,
