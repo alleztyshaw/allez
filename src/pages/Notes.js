@@ -388,8 +388,12 @@ export default function Notes() {
           }
           .expand-triangle {
             display: inline-block;
+            width: 0;
+            height: 0;
+            border-top: 4px solid transparent;
+            border-bottom: 4px solid transparent;
+            border-left: 5px solid currentColor;
             transition: transform 0.2s ease;
-            font-size: 9px;
             margin-left: 4px;
             vertical-align: middle;
           }
@@ -528,7 +532,7 @@ export default function Notes() {
                           {isLong && (
                             <button style={s.noteAction} onClick={() => toggleExpand(note.id)}>
                               {isExpanded ? 'Show less' : 'Read more'}
-                              <span className={`expand-triangle${isExpanded ? ' open' : ''}`}>▶</span>
+                              <span className={`expand-triangle${isExpanded ? ' open' : ''}`} />
                             </button>
                           )}
                         </div>

@@ -517,11 +517,13 @@ function TaskRow({ task, clientName, onComplete, onDelete, onEdit, s, t, navigat
   const today = isToday(task.due_date);
   const checkColor = overdue ? '#f87171' : today ? ACCENT : soon ? '#fbbf24' : '#60a5fa';
   const hasNotes = task.notes && task.notes.trim().length > 0;
+  const dueDateColor = overdue ? '#f87171' : today ? ACCENT : soon ? '#fbbf24' : t.TEXT_MUTED;
+
   return (
     <div style={{ background: t.SURFACE, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_LG, marginBottom: '10px', boxShadow: SHADOW_MD, overflow: 'hidden' }}>
-      {/* Main row — fixed height */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '0 20px', height: '60px' }}>
-        {/* Circle */}
+
+      {/* Row 1: complete circle + title + due date */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '14px 20px 6px' }}>
         <div
           className="task-check"
           style={{ ...s.taskCheck, border: `2px solid ${hovered ? checkColor : t.BORDER}`, background: hovered ? `${checkColor}18` : 'transparent', flexShrink: 0 }}
@@ -532,40 +534,53 @@ function TaskRow({ task, clientName, onComplete, onDelete, onEdit, s, t, navigat
         >
           {hovered && <span style={{ fontSize: '10px', color: checkColor }}>✓</span>}
         </div>
-        {/* Title / client / note — all in one natural flow */}
-        <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: '0' }}>
-          <div style={{ flexShrink: 0, marginRight: '16px' }}>
-            <p style={{ ...s.taskTitle, margin: 0, whiteSpace: 'nowrap' }}>{task.title}</p>
-            {task.client_id && (
-              <p style={{ ...s.taskMeta, margin: '1px 0 0', whiteSpace: 'nowrap' }}>
-                <span style={{ color: '#60a5fa', cursor: 'pointer' }} onClick={e => { e.stopPropagation(); navigate(`/hq/clients/${task.client_id}`, { state: { from: '/hq/crm' } }); }}>
-                  {clientName(task.client_id)}
-                </span>
-              </p>
-            )}
-          </div>
-          {hasNotes && (
-            <p style={{ fontSize: '12px', color: t.TEXT_SUBTLE, fontWeight: '300', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1, minWidth: 0 }}>
-              {task.notes}
-            </p>
-          )}
-          {hasNotes && task.notes.length > 50 && (
-            <button style={{ ...s.deleteAction, color: t.TEXT_SUBTLE, flexShrink: 0, marginLeft: '8px' }} onClick={() => setExpanded(v => !v)}>
-              {expanded ? 'Read less' : 'Read more'}
-              <span style={{ display: 'inline-block', transition: 'transform 0.2s ease', transform: expanded ? 'rotate(90deg)' : 'rotate(0deg)', fontSize: '9px', marginLeft: '3px' }}>▶</span>
-            </button>
-          )}
-        </div>
-        {/* Badge + actions */}
+        <p style={{ ...s.taskTitle, flex: 1, margin: 0 }}>{task.title}</p>
         {task.due_date && (
-          <span style={{ fontSize: '12px', color: t.TEXT_MUTED, fontWeight: '300', flexShrink: 0, whiteSpace: 'nowrap' }}>
-            Due {formatDate(task.due_date)}
+          <span style={{ fontSize: '12px', color: dueDateColor, fontWeight: overdue || today ? '500' : '300', flexShrink: 0, whiteSpace: 'nowrap' }}>
+            {overdue ? 'Overdue · ' : today ? 'Today · ' : ''}{formatDate(task.due_date)}
           </span>
         )}
-        <button style={{ ...s.deleteAction, flexShrink: 0 }} onClick={() => onEdit(task)}>Edit</button>
-        <button style={{ ...s.deleteAction, color: '#f87171', flexShrink: 0 }} onClick={() => onDelete(task.id)}>Delete</button>
       </div>
-      {/* Expandable full note */}
+
+      {/* Row 2: client link + actions */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '2px 20px 12px 52px' }}>
+        {task.client_id ? (
+          <span
+            style={{ fontSize: '12px', color: '#60a5fa', fontWeight: '400', cursor: 'pointer', flex: 1 }}
+            onClick={e => { e.stopPropagation(); navigate(`/hq/clients/${task.client_id}`, { state: { from: '/hq/crm' } }); }}
+          >
+            {clientName(task.client_id)}
+          </span>
+        ) : (
+          <span style={{ flex: 1 }} />
+        )}
+        {hasNotes && (
+          <>
+            <button
+              style={{ ...s.deleteAction, fontSize: '12px', display: 'flex', alignItems: 'center', gap: '3px' }}
+              onClick={() => setExpanded(v => !v)}
+            >
+              Expand
+              <span style={{
+                display: 'inline-block',
+                width: 0, height: 0,
+                borderTop: '4px solid transparent',
+                borderBottom: '4px solid transparent',
+                borderLeft: `5px solid ${t.TEXT_SUBTLE}`,
+                transition: 'transform 0.2s ease',
+                transform: expanded ? 'rotate(90deg)' : 'rotate(0deg)',
+                flexShrink: 0,
+              }} />
+            </button>
+            <span style={{ fontSize: '10px', color: t.BORDER }}>·</span>
+          </>
+        )}
+        <button style={{ ...s.deleteAction, fontSize: '12px' }} onClick={() => onEdit(task)}>Edit</button>
+        <span style={{ fontSize: '10px', color: t.BORDER }}>·</span>
+        <button style={{ ...s.deleteAction, fontSize: '12px', color: '#f87171' }} onClick={() => onDelete(task.id)}>Delete</button>
+      </div>
+
+      {/* Expandable note */}
       {hasNotes && expanded && (
         <div style={{ borderTop: `1px solid ${t.BORDER}`, padding: '12px 20px 14px 52px', animation: 'fadeUp 0.25s ease both' }}>
           <p style={{ fontSize: '13px', color: t.TEXT_MUTED, fontWeight: '300', lineHeight: '1.65', margin: 0, whiteSpace: 'pre-wrap' }}>
