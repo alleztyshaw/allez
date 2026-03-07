@@ -24,6 +24,12 @@ export default function Welcome() {
   const [displayNameEdited, setDisplayNameEdited] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [debugLog, setDebugLog] = useState([]);
+
+  function log(msg) {
+    console.log('[Welcome]', msg);
+    setDebugLog(prev => [...prev, msg]);
+  }
 
   useEffect(() => {
     const hash = window.location.hash;
@@ -58,20 +64,33 @@ export default function Welcome() {
 
     // Token is present — sign out any existing session first, then exchange
     async function setupSession() {
+      log('Token detected. code=' + !!code + ' hash=' + hasHashToken);
+
       const { data: { session: existing } } = await supabase.auth.getSession();
+      log('Existing session: ' + (existing ? existing.user?.email : 'none'));
+
       if (existing) {
+        log('Signing out existing session...');
         await supabase.auth.signOut();
+        log('Signed out.');
       }
 
       if (code) {
-        // PKCE flow: exchange the code directly for a session
+        log('Calling exchangeCodeForSession...');
         const { data, error } = await supabase.auth.exchangeCodeForSession(code);
-        if (error || !data.session) {
-          console.error('exchangeCodeForSession error:', error);
+        if (error) {
+          log('exchangeCodeForSession ERROR: ' + error.message + ' | status: ' + error.status);
           setLinkError(true);
           setLoading(false);
           return;
         }
+        if (!data?.session) {
+          log('exchangeCodeForSession: no session returned');
+          setLinkError(true);
+          setLoading(false);
+          return;
+        }
+        log('Session established for: ' + data.session.user?.email);
         if (data.session.user?.user_metadata?.onboarding_complete) {
           navigate('/hq');
           return;
@@ -82,8 +101,9 @@ export default function Welcome() {
       }
 
       if (hasHashToken) {
-        // Implicit flow: listen for Supabase to process the hash token
+        log('Hash token flow — waiting for onAuthStateChange...');
         const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+          log('onAuthStateChange: ' + event);
           if (event === 'SIGNED_IN' && session) {
             if (session.user?.user_metadata?.onboarding_complete) {
               navigate('/hq');
@@ -93,10 +113,9 @@ export default function Welcome() {
             setLoading(false);
           }
         });
-        // Safety net timeout for hash flow only
         setTimeout(() => {
           setLoading(prev => {
-            if (prev) { setLinkError(true); return false; }
+            if (prev) { log('Timeout — no session established'); setLinkError(true); return false; }
             return prev;
           });
         }, 8000);
@@ -178,6 +197,11 @@ export default function Welcome() {
         <div style={s.card}>
           <p style={s.logo}>Allez HQ</p>
           <p style={s.loadingText}>Setting up your account…</p>
+          {debugLog.length > 0 && (
+            <div style={{ marginTop: '20px', fontSize: '11px', color: '#a78bfa', fontFamily: 'monospace', lineHeight: '1.8' }}>
+              {debugLog.map((l, i) => <div key={i}>› {l}</div>)}
+            </div>
+          )}
         </div>
       </div>
     );
@@ -193,6 +217,11 @@ export default function Welcome() {
             This invite link has expired or has already been used.
             Please ask your admin to send a new invite.
           </p>
+          {debugLog.length > 0 && (
+            <div style={{ marginTop: '20px', fontSize: '11px', color: '#f87171', fontFamily: 'monospace', lineHeight: '1.8' }}>
+              {debugLog.map((l, i) => <div key={i}>› {l}</div>)}
+            </div>
+          )}
         </div>
       </div>
     );
