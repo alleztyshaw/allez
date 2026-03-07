@@ -26,86 +26,85 @@ export default function Welcome() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    // Check if Supabase put an error in the URL hash (e.g. expired token)
     const hash = window.location.hash;
-    const params = new URLSearchParams(hash.replace('#', '?'));
-    if (params.get('error_description')) {
+    const hashParams = new URLSearchParams(hash.replace('#', '?'));
+    const searchParams = new URLSearchParams(window.location.search);
+
+    // Supabase put an explicit error in the URL — show it immediately
+    if (hashParams.get('error_description') || searchParams.get('error_description')) {
       setLinkError(true);
       setLoading(false);
       return;
     }
 
-    // If an invite token is present in the URL, we need to clear any existing
-    // session first so the invite token can exchange cleanly. We await the
-    // signOut inside an async IIFE so the listener is only set up after the
-    // sign-out is fully complete — otherwise signOut can race with the token
-    // exchange and wipe the newly established invite session.
-    const searchParamsCheck = new URLSearchParams(window.location.search);
-    const hasInviteToken = hash.includes('access_token') || searchParamsCheck.has('code');
+    const code = searchParams.get('code');         // PKCE flow token
+    const hasHashToken = hash.includes('access_token'); // implicit flow token
 
-    let subscription;
-
-    const init = async () => {
-      if (hasInviteToken) {
-        await supabase.auth.signOut();
-      }
-
-      // Listen for the auth state change that fires when Supabase exchanges
-      // the invite token from the URL hash into a real session.
-      const { data } = supabase.auth.onAuthStateChange((event, session) => {
-        if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session) {
-          // If they've already completed onboarding, send straight to HQ
-          if (session.user?.user_metadata?.onboarding_complete) {
-            navigate('/hq');
-            return;
-          }
+    if (!code && !hasHashToken) {
+      // No token at all — check for an existing valid session (e.g. page refresh)
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session && !session.user?.user_metadata?.onboarding_complete) {
           setSession(session);
           setLoading(false);
-        }
-        if (event === 'SIGNED_OUT') {
+        } else if (session?.user?.user_metadata?.onboarding_complete) {
+          navigate('/hq');
+        } else {
           setLinkError(true);
           setLoading(false);
         }
       });
-      subscription = data.subscription;
-    };
+      return;
+    }
 
-    init();
+    // Token is present — sign out any existing session first, then exchange
+    async function setupSession() {
+      const { data: { session: existing } } = await supabase.auth.getSession();
+      if (existing) {
+        await supabase.auth.signOut();
+      }
 
-    // Fallback: check for an existing session (e.g. user refreshes the page
-    // after the hash token has already been exchanged)
-    // Check both hash-based (implicit flow) and query-param-based (PKCE flow) tokens
-    const searchParams = new URLSearchParams(window.location.search);
-    const hasToken = hash.includes('access_token') || searchParams.has('code');
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        if (session.user?.user_metadata?.onboarding_complete) {
+      if (code) {
+        // PKCE flow: exchange the code directly for a session
+        const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+        if (error || !data.session) {
+          console.error('exchangeCodeForSession error:', error);
+          setLinkError(true);
+          setLoading(false);
+          return;
+        }
+        if (data.session.user?.user_metadata?.onboarding_complete) {
           navigate('/hq');
           return;
         }
-        setSession(session);
+        setSession(data.session);
         setLoading(false);
-      } else if (!hasToken) {
-        // No session and no token — link is invalid or already used
-        setLinkError(true);
-        setLoading(false);
+        return;
       }
-      // If URL has a token, stay loading and let onAuthStateChange fire
-    });
 
-    // Safety net — if nothing resolves in 8 seconds, show the error state
-    const timeout = setTimeout(() => {
-      setLoading(prev => {
-        if (prev) { setLinkError(true); return false; }
-        return prev;
-      });
-    }, 8000);
+      if (hasHashToken) {
+        // Implicit flow: listen for Supabase to process the hash token
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+          if (event === 'SIGNED_IN' && session) {
+            if (session.user?.user_metadata?.onboarding_complete) {
+              navigate('/hq');
+              return;
+            }
+            setSession(session);
+            setLoading(false);
+          }
+        });
+        // Safety net timeout for hash flow only
+        setTimeout(() => {
+          setLoading(prev => {
+            if (prev) { setLinkError(true); return false; }
+            return prev;
+          });
+        }, 8000);
+        return () => subscription.unsubscribe();
+      }
+    }
 
-    return () => {
-      subscription?.unsubscribe();
-      clearTimeout(timeout);
-    };
+    setupSession();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   function handleChange(e) {
