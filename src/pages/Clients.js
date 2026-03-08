@@ -122,27 +122,43 @@ export default function Clients() {
     }
     setSaving(true);
     setError('');
-    const payload = Object.fromEntries(
-      Object.entries({ ...formData, org_id: orgId }).map(([k, v]) => [k, v === '' ? null : v])
-    );
-    const { data: inserted, error } = await supabase.from('clients').insert([payload]).select().single();
+
+    // Determine advisor to assign
+    const { data: { user } } = await supabase.auth.getUser();
+    const advisorToAssign = selectedAdvisor
+      || (['advisor', 'associate'].includes(userRole) ? user?.id : null);
+
+    // Use atomic RPC to insert client + assign advisor in one operation.
+    // This avoids the RLS race condition where .select() after insert fails
+    // because the advisor isn't in client_advisors yet.
+    const n = (v) => v === '' ? null : v;
+    const { data: newClientId, error } = await supabase.rpc('create_client_with_advisor', {
+      p_org_id:                    orgId,
+      p_first_name:                formData.first_name,
+      p_last_name:                 formData.last_name,
+      p_email:                     n(formData.email),
+      p_phone:                     n(formData.phone),
+      p_date_of_birth:             n(formData.date_of_birth),
+      p_status:                    n(formData.status),
+      p_asset_level:               n(formData.asset_level),
+      p_risk_tolerance:            n(formData.risk_tolerance),
+      p_investment_objective:      n(formData.investment_objective),
+      p_time_horizon:              n(formData.time_horizon),
+      p_tax_bracket:               n(formData.tax_bracket),
+      p_liquidity_needs:           n(formData.liquidity_needs),
+      p_referral_source:           n(formData.referral_source),
+      p_client_since:              n(formData.client_since),
+      p_next_review_date:          n(formData.next_review_date),
+      p_preferred_contact_method:  n(formData.preferred_contact_method),
+      p_communication_frequency:   n(formData.communication_frequency),
+      p_notes:                     n(formData.notes),
+      p_advisor_user_id:           advisorToAssign || null,
+    });
+
     if (error) {
       setError('Something went wrong. Please try again.');
-      console.error(error);
+      console.error('create_client_with_advisor error:', error);
     } else {
-      // Determine which user_id to assign as primary advisor
-      const { data: { user } } = await supabase.auth.getUser();
-      const advisorToAssign = selectedAdvisor
-        || (['advisor', 'associate'].includes(userRole) ? user?.id : null);
-
-      if (advisorToAssign && inserted?.id) {
-        await supabase.from('client_advisors').insert([{
-          org_id: orgId,
-          client_id: inserted.id,
-          user_id: advisorToAssign,
-          is_primary: true,
-        }]);
-      }
       setShowModal(false);
       setFormData(emptyForm);
       setSelectedAdvisor('');
