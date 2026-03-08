@@ -41,8 +41,8 @@ export default function HQ() {
     async function fetchMetrics() {
       const { data: { user } } = await supabase.auth.getUser();
       const [{ data: clients }, { data: notes }, { data: orgData }, { data: membersData }] = await Promise.all([
-        supabase.from('clients').select('id'),
-        supabase.from('notes').select('id'),
+        supabase.from('clients').select('id').eq('org_id', orgId).is('deleted_at', null),
+        supabase.from('notes').select('id').eq('org_id', orgId),
         supabase.from('organizations').select('name').eq('org_id', orgId).single(),
         supabase.rpc('get_org_members', { target_org_id: orgId }),
       ]);

@@ -120,8 +120,28 @@ export default function Clients() {
       setError('First and last name are required.');
       return;
     }
+    if (!formData.date_of_birth) {
+      setError('Date of birth is required.');
+      return;
+    }
     setSaving(true);
     setError('');
+
+    // Duplicate check — same name + DOB in this org
+    const { data: existing } = await supabase
+      .from('clients')
+      .select('id')
+      .eq('org_id', orgId)
+      .eq('first_name', formData.first_name.trim())
+      .eq('last_name', formData.last_name.trim())
+      .eq('date_of_birth', formData.date_of_birth)
+      .is('deleted_at', null)
+      .limit(1);
+    if (existing && existing.length > 0) {
+      setError(`A client named ${formData.first_name} ${formData.last_name} with that date of birth already exists.`);
+      setSaving(false);
+      return;
+    }
 
     // Determine advisor to assign.
     // Fetch role fresh here rather than relying on userRole state, which may
@@ -696,7 +716,7 @@ export default function Clients() {
                   <FormField label="Last Name *"  name="last_name"  value={formData.last_name}  onChange={handleChange} s={s} />
                   <FormField label="Email"         name="email"      type="email" value={formData.email} onChange={handleChange} s={s} />
                   <FormField label="Phone"         name="phone"      value={formData.phone}      onChange={handleChange} s={s} />
-                  <FormField label="Date of Birth" name="date_of_birth" type="date" value={formData.date_of_birth} onChange={handleChange} s={s} />
+                  <FormField label="Date of Birth *" name="date_of_birth" type="date" value={formData.date_of_birth} onChange={handleChange} s={s} />
                   <SelectField label="Status" name="status" value={formData.status} onChange={handleChange} options={STATUS_OPTIONS} s={s} />
                 </div>
 
@@ -746,6 +766,9 @@ export default function Clients() {
                 {error && <p style={s.errorText}>{error}</p>}
               </div>
 
+              <p style={{ fontSize: '11px', color: t.TEXT_MUTED, fontWeight: 300, margin: '8px 0 0 0', padding: '0 24px' }}>
+                * Required field
+              </p>
               <div style={s.modalFooter}>
                 <button
                   style={s.cancelButton}
