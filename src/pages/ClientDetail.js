@@ -24,7 +24,6 @@ import {
   TAX_BRACKET_OPTIONS,
   TIME_HORIZON_OPTIONS,
   FULL_ACCESS_ROLES,
-  ORG_ADMIN_ROLES,
   WRITE_ROLES,
 } from '../utils/hqConstants';
 import { useTokens } from '../context/ThemeContext';
@@ -424,7 +423,6 @@ export default function ClientDetail() {
   const location = useLocation();
   const { orgId } = useOrg();
   const [userRole, setUserRole] = useState(null);
-  const canManageOrg = ORG_ADMIN_ROLES.includes(userRole);
   const canWrite = WRITE_ROLES.includes(userRole);
   const canManageAdvisors = FULL_ACCESS_ROLES.includes(userRole);
   const backPath = location.state?.from || '/hq/clients';
