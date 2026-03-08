@@ -755,6 +755,13 @@ export default function ClientDetail() {
             <Field label="Liquidity Needs" value={client.liquidity_needs} s={s} />
           </Section>
           <Section title="Relationship" s={s}>
+            {client.status === 'Prospect' && client.pipeline_stage && (
+              <Field
+                label="Pipeline Stage"
+                value={client.is_reactivation ? `${client.pipeline_stage} *` : client.pipeline_stage}
+                s={s}
+              />
+            )}
             <Field label="Client Since" value={client.client_since} s={s} />
             <Field label="Referral Source" value={client.referral_source} s={s} />
             <Field label="Next Review Date" value={client.next_review_date} s={s} />

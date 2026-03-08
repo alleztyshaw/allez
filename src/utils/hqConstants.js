@@ -131,6 +131,26 @@ export const AI_NOTE_PROMPT_FIELDS = ['title', 'summary', 'decisions', 'action_i
 // ============================================================
 
 // Roles that can see ALL clients in the org (not just assigned ones)
+// ── Pipeline ──────────────────────────────────────────────────────────────────
+
+export const PIPELINE_STAGES = [
+  { key: 'Lead',       label: 'Lead'       },
+  { key: 'Proposal',   label: 'Proposal'   },
+  { key: 'Agreement',  label: 'Agreement'  },
+  { key: 'Onboarding', label: 'Onboarding' },
+  { key: 'Active',     label: 'Active'     },
+];
+
+export const PIPELINE_STAGE_COLORS = {
+  Lead:       { bg: 'rgba(96,165,250,0.12)',   color: '#60a5fa' },
+  Proposal:   { bg: 'rgba(167,139,250,0.12)',  color: '#a78bfa' },
+  Agreement:  { bg: 'rgba(251,191,36,0.12)',   color: '#fbbf24' },
+  Onboarding: { bg: 'rgba(52,211,153,0.12)',   color: '#34d399' },
+  Active:     { bg: 'rgba(29,185,84,0.12)',    color: '#1DB954' },
+};
+
+// ── Role tiers ────────────────────────────────────────────────────────────────
+
 export const FULL_ACCESS_ROLES = ['admin', 'manager', 'compliance'];
 
 // Roles that can write — create notes, tasks, edit client data

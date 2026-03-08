@@ -12,6 +12,7 @@ import {
   FONT_BODY,
   FONT_DISPLAY,
   FULL_ACCESS_ROLES,
+  PIPELINE_STAGES,
   INVESTMENT_OBJECTIVE_OPTIONS,
   LIQUIDITY_NEEDS_OPTIONS,
   RADIUS_LG,
@@ -39,7 +40,7 @@ function useWindowWidth() {
 
 const emptyForm = {
   first_name: '', last_name: '', email: '', phone: '',
-  date_of_birth: '', status: 'Prospect', asset_level: '',
+  date_of_birth: '', status: 'Prospect', pipeline_stage: 'Lead', asset_level: '',
   risk_tolerance: '', investment_objective: '', time_horizon: '',
   tax_bracket: '', liquidity_needs: '',
   referral_source: '', client_since: '', next_review_date: '',
@@ -178,6 +179,7 @@ export default function Clients() {
       p_communication_frequency:   n(formData.communication_frequency),
       p_notes:                     n(formData.notes),
       p_advisor_user_id:           advisorToAssign || null,
+      p_pipeline_stage:            formData.pipeline_stage || 'Lead',
     });
 
     if (error) {
@@ -718,6 +720,14 @@ export default function Clients() {
                   <FormField label="Phone"         name="phone"      value={formData.phone}      onChange={handleChange} s={s} />
                   <FormField label="Date of Birth *" name="date_of_birth" type="date" value={formData.date_of_birth} onChange={handleChange} s={s} />
                   <SelectField label="Status" name="status" value={formData.status} onChange={handleChange} options={STATUS_OPTIONS} s={s} />
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <label style={{ fontSize: '11px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.08em', color: t.TEXT_MUTED }}>Pipeline Stage</label>
+                    <select name="pipeline_stage" value={formData.pipeline_stage} onChange={handleChange} style={s.input}>
+                      {PIPELINE_STAGES.filter(st => st.key !== 'Active').map(st => (
+                        <option key={st.key} value={st.key}>{st.label}</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
 
                 <p style={s.sectionLabel}>Financial Profile</p>

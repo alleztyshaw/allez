@@ -5,18 +5,13 @@ import { useOrg } from '../context/OrgContext';
 import {
   ACCENT, ACCENT_BORDER, ACCENT_MUTED,
   FONT_BODY, FONT_DISPLAY,
+  PIPELINE_STAGES, PIPELINE_STAGE_COLORS,
   RADIUS_LG, RADIUS_MD, RADIUS_PILL,
-  SHADOW_MD, STATUS_COLORS,
+  SHADOW_MD,
 } from '../utils/hqConstants';
 import { useTokens } from '../context/ThemeContext';
 
 const TABS = ['Tasks', 'Activity', 'Pipeline'];
-
-const PIPELINE_STAGES = [
-  { key: 'Prospect',  label: 'Prospect' },
-  { key: 'Active',    label: 'Active'   },
-  { key: 'Inactive',  label: 'Inactive' },
-];
 
 function formatAUM(val) {
   if (!val) return '—';
@@ -103,7 +98,7 @@ export default function CRM() {
   const fetchData = useCallback(async () => {
     if (!orgId) return;
     const [{ data: c }, { data: tk }, { data: n }] = await Promise.all([
-      supabase.from('clients').select('id, first_name, last_name, status, aum, fee_rate, next_review_date, custodian, aum_source, aum_synced_at').eq('org_id', orgId).is('deleted_at', null).order('last_name'),
+      supabase.from('clients').select('id, first_name, last_name, status, pipeline_stage, is_reactivation, aum, fee_rate, next_review_date, custodian, aum_source, aum_synced_at').eq('org_id', orgId).is('deleted_at', null).order('last_name'),
       supabase.from('client_tasks').select('id, org_id, client_id, title, due_date, notes, completed, completed_at, created_at').eq('org_id', orgId).is('deleted_at', null).order('due_date', { ascending: true, nullsFirst: false }),
       supabase.from('notes').select('id, title, note_type, client_id, created_at').eq('org_id', orgId).is('deleted_at', null).order('created_at', { ascending: false }).limit(50),
     ]);
@@ -330,7 +325,7 @@ export default function CRM() {
           <>
             {/* PIPELINE TAB */}
             {tab === 'Pipeline' && (
-              <PipelineTable clients={clients} navigate={navigate} s={s} t={t} isMobile={isMobile} />
+              <PipelineTable clients={clients} navigate={navigate} s={s} t={t} isMobile={isMobile} orgId={orgId} onStageChange={fetchData} />
             )}
 
             {/* TASKS TAB */}
@@ -595,20 +590,26 @@ function TaskRow({ task, clientName, onComplete, onDelete, onEdit, s, t, navigat
   );
 }
 
-function PipelineTable({ clients, navigate, s, t, isMobile }) {
-  const [statusFilter, setStatusFilter] = useState('All');
-  const [sortKey, setSortKey] = useState('last_name');
-  const [sortDir, setSortDir] = useState('asc');
+function PipelineTable({ clients, navigate, s, t, isMobile, orgId, onStageChange }) {
+  const [stageFilter, setStageFilter] = useState('All');
+  const [sortKey, setSortKey]         = useState('last_name');
+  const [sortDir, setSortDir]         = useState('asc');
+  const [savingId, setSavingId]       = useState(null);
+  const [tooltip, setTooltip]         = useState(null);
 
-  const statuses = ['All', ...PIPELINE_STAGES.map(s => s.key)];
+  // Prospects + reactivating clients only (not Active or Inactive without a stage)
+  const pipelineClients = clients.filter(c =>
+    c.pipeline_stage && c.pipeline_stage !== 'Active'
+  );
 
-  const filtered = clients
-    .filter(c => statusFilter === 'All' || c.status === statusFilter)
+  const stageCount = (key) => pipelineClients.filter(c => c.pipeline_stage === key).length;
+
+  const filtered = pipelineClients
+    .filter(c => stageFilter === 'All' || c.pipeline_stage === stageFilter)
     .sort((a, b) => {
       let av = a[sortKey] ?? '';
       let bv = b[sortKey] ?? '';
       if (sortKey === 'aum') { av = a.aum || 0; bv = b.aum || 0; }
-      if (sortKey === 'next_review_date') { av = a.next_review_date || 'zzz'; bv = b.next_review_date || 'zzz'; }
       if (sortKey === 'last_name') { av = `${a.last_name} ${a.first_name}`; bv = `${b.last_name} ${b.first_name}`; }
       if (av < bv) return sortDir === 'asc' ? -1 : 1;
       if (av > bv) return sortDir === 'asc' ? 1 : -1;
@@ -620,84 +621,219 @@ function PipelineTable({ clients, navigate, s, t, isMobile }) {
     else { setSortKey(key); setSortDir('asc'); }
   }
 
-  const arrow = (key) => sortKey === key ? (sortDir === 'asc' ? ' ↑' : ' ↓') : '';
+  const arrow = (key) => {
+    if (sortKey !== key) return null;
+    return (
+      <span style={{
+        display: 'inline-block', width: 0, height: 0, marginLeft: '4px',
+        borderLeft: '4px solid transparent', borderRight: '4px solid transparent',
+        ...(sortDir === 'asc'
+          ? { borderBottom: `5px solid currentColor`, verticalAlign: 'middle' }
+          : { borderTop: `5px solid currentColor`, verticalAlign: 'middle' }),
+      }} />
+    );
+  };
 
-  const stageAUM = (key) => clients.filter(c => c.status === key).reduce((sum, c) => sum + (c.aum || 0), 0);
+  async function handleStageChange(client, newStage) {
+    // Reactivation guard on the frontend too
+    if (client.is_reactivation && newStage === 'Lead') return;
+    setSavingId(client.id);
+    const { error } = await supabase.rpc('update_pipeline_stage', {
+      p_client_id: client.id,
+      p_org_id:    orgId,
+      p_new_stage: newStage,
+    });
+    if (error) console.error('update_pipeline_stage error:', error);
+    else onStageChange();
+    setSavingId(null);
+  }
+
+  const gridCols = isMobile ? '1fr 130px' : '1fr 130px 100px 120px 160px';
 
   return (
     <div>
-      {/* Status filter + AUM summary */}
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', flexWrap: 'wrap', alignItems: 'center' }}>
-        {statuses.map(st => {
-          const active = statusFilter === st;
-          const color = STATUS_COLORS?.[st]?.color || ACCENT;
+      {/* Stage filter pills */}
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', flexWrap: 'wrap', alignItems: 'center' }}>
+        <button
+          onClick={() => setStageFilter('All')}
+          style={{
+            padding: '5px 14px', borderRadius: RADIUS_PILL, fontSize: '12px', fontWeight: '600',
+            cursor: 'pointer', fontFamily: FONT_BODY, border: `1px solid ${stageFilter === 'All' ? ACCENT : 'transparent'}`,
+            background: stageFilter === 'All' ? ACCENT_MUTED : t.SURFACE_ALT,
+            color: stageFilter === 'All' ? ACCENT : t.TEXT_MUTED, transition: 'all 0.15s',
+          }}
+        >
+          All ({pipelineClients.length})
+        </button>
+        {PIPELINE_STAGES.filter(st => st.key !== 'Active').map(st => {
+          const active = stageFilter === st.key;
+          const sc = PIPELINE_STAGE_COLORS[st.key];
           return (
             <button
-              key={st}
-              onClick={() => setStatusFilter(st)}
+              key={st.key}
+              onClick={() => setStageFilter(st.key)}
               style={{
                 padding: '5px 14px', borderRadius: RADIUS_PILL, fontSize: '12px', fontWeight: '600',
-                cursor: 'pointer', fontFamily: FONT_BODY, border: `1px solid ${active ? color : 'transparent'}`,
-                background: active ? `${color}18` : t.SURFACE_ALT,
-                color: active ? color : t.TEXT_MUTED,
-                transition: 'all 0.15s',
+                cursor: 'pointer', fontFamily: FONT_BODY,
+                border: `1px solid ${active ? sc.color : 'transparent'}`,
+                background: active ? sc.bg : t.SURFACE_ALT,
+                color: active ? sc.color : t.TEXT_MUTED, transition: 'all 0.15s',
               }}
             >
-              {st === 'All' ? `All (${clients.length})` : `${st} (${clients.filter(c => c.status === st).length})`}
+              {st.label} ({stageCount(st.key)})
             </button>
           );
         })}
-        {statusFilter !== 'All' && stageAUM(statusFilter) > 0 && (
-          <span style={{ fontSize: '12px', color: ACCENT, marginLeft: '8px', fontWeight: '500' }}>
-            {formatAUM(stageAUM(statusFilter))} AUM in stage
-          </span>
-        )}
       </div>
 
       {/* Table */}
       {filtered.length === 0 ? (
-        <div style={s.emptyState}>No clients in this stage.</div>
+        <div style={s.emptyState}>No prospects in this stage.</div>
       ) : (
         <div style={s.tableWrap}>
-          <div style={s.tableHead}>
-            <button onClick={() => toggleSort('last_name')} style={{ ...s.tableHeadCell, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', fontFamily: FONT_BODY, padding: 0 }}>Client{arrow('last_name')}</button>
-            <button onClick={() => toggleSort('status')} style={{ ...s.tableHeadCell, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', fontFamily: FONT_BODY, padding: 0 }}>Status{arrow('status')}</button>
-            {!isMobile && <button onClick={() => toggleSort('aum')} style={{ ...s.tableHeadCell, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', fontFamily: FONT_BODY, padding: 0 }}>AUM{arrow('aum')}</button>}
-            {!isMobile && <button onClick={() => toggleSort('next_review_date')} style={{ ...s.tableHeadCell, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', fontFamily: FONT_BODY, padding: 0 }}>Next Review{arrow('next_review_date')}</button>}
-            {!isMobile && <div style={s.tableHeadCell}>Custodian</div>}
+          {/* Header */}
+          <div style={{ display: 'grid', gridTemplateColumns: gridCols, padding: '10px 20px', background: t.SURFACE_ALT, borderBottom: `1px solid ${t.BORDER}`, minWidth: isMobile ? 'unset' : '640px' }}>
+            {[
+              { key: 'last_name', label: 'Prospect' },
+              { key: 'pipeline_stage', label: 'Stage' },
+              ...(!isMobile ? [
+                { key: 'is_reactivation', label: 'Type' },
+                { key: 'aum', label: 'AUM' },
+                { key: null, label: 'Move Stage' },
+              ] : []),
+            ].map(col => (
+              <div
+                key={col.label}
+                onClick={() => col.key && toggleSort(col.key)}
+                style={{ fontSize: '10px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.1em', color: t.TEXT_MUTED, cursor: col.key ? 'pointer' : 'default', display: 'flex', alignItems: 'center' }}
+              >
+                {col.label}{col.key && arrow(col.key)}
+              </div>
+            ))}
           </div>
+
+          {/* Rows */}
           {filtered.map((client, i) => {
-            const sc = STATUS_COLORS?.[client.status];
-            const reviewSoon = client.next_review_date && isToday(client.next_review_date);
-            const reviewOverdue = client.next_review_date && isOverdue(client.next_review_date);
+            const sc = PIPELINE_STAGE_COLORS[client.pipeline_stage] || {};
+            const isSaving = savingId === client.id;
+            // Stages this client can move to
+            const allStages = PIPELINE_STAGES.filter(st => st.key !== 'Active');
+            const availableStages = client.is_reactivation
+              ? allStages.filter(st => st.key !== 'Lead')
+              : allStages;
+            const currentIdx = availableStages.findIndex(st => st.key === client.pipeline_stage);
+            const nextStage  = availableStages[currentIdx + 1] || { key: 'Active', label: 'Active' };
+            const prevStage  = availableStages[currentIdx - 1] || null;
+
             return (
               <div
                 key={client.id}
-                style={{ ...s.tableRow, background: i % 2 === 0 ? t.SURFACE : t.SURFACE_ALT, borderBottom: i === filtered.length - 1 ? 'none' : `1px solid ${t.BORDER}` }}
-                onClick={() => navigate(`/hq/clients/${client.id}`, { state: { from: '/hq/crm' } })}
+                style={{
+                  display: 'grid', gridTemplateColumns: gridCols,
+                  padding: '14px 20px',
+                  background: i % 2 === 0 ? t.SURFACE : t.SURFACE_ALT,
+                  borderBottom: i === filtered.length - 1 ? 'none' : `1px solid ${t.BORDER}`,
+                  minWidth: isMobile ? 'unset' : '640px',
+                  alignItems: 'center',
+                  opacity: isSaving ? 0.6 : 1,
+                  transition: 'opacity 0.2s',
+                }}
                 onMouseEnter={e => e.currentTarget.style.background = `${ACCENT}08`}
                 onMouseLeave={e => e.currentTarget.style.background = i % 2 === 0 ? t.SURFACE : t.SURFACE_ALT}
               >
-                <div style={s.tableCell}>
-                  <span style={{ fontWeight: '500' }}>{client.last_name}, {client.first_name}</span>
+                {/* Name — clickable */}
+                <div
+                  style={{ fontSize: '13px', color: t.TEXT, fontWeight: '500', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+                  onClick={() => navigate(`/hq/clients/${client.id}`, { state: { from: '/hq/crm' } })}
+                >
+                  {client.last_name}, {client.first_name}
                 </div>
-                <div style={s.tableCell}>
-                  {client.status ? (
-                    <span style={{ fontSize: '11px', fontWeight: '600', padding: '2px 10px', borderRadius: RADIUS_PILL, background: sc ? `${sc.color}18` : t.SURFACE_ALT, color: sc?.color || t.TEXT_MUTED, border: `1px solid ${sc ? `${sc.color}44` : t.BORDER}` }}>
-                      {client.status}
-                    </span>
-                  ) : <span style={s.tableCellMuted}>—</span>}
+
+                {/* Stage pill */}
+                <div>
+                  <span style={{
+                    fontSize: '11px', fontWeight: '600', padding: '2px 10px',
+                    borderRadius: RADIUS_PILL,
+                    background: sc.bg || t.SURFACE_ALT,
+                    color: sc.color || t.TEXT_MUTED,
+                    border: `1px solid ${sc.color ? `${sc.color}44` : t.BORDER}`,
+                  }}>
+                    {client.pipeline_stage}
+                  </span>
                 </div>
-                {!isMobile && <div style={{ ...s.tableCell, color: client.aum ? ACCENT : t.TEXT_SUBTLE, fontWeight: client.aum ? '500' : '300' }}>
-                  {formatAUM(client.aum)}
-                  {client.aum_source === 'api' && <span style={{ fontSize: '9px', color: t.TEXT_SUBTLE, marginLeft: '4px' }}>sync</span>}
-                </div>}
-                {!isMobile && <div style={{ ...s.tableCell, color: reviewOverdue ? '#f87171' : reviewSoon ? '#fbbf24' : t.TEXT_MUTED, fontWeight: '300', fontSize: '12px' }}>
-                  {client.next_review_date ? formatDate(client.next_review_date) : <span style={{ color: t.TEXT_SUBTLE }}>—</span>}
-                </div>}
-                {!isMobile && <div style={s.tableCellMuted}>
-                  {client.custodian || '—'}
-                </div>}
+
+                {/* Type — new vs reactivation */}
+                {!isMobile && (
+                  <div style={{ position: 'relative' }}>
+                    {client.is_reactivation ? (
+                      <span
+                        style={{ fontSize: '11px', color: '#fbbf24', fontWeight: '500', cursor: 'default' }}
+                        onMouseEnter={() => setTooltip(client.id)}
+                        onMouseLeave={() => setTooltip(null)}
+                      >
+                        Prospect *
+                        {tooltip === client.id && (
+                          <span style={{
+                            position: 'absolute', left: 0, top: '22px', zIndex: 10,
+                            background: t.SURFACE, border: `1px solid ${t.BORDER}`,
+                            borderRadius: RADIUS_MD, padding: '6px 10px',
+                            fontSize: '11px', color: t.TEXT_MUTED, fontWeight: '300',
+                            whiteSpace: 'nowrap', boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                          }}>
+                            * Former client — reactivation prospect
+                          </span>
+                        )}
+                      </span>
+                    ) : (
+                      <span style={{ fontSize: '11px', color: t.TEXT_MUTED, fontWeight: '300' }}>New</span>
+                    )}
+                  </div>
+                )}
+
+                {/* AUM */}
+                {!isMobile && (
+                  <div style={{ fontSize: '13px', color: client.aum ? ACCENT : t.TEXT_SUBTLE, fontWeight: client.aum ? '500' : '300' }}>
+                    {formatAUM(client.aum)}
+                  </div>
+                )}
+
+                {/* Move stage buttons */}
+                {!isMobile && (
+                  <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                    {prevStage && (
+                      <button
+                        onClick={() => handleStageChange(client, prevStage.key)}
+                        disabled={isSaving}
+                        style={{
+                          background: 'none', border: `1px solid ${t.BORDER}`,
+                          borderRadius: RADIUS_MD, padding: '3px 8px',
+                          fontSize: '11px', color: t.TEXT_MUTED,
+                          cursor: 'pointer', fontFamily: FONT_BODY,
+                          display: 'flex', alignItems: 'center', gap: '3px',
+                        }}
+                        title={`Move back to ${prevStage.label}`}
+                      >
+                        <span style={{ display: 'inline-block', width: 0, height: 0, borderTop: '4px solid transparent', borderBottom: '4px solid transparent', borderRight: `5px solid currentColor` }} />
+                        {prevStage.label}
+                      </button>
+                    )}
+                    <button
+                      onClick={() => handleStageChange(client, nextStage.key)}
+                      disabled={isSaving}
+                      style={{
+                        background: ACCENT_MUTED, border: `1px solid ${ACCENT_BORDER}`,
+                        borderRadius: RADIUS_MD, padding: '3px 8px',
+                        fontSize: '11px', color: ACCENT, fontWeight: '600',
+                        cursor: 'pointer', fontFamily: FONT_BODY,
+                        display: 'flex', alignItems: 'center', gap: '3px',
+                      }}
+                      title={`Advance to ${nextStage.label}`}
+                    >
+                      {nextStage.label}
+                      <span style={{ display: 'inline-block', width: 0, height: 0, borderTop: '4px solid transparent', borderBottom: '4px solid transparent', borderLeft: `5px solid currentColor` }} />
+                    </button>
+                  </div>
+                )}
               </div>
             );
           })}
