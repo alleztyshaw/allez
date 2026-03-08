@@ -66,15 +66,19 @@ export default function Orgs() {
       { count: clients },
       { count: activeClients },
       { count: notes },
+      { count: openTasks },
     ] = await Promise.all([
-      supabase.rpc('get_org_members', { target_org_id: orgId }),
+      supabase.rpc('get_org_members_platform', { target_org_id: orgId }),
       supabase.from('clients').select('*', { count: 'exact', head: true }).eq('org_id', orgId).is('deleted_at', null),
       supabase.from('clients').select('*', { count: 'exact', head: true }).eq('org_id', orgId).eq('status', 'Active').is('deleted_at', null),
       supabase.from('notes').select('*', { count: 'exact', head: true }).eq('org_id', orgId),
+      supabase.from('client_tasks').select('*', { count: 'exact', head: true }).eq('org_id', orgId).eq('completed', false).is('deleted_at', null),
     ]);
 
-    const members = membersData?.length ?? 0;
-    setOrgStats(prev => ({ ...prev, [orgId]: { members, clients, activeClients, notes } }));
+    const allMembers = membersData || [];
+    const activeMembers = allMembers.filter(m => m.first_name && m.last_name).length;
+    const totalMembers = allMembers.length;
+    setOrgStats(prev => ({ ...prev, [orgId]: { activeMembers, totalMembers, clients, activeClients, notes, openTasks } }));
     setStatsLoading(prev => ({ ...prev, [orgId]: false }));
   }
 
@@ -361,8 +365,13 @@ export default function Orgs() {
                         <>
                           <div style={s.statsGrid}>
                             <div style={s.statBlock}>
-                              <span style={s.statNumber}>{stats.members ?? '—'}</span>
-                              <span style={s.statLabel}>Members</span>
+                              <span style={s.statNumber}>{stats.activeMembers ?? '—'}</span>
+                              <span style={s.statLabel}>Active Members</span>
+                              {(stats.totalMembers - stats.activeMembers) > 0 && (
+                                <span style={{ fontSize: '11px', color: t.TEXT_MUTED, fontWeight: 300, marginTop: '2px' }}>
+                                  +{stats.totalMembers - stats.activeMembers} pending
+                                </span>
+                              )}
                             </div>
                             <div style={s.statBlock}>
                               <span style={s.statNumber}>{stats.clients ?? '—'}</span>
@@ -375,6 +384,10 @@ export default function Orgs() {
                             <div style={s.statBlock}>
                               <span style={s.statNumber}>{stats.notes ?? '—'}</span>
                               <span style={s.statLabel}>Notes</span>
+                            </div>
+                            <div style={s.statBlock}>
+                              <span style={s.statNumber}>{stats.openTasks ?? '—'}</span>
+                              <span style={s.statLabel}>Open Tasks</span>
                             </div>
                           </div>
                           <p style={s.createdDate}>Created {formatDate(org.created_at)}</p>

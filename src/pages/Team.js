@@ -97,8 +97,14 @@ export default function Team() {
 
   async function fetchMembers(targetOrgId) {
     setLoading(true);
+    // Platform admins viewing a foreign org must use the platform RPC,
+    // since get_org_members only returns rows if the caller is a member
+    // of that org. Platform admins are only members of their own org.
+    const rpc = (isPlatformAdmin && targetOrgId !== orgId)
+      ? 'get_org_members_platform'
+      : 'get_org_members';
     const { data, error } = await supabase
-      .rpc('get_org_members', { target_org_id: targetOrgId });
+      .rpc(rpc, { target_org_id: targetOrgId });
     if (error) console.error('fetchMembers error:', error);
     setMembers(data || []);
     setLoading(false);
