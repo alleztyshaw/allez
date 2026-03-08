@@ -129,18 +129,21 @@ export default function CRM() {
 
   async function handleSaveTask() {
     if (!taskForm.title.trim()) { setTaskError('Please enter a task title.'); return; }
+    if (!taskForm.client_id) { setTaskError('Please select a client for this task.'); return; }
     setTaskSaving(true); setTaskError('');
     const { data: { session } } = await supabase.auth.getSession();
     const { error } = await supabase.from('client_tasks').insert([{
       org_id: orgId,
-      client_id: taskForm.client_id || null,
+      client_id: taskForm.client_id,
       title: taskForm.title,
       due_date: taskForm.due_date || null,
       notes: taskForm.notes || null,
       created_by: session?.user?.id,
     }]);
-    if (error) { setTaskError('Something went wrong.'); }
-    else {
+    if (error) {
+      console.error('handleSaveTask error:', error);
+      setTaskError('Something went wrong. Please try again.');
+    } else {
       setTaskForm({ client_id: '', title: '', due_date: '' });
       setShowTaskForm(false);
       fetchData();

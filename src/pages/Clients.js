@@ -123,10 +123,15 @@ export default function Clients() {
     setSaving(true);
     setError('');
 
-    // Determine advisor to assign
+    // Determine advisor to assign.
+    // Fetch role fresh here rather than relying on userRole state, which may
+    // still be null if fetchOrgMembers hasn't resolved yet.
     const { data: { user } } = await supabase.auth.getUser();
+    const { data: membersNow } = await supabase.rpc('get_org_members', { target_org_id: orgId });
+    const meNow = (membersNow || []).find(m => m.user_id === user?.id);
+    const roleNow = meNow?.role || null;
     const advisorToAssign = selectedAdvisor
-      || (['advisor', 'associate'].includes(userRole) ? user?.id : null);
+      || (['advisor', 'associate'].includes(roleNow) ? user?.id : null);
 
     // Use atomic RPC to insert client + assign advisor in one operation.
     // This avoids the RLS race condition where .select() after insert fails
@@ -715,9 +720,9 @@ export default function Clients() {
                       style={s.input}
                     >
                       <option value=''>— Select advisor —</option>
-                      {orgMembers.map(m => (
+                      {orgMembers.filter(m => m.first_name && m.last_name).map(m => (
                         <option key={m.user_id} value={m.user_id}>
-                          {m.first_name && m.last_name ? `${m.first_name} ${m.last_name}` : m.user_id.slice(0, 8)}
+                          {m.first_name} {m.last_name}
                         </option>
                       ))}
                     </select>
