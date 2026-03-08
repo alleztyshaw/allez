@@ -93,7 +93,7 @@ export default function Team() {
 
   useEffect(() => {
     if (selectedOrg) fetchMembers(selectedOrg);
-  }, [selectedOrg]);
+  }, [selectedOrg]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function fetchMembers(targetOrgId) {
     setLoading(true);
