@@ -132,7 +132,7 @@ export default function Clients() {
     // This avoids the RLS race condition where .select() after insert fails
     // because the advisor isn't in client_advisors yet.
     const n = (v) => v === '' ? null : v;
-    const { data: newClientId, error } = await supabase.rpc('create_client_with_advisor', {
+    const { error } = await supabase.rpc('create_client_with_advisor', {
       p_org_id:                    orgId,
       p_first_name:                formData.first_name,
       p_last_name:                 formData.last_name,
