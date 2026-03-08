@@ -110,7 +110,7 @@ export default function Clients() {
     if (error) console.error('Error fetching clients:', error);
     else {
       setClients(data || []);
-      fetchPrimaryAdvisors((data || []).map(c => c.id));
+      await fetchPrimaryAdvisors((data || []).map(c => c.id));
     }
     setLoading(false);
   }

@@ -549,7 +549,7 @@ function TaskRow({ task, clientName, onComplete, onDelete, onEdit, s, t, navigat
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '2px 20px 12px 52px' }}>
         {task.client_id ? (
           <span
-            style={{ fontSize: '12px', color: '#60a5fa', fontWeight: '400', cursor: 'pointer', flex: 1 }}
+            style={{ fontSize: '12px', color: t.TEXT, fontWeight: '400', cursor: 'pointer', flex: 1 }}
             onClick={e => { e.stopPropagation(); navigate(`/hq/clients/${task.client_id}`, { state: { from: '/hq/crm' } }); }}
           >
             {clientName(task.client_id)}
@@ -575,11 +575,11 @@ function TaskRow({ task, clientName, onComplete, onDelete, onEdit, s, t, navigat
                 flexShrink: 0,
               }} />
             </button>
-            <span style={{ fontSize: '10px', color: t.BORDER }}>·</span>
+            <span style={{ fontSize: '10px', color: t.TEXT_MUTED }}>·</span>
           </>
         )}
         <button style={{ ...s.deleteAction, fontSize: '12px' }} onClick={() => onEdit(task)}>Edit</button>
-        <span style={{ fontSize: '10px', color: t.BORDER }}>·</span>
+        <span style={{ fontSize: '10px', color: t.TEXT_MUTED }}>·</span>
         <button style={{ ...s.deleteAction, fontSize: '12px', color: '#f87171' }} onClick={() => onDelete(task.id)}>Delete</button>
       </div>
 

@@ -256,11 +256,11 @@ export default function Orgs() {
         @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=DM+Sans:wght@300;400;500;600&display=swap');
         @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes borderPulse {
-          0%   { border-color: var(--pulse-color); box-shadow: 0 0 0 0 var(--pulse-glow); }
-          40%  { border-color: var(--pulse-color); box-shadow: 0 0 0 3px var(--pulse-glow); }
-          100% { border-color: var(--border-color); box-shadow: none; }
+          0%   { box-shadow: 0 0 0 0 var(--pulse-glow); }
+          40%  { box-shadow: 0 0 0 4px var(--pulse-glow); }
+          100% { box-shadow: none; }
         }
-        .org-card-pulse { animation: borderPulse 0.6s ease forwards; }
+        .org-card-pulse { animation: borderPulse 0.7s ease forwards; }
       `}</style>
 
       {toast && (

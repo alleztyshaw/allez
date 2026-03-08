@@ -18,8 +18,9 @@ function Navigation() {
   const getGreeting = () => {
     const h = new Date().getHours();
     if (h >= 5 && h < 12) return 'Good morning';
-    if (h >= 12 && h < 17) return 'Good afternoon';
-    return 'Good evening';
+    if (h >= 12 && h < 18) return 'Good afternoon';
+    if (h >= 18 && h < 24) return 'Good evening';
+    return 'Good evening'; // midnight–5am
   };
 
   useEffect(() => {
