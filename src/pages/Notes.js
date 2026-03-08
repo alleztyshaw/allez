@@ -73,7 +73,7 @@ export default function Notes() {
 
   // Compose
   const [showCompose, setShowCompose] = useState(false);
-  const [composeMode, setComposeMode] = useState('manual'); // 'manual' | 'ai'
+  const [composeMode, setComposeMode] = useState('ai'); // 'ai' | 'manual'
   const [formData, setFormData] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -320,6 +320,7 @@ export default function Notes() {
     modeTabActive: { padding: '5px 14px', fontSize: '12px', fontWeight: '600', letterSpacing: '0.04em', borderRadius: '4px', border: 'none', cursor: 'pointer', fontFamily: FONT_BODY, background: ACCENT_MUTED, color: ACCENT },
     modeTabInactive: { padding: '5px 14px', fontSize: '12px', fontWeight: '600', letterSpacing: '0.04em', borderRadius: '4px', border: 'none', cursor: 'pointer', fontFamily: FONT_BODY, background: 'transparent', color: t.TEXT_MUTED },
     aiBadge: { fontSize: '10px', fontWeight: '600', letterSpacing: '0.08em', padding: '2px 8px', borderRadius: RADIUS_PILL, background: 'rgba(139,92,246,0.12)', color: '#a78bfa', border: '1px solid rgba(139,92,246,0.25)', textTransform: 'uppercase' },
+    manualBadge: { fontSize: '10px', fontWeight: '600', letterSpacing: '0.08em', padding: '2px 8px', borderRadius: RADIUS_PILL, background: t.SURFACE_ALT, color: t.TEXT_MUTED, border: `1px solid ${t.BORDER}`, textTransform: 'uppercase' },
     formRow: { display: 'flex', gap: '12px', marginBottom: '12px', flexWrap: 'wrap' },
     formField: { display: 'flex', flexDirection: 'column', gap: '4px', flex: 1, minWidth: '180px' },
     label: { fontSize: '12px', fontWeight: '500', color: t.TEXT_MUTED, letterSpacing: '0.02em' },
@@ -422,16 +423,16 @@ export default function Notes() {
             <div style={s.composeHeader}>
               <div style={s.modeToggle}>
                 <button
-                  style={composeMode === 'manual' ? s.modeTabActive : s.modeTabInactive}
-                  onClick={() => { setComposeMode('manual'); setAiResult(null); setAiError(''); }}
-                >
-                  Manual
-                </button>
-                <button
                   style={composeMode === 'ai' ? s.modeTabActive : s.modeTabInactive}
                   onClick={() => { setComposeMode('ai'); setError(''); }}
                 >
                   AI Note-Taker
+                </button>
+                <button
+                  style={composeMode === 'manual' ? s.modeTabActive : s.modeTabInactive}
+                  onClick={() => { setComposeMode('manual'); setAiResult(null); setAiError(''); }}
+                >
+                  Manual
                 </button>
               </div>
               {composeMode === 'ai' && <span style={s.aiBadge}>Beta</span>}
@@ -628,7 +629,7 @@ export default function Notes() {
                     {/* Header */}
                     <div style={s.noteHeader}>
                       <span style={s.noteTitle}>{note.title}</span>
-                      {isAi && <span style={s.noteAiBadge}>AI</span>}
+                      {!isAi && <span style={s.manualBadge}>Manual</span>}
                       {note.note_type && <span style={s.noteTypeBadge}>{note.note_type}</span>}
                       <Link
                         to={`/hq/clients/${note.client_id}`}

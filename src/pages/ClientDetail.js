@@ -23,6 +23,7 @@ import {
   STATUS_OPTIONS,
   TAX_BRACKET_OPTIONS,
   TIME_HORIZON_OPTIONS,
+  FULL_ACCESS_ROLES,
   ORG_ADMIN_ROLES,
   WRITE_ROLES,
 } from '../utils/hqConstants';
@@ -425,6 +426,7 @@ export default function ClientDetail() {
   const [userRole, setUserRole] = useState(null);
   const canManageOrg = ORG_ADMIN_ROLES.includes(userRole);
   const canWrite = WRITE_ROLES.includes(userRole);
+  const canManageAdvisors = FULL_ACCESS_ROLES.includes(userRole);
   const backPath = location.state?.from || '/hq/clients';
   const backLabel = backPath === '/hq/notes' ? '← Back to Notes' : backPath === '/hq/crm' ? '← Back to CRM' : '← Back to Clients';
   const [client, setClient] = useState(null);
@@ -669,7 +671,7 @@ export default function ClientDetail() {
         <div style={{ marginBottom: '32px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
             <p style={{ ...s.sectionLabel, margin: 0 }}>Assigned Advisors</p>
-            {canManageOrg && (
+            {canManageAdvisors && (
               <button
                 onClick={() => setShowAdvisorModal(true)}
                 style={{ background: 'none', border: `1px solid ${ACCENT_BORDER}`, borderRadius: RADIUS_MD, padding: '3px 10px', fontSize: '12px', color: ACCENT, cursor: 'pointer', fontFamily: FONT_BODY }}
@@ -699,10 +701,10 @@ export default function ClientDetail() {
                   {a.is_primary && (
                     <span style={{ fontSize: '10px', color: ACCENT, letterSpacing: '0.06em', fontWeight: '600' }}>Primary</span>
                   )}
-                  {canManageOrg && !a.is_primary && (
+                  {canManageAdvisors && !a.is_primary && (
                     <button onClick={() => handleSetPrimary(a.id)} style={{ background: 'none', border: 'none', fontSize: '11px', color: t.TEXT_MUTED, cursor: 'pointer', padding: 0 }}>Set primary</button>
                   )}
-                  {canManageOrg && (
+                  {canManageAdvisors && (
                     <button onClick={() => handleRemoveAdvisor(a.id)} style={{ background: 'none', border: 'none', fontSize: '11px', color: '#f87171', cursor: 'pointer', padding: 0 }}>✕</button>
                   )}
                 </div>
