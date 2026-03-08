@@ -649,7 +649,7 @@ export default function Clients() {
                 )}
 
                 {/* Status + advisor pill — stacked right aligned */}
-                <div style={{ marginLeft: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px', justifyContent: 'center', alignSelf: 'stretch' }}>
+                <div style={{ marginLeft: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px', justifyContent: 'center', alignSelf: 'center' }}>
                   {canSeeAdvisorPill && advisorMapLoaded && (
                     primaryAdvisorMap[client.id] ? (
                       <span style={{ ...s.badge, backgroundColor: 'rgba(102,126,234,0.12)', color: '#667eea', border: '1px solid rgba(102,126,234,0.3)' }}>
@@ -662,13 +662,7 @@ export default function Clients() {
                     )
                   )}
                   {client.status && (
-                    <span style={{
-                      ...s.badge,
-                      backgroundColor: STATUS_COLORS[client.status]?.bg || ACCENT_MUTED,
-                      color: STATUS_COLORS[client.status]?.color || ACCENT,
-                      marginTop: canSeeAdvisorPill ? 0 : 'auto',
-                      marginBottom: canSeeAdvisorPill ? 0 : 'auto',
-                    }}>
+                    <span style={{ ...s.badge, backgroundColor: STATUS_COLORS[client.status]?.bg || ACCENT_MUTED, color: STATUS_COLORS[client.status]?.color || ACCENT }}>
                       {client.status}
                     </span>
                   )}
