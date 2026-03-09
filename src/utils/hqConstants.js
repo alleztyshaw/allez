@@ -73,8 +73,8 @@ export const SHADOW_SM = '0 1px 3px rgba(0,0,0,0.08)';
 
 // ── Layout ────────────────────────────────────────────────────────────────────
 export const TOPBAR_HEIGHT          = 52;   // px — fixed top bar height
-export const SIDEBAR_WIDTH          = 220;  // px — desktop sidebar expanded width
-export const SIDEBAR_COLLAPSED_WIDTH = 48;  // px — desktop sidebar collapsed width
+export const SIDEBAR_WIDTH          = 145;  // px — desktop sidebar expanded width
+export const SIDEBAR_COLLAPSED_WIDTH = 24;  // px — desktop sidebar collapsed width
 export const SIDEBAR_BREAKPOINT     = 900;  // px — sidebar collapses to overlay below this
 export const MOBILE_BREAKPOINT      = 900;  // px — single source of truth for isMobile
 export const SHADOW_MD = '0 4px 16px rgba(0,0,0,0.12)';
