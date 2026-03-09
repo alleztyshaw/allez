@@ -90,7 +90,7 @@ export default function Sidebar() {
       fontSize: '15px', fontWeight: FW_LIGHT, color: t.TEXT_MUTED,
     },
     greetingName: {
-      color: t.TEXT, fontWeight: FW_REGULAR,
+      color: t.TEXT_MUTED, fontWeight: FW_REGULAR,
     },
     backdrop: {
       position: 'fixed', inset: 0,
