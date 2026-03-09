@@ -45,7 +45,6 @@ export default function HQ() {
   const [metrics, setMetrics] = useState({});
   const [metricsLoading, setMetricsLoading] = useState(true);
   const [orgName, setOrgName] = useState('');
-  const [userRole, setUserRole] = useState('');
 
   useEffect(() => {
     if (!orgId) return;
@@ -59,8 +58,6 @@ export default function HQ() {
       ]);
       setMetrics({ clients: clients?.length ?? 0, notes: notes?.length ?? 0 });
       setOrgName(orgData?.name || '');
-      const me = (membersData || []).find(m => m.user_id === user?.id);
-      setUserRole(me?.role || '');
       setMetricsLoading(false);
     }
     fetchMetrics();
@@ -70,9 +67,6 @@ export default function HQ() {
     ...pageStyles(t, isMobile),
     header: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '28px' },
     date: { fontSize: '13px', color: t.TEXT_SUBTLE, fontWeight: 300, letterSpacing: '0.03em' },
-    roleBadge: { display: 'flex', alignItems: 'center', gap: '6px', background: t.SURFACE, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_PILL, padding: '6px 14px', marginBottom: '4px' },
-    roleDot: { width: '6px', height: '6px', borderRadius: '50%', background: t.ACCENT, display: 'inline-block', flexShrink: 0 },
-    roleText: { fontSize: '12px', fontWeight: 600, color: t.TEXT, letterSpacing: '0.04em' },
     divider: { height: '1px', background: t.BORDER, marginBottom: '36px' },
     grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '20px', marginBottom: '48px' },
     card: { background: t.SURFACE, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_LG, padding: '24px', display: 'flex', flexDirection: 'column', minHeight: '220px', boxShadow: SHADOW_MD },
@@ -106,12 +100,7 @@ export default function HQ() {
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px' }}>
             {orgName && <p style={s.date}>{orgName}</p>}
             <p style={s.date}>{formatDate(new Date())}</p>
-            {userRole && (
-              <div style={s.roleBadge}>
-                <span style={s.roleDot} />
-                <span style={s.roleText}>{userRole.charAt(0).toUpperCase() + userRole.slice(1)}</span>
-              </div>
-            )}
+
           </div>
         </div>
 

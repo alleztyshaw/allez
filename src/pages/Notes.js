@@ -334,7 +334,7 @@ export default function Notes() {
     noteCard: { background: t.SURFACE, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_LG, padding: '18px 20px', marginBottom: '10px', boxShadow: SHADOW_MD },
     noteHeader: { display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px', flexWrap: 'wrap' },
     noteTitle: { fontFamily: FONT_DISPLAY, fontSize: '17px', fontWeight: '400', color: t.TEXT, flex: 1, letterSpacing: '0.01em' },
-    noteTypeBadge: { fontSize: '10px', fontWeight: '600', padding: '2px 10px', borderRadius: RADIUS_PILL, background: t.ACCENT_MUTED, color: t.ACCENT, border: `1px solid ${t.ACCENT_BORDER}`, letterSpacing: '0.06em', textTransform: 'uppercase' },
+    noteTypeBadge: { fontSize: '11px', fontWeight: '400', color: t.TEXT_MUTED, letterSpacing: '0.03em' },
     noteAiBadge: { fontSize: '10px', fontWeight: '600', padding: '2px 10px', borderRadius: RADIUS_PILL, background: 'rgba(139,92,246,0.12)', color: '#a78bfa', border: '1px solid rgba(139,92,246,0.25)', letterSpacing: '0.06em', textTransform: 'uppercase' },
     clientBadge: { fontSize: '11px', fontWeight: '600', padding: '2px 10px', borderRadius: RADIUS_PILL, background: 'rgba(96,165,250,0.12)', color: '#60a5fa', border: 'rgba(96,165,250,0.2)', textDecoration: 'none', transition: 'background 0.15s, box-shadow 0.15s' },
     noteBody: { fontSize: '14px', color: t.TEXT_MUTED, lineHeight: '1.65', margin: '0 0 10px', whiteSpace: 'pre-wrap', fontWeight: '300' },

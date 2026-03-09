@@ -747,15 +747,9 @@ function PipelineTable({ clients, navigate, s, t, isMobile, orgId, onStageChange
                   {client.last_name}, {client.first_name}
                 </div>
 
-                {/* Stage pill */}
+                {/* Stage — plain text */}
                 <div>
-                  <span style={{
-                    fontSize: '11px', fontWeight: '600', padding: '2px 10px',
-                    borderRadius: RADIUS_PILL,
-                    background: sc.bg || t.SURFACE_ALT,
-                    color: sc.color || t.TEXT_MUTED,
-                    border: `1px solid ${sc.color ? `${sc.color}44` : t.BORDER}`,
-                  }}>
+                  <span style={{ fontSize: '13px', fontWeight: '400', color: t.TEXT_MUTED }}>
                     {client.pipeline_stage}
                   </span>
                 </div>
@@ -819,9 +813,9 @@ function PipelineTable({ clients, navigate, s, t, isMobile, orgId, onStageChange
                       onClick={() => handleStageChange(client, nextStage.key)}
                       disabled={isSaving}
                       style={{
-                        background: t.ACCENT_MUTED, border: `1px solid ${t.ACCENT_BORDER}`,
+                        background: 'none', border: `1px solid ${t.BORDER}`,
                         borderRadius: RADIUS_MD, padding: '3px 8px',
-                        fontSize: '11px', color: t.ACCENT, fontWeight: '600',
+                        fontSize: '11px', color: t.TEXT_MUTED, fontWeight: '500',
                         cursor: 'pointer', fontFamily: FONT_BODY,
                         display: 'flex', alignItems: 'center', gap: '3px',
                       }}
