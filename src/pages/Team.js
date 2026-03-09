@@ -13,7 +13,6 @@ import {
   MOBILE_BREAKPOINT,
   ACCENT,
   ACCENT_MUTED,
-  ACCENT_BORDER,
 } from '../utils/hqConstants';
 import { useTokens } from '../context/ThemeContext';
 

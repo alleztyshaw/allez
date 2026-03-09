@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { ACCENT, ACCENT_MUTED } from '../utils/hqConstants';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 
@@ -201,8 +202,8 @@ export default function Login() {
                 <div style={s.featureCardTop}>
                   <span style={{
                     ...s.featureBadge,
-                    background: f.status === 'Live' ? '${t.ACCENT_MUTED}' : 'rgba(0,0,0,0.06)',
-                    color: f.status === 'Live' ? '${t.ACCENT}' : '#999',
+                    background: f.status === 'Live' ? ACCENT_MUTED : 'rgba(0,0,0,0.06)',
+                    color: f.status === 'Live' ? ACCENT : '#999',
                   }}>
                     {f.status}
                   </span>

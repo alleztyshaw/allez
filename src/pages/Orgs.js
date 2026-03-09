@@ -195,7 +195,7 @@ export default function Orgs() {
     },
     statusBadge: (status) => {
       const map = {
-        active:     { bg: '${t.ACCENT_MUTED}',   color: '${t.ACCENT}' },
+        active:     { bg: t.ACCENT_MUTED, color: t.ACCENT },
         onboarding: { bg: 'rgba(251,191,36,0.15)',  color: '#fbbf24' },
         former:     { bg: 'rgba(156,163,175,0.15)', color: '#9ca3af' },
       };
