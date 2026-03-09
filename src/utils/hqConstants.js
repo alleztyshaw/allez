@@ -72,9 +72,11 @@ export const SPACE_2XL = '64px';
 export const SHADOW_SM = '0 1px 3px rgba(0,0,0,0.08)';
 
 // ── Layout ────────────────────────────────────────────────────────────────────
-export const SIDEBAR_WIDTH      = 220;  // px — desktop sidebar width
-export const SIDEBAR_BREAKPOINT = 900;  // px — sidebar collapses below this
-export const MOBILE_BREAKPOINT  = 900;  // px — single source of truth for isMobile
+export const TOPBAR_HEIGHT          = 52;   // px — fixed top bar height
+export const SIDEBAR_WIDTH          = 220;  // px — desktop sidebar expanded width
+export const SIDEBAR_COLLAPSED_WIDTH = 48;  // px — desktop sidebar collapsed width
+export const SIDEBAR_BREAKPOINT     = 900;  // px — sidebar collapses to overlay below this
+export const MOBILE_BREAKPOINT      = 900;  // px — single source of truth for isMobile
 export const SHADOW_MD = '0 4px 16px rgba(0,0,0,0.12)';
 export const SHADOW_LG = '0 8px 32px rgba(0,0,0,0.18)';
 
@@ -236,7 +238,7 @@ export function pageStyles(t, isMobile) {
     page: {
       maxWidth:    '1200px',
       margin:      '0 auto',
-      padding:     isMobile ? '100px 16px 60px' : '120px 40px 80px',
+      padding:     isMobile ? '28px 16px 60px' : '40px 40px 80px',
       fontFamily:  FONT_BODY,
       color:       t.TEXT,
     },
