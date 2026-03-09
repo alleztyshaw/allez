@@ -9,6 +9,7 @@ import {
   MOBILE_BREAKPOINT,
 } from '../utils/hqConstants';
 import { useTokens } from '../context/ThemeContext';
+import { useOrg } from '../context/OrgContext';
 
 function useWindowWidth() {
   const [width, setWidth] = useState(window.innerWidth);
@@ -23,6 +24,7 @@ function useWindowWidth() {
 export default function Settings() {
   const { theme, toggleTheme } = useTheme();
   const t = useTokens();
+  const { userRole } = useOrg();
   const windowWidth = useWindowWidth();
   const isMobile = windowWidth < MOBILE_BREAKPOINT;
   const [displayName, setDisplayName] = useState('');
@@ -218,7 +220,16 @@ export default function Settings() {
 
           <div style={s.rowDivider} />
 
-          {/* Password */}
+          {/* Role */}
+          <div style={s.row}>
+            <div style={s.rowLeft}>
+              <p style={s.rowTitle}>Role</p>
+              <p style={s.rowDesc}>Assigned by your organisation administrator</p>
+            </div>
+            <p style={{ ...s.rowDesc, margin: 0, flexShrink: 0 }}>{userRole ? userRole.charAt(0).toUpperCase() + userRole.slice(1) : '—'}</p>
+          </div>
+
+          <div style={s.rowDivider} />
           <div style={{ padding: '20px 24px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: passwordEditing ? '12px' : 0 }}>
               <div style={s.rowLeft}>
