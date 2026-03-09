@@ -3,7 +3,7 @@ import { useTheme } from '../context/ThemeContext';
 import { supabase } from '../supabaseClient';
 import {
   ACCENT, ACCENT_MUTED, ACCENT_BORDER,
-  FONT_DISPLAY, FONT_BODY,
+  FONT_BODY,
   RADIUS_MD, RADIUS_LG,
   SHADOW_MD,
   pageStyles,
