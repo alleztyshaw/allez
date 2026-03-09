@@ -12,6 +12,7 @@ import {
   RADIUS_MD,
   RADIUS_PILL,
   SHADOW_MD,
+  pageStyles,
 } from '../utils/hqConstants';
 import { useTokens } from '../context/ThemeContext';
 
@@ -129,33 +130,7 @@ export default function Team() {
 
 
   const s = {
-    pageWrapper: {
-      background: t.BG,
-      minHeight: '100vh',
-      width: '100%',
-    },
-    page: {
-      maxWidth: '1200px',
-      margin: '0 auto',
-      padding: isMobile ? '100px 16px 60px' : '120px 40px 80px',
-      fontFamily: FONT_BODY,
-      color: t.TEXT,
-    },
-    header: {
-      display: 'flex', justifyContent: 'space-between',
-      alignItems: 'flex-start', marginBottom: '32px',
-      flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? '16px' : '0',
-    },
-    title: {
-      fontFamily: FONT_DISPLAY,
-      fontSize: isMobile ? '32px' : '44px',
-      fontWeight: '300',
-      color: t.TEXT,
-      margin: '0 0 6px',
-      letterSpacing: '0.01em',
-      lineHeight: 1.1,
-    },
-    subtitle: { fontSize: '13px', color: t.TEXT_MUTED, margin: 0, fontWeight: '300', letterSpacing: '0.03em' },
+    ...pageStyles(t, isMobile),
     orgTabs: {
       display: 'flex', gap: '8px', marginBottom: '32px', flexWrap: 'wrap',
     },

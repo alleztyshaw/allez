@@ -3,6 +3,7 @@ import {
   ACCENT,
   FONT_DISPLAY, FONT_BODY,
   RADIUS_LG, SHADOW_MD,
+  pageStyles,
 } from '../utils/hqConstants';
 import { useTokens } from '../context/ThemeContext';
 
@@ -22,8 +23,10 @@ function Contact() {
   const isMobile = windowWidth < 600;
 
   const s = {
-    pageWrapper: { minHeight: '100vh', width: '100%', background: t.BG, fontFamily: FONT_BODY, color: t.TEXT },
-    page: { maxWidth: '1200px', margin: '0 auto', padding: isMobile ? '100px 20px 60px' : '120px 40px 80px', boxSizing: 'border-box' },
+    ...pageStyles(t, isMobile),
+    // Contact overrides — larger hero typography
+    title: { fontFamily: FONT_DISPLAY, fontSize: isMobile ? '36px' : '52px', fontWeight: '300', lineHeight: 1.15, margin: '0 0 20px', letterSpacing: '0.01em', color: t.TEXT },
+    subtitle: { fontSize: '16px', lineHeight: '1.7', fontWeight: '300', maxWidth: '520px', margin: 0, color: t.TEXT_MUTED },
     headlineBlock: { marginBottom: '56px' },
     eyebrow: { fontSize: '11px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.12em', color: ACCENT, margin: '0 0 16px' },
     title: { fontFamily: FONT_DISPLAY, fontSize: isMobile ? '36px' : '52px', fontWeight: '300', lineHeight: 1.15, margin: '0 0 20px', letterSpacing: '0.01em', color: t.TEXT },

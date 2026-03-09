@@ -7,6 +7,7 @@ import {
   FONT_DISPLAY, FONT_BODY,
   RADIUS_MD, RADIUS_LG, RADIUS_PILL,
   SHADOW_MD,
+  pageStyles,
 } from '../utils/hqConstants';
 import { useTokens } from '../context/ThemeContext';
 
@@ -120,22 +121,7 @@ export default function Orgs() {
   }
 
   const s = {
-    pageWrapper: { background: t.BG, minHeight: '100vh', width: '100%' },
-    page: {
-      maxWidth: '1200px', margin: '0 auto',
-      padding: isMobile ? '100px 16px 60px' : '120px 40px 80px',
-      fontFamily: FONT_BODY, color: t.TEXT,
-    },
-    header: {
-      display: 'flex', justifyContent: 'space-between',
-      alignItems: 'flex-start', marginBottom: '32px',
-      flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? '16px' : '0',
-    },
-    title: {
-      fontFamily: FONT_DISPLAY, fontSize: isMobile ? '32px' : '44px', fontWeight: '300',
-      color: t.TEXT, margin: '0 0 6px', letterSpacing: '0.01em', lineHeight: 1.1,
-    },
-    subtitle: { fontSize: '13px', color: t.TEXT_MUTED, margin: 0, fontWeight: '300' },
+    ...pageStyles(t, isMobile),
     addButton: {
       background: 'transparent', border: `1px solid ${ACCENT_BORDER}`,
       borderRadius: RADIUS_MD, padding: '10px 20px',

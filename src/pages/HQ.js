@@ -11,6 +11,7 @@ import {
   RADIUS_MD,
   RADIUS_PILL,
   SHADOW_MD,
+  pageStyles,
 } from '../utils/hqConstants';
 import { useTokens } from '../context/ThemeContext';
 import { useOrg } from '../context/OrgContext';
@@ -23,6 +24,16 @@ const features = [
 ];
 
 
+function useWindowWidth() {
+  const [width, setWidth] = useState(window.innerWidth);
+  useEffect(() => {
+    const handler = () => setWidth(window.innerWidth);
+    window.addEventListener('resize', handler);
+    return () => window.removeEventListener('resize', handler);
+  }, []);
+  return width;
+}
+
 function formatDate(d) {
   return d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
 }
@@ -30,6 +41,8 @@ function formatDate(d) {
 export default function HQ() {
   const navigate = useNavigate();
   const t = useTokens();
+  const windowWidth = useWindowWidth();
+  const isMobile = windowWidth < 600;
   const { orgId } = useOrg();
   const [metrics, setMetrics] = useState({});
   const [metricsLoading, setMetricsLoading] = useState(true);
@@ -56,8 +69,7 @@ export default function HQ() {
   }, [orgId]);
 
   const s = {
-    pageWrapper: { background: t.BG, minHeight: '100vh', width: '100%' },
-    page: { fontFamily: FONT_BODY, color: t.TEXT, padding: '120px 40px 80px', maxWidth: '1200px', margin: '0 auto' },
+    ...pageStyles(t, isMobile),
     header: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '28px' },
     date: { fontSize: '13px', color: t.TEXT_SUBTLE, fontWeight: 300, letterSpacing: '0.03em' },
     roleBadge: { display: 'flex', alignItems: 'center', gap: '6px', background: t.SURFACE, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_PILL, padding: '6px 14px', marginBottom: '4px' },

@@ -6,6 +6,7 @@ import {
   FONT_DISPLAY, FONT_BODY,
   RADIUS_MD, RADIUS_LG,
   SHADOW_MD,
+  pageStyles,
 } from '../utils/hqConstants';
 import { useTokens } from '../context/ThemeContext';
 
@@ -92,16 +93,7 @@ export default function Settings() {
   const isDark = theme === 'dark';
 
   const s = {
-    pageWrapper: { background: t.BG, minHeight: '100vh', width: '100%' },
-    page: {
-      maxWidth: '1200px', margin: '0 auto',
-      padding: isMobile ? '100px 16px 60px' : '120px 40px 80px',
-      fontFamily: FONT_BODY, color: t.TEXT,
-    },
-    title: {
-      fontFamily: FONT_DISPLAY, fontSize: isMobile ? '32px' : '44px', fontWeight: '300',
-      color: t.TEXT, margin: '0 0 6px', letterSpacing: '0.01em', lineHeight: 1.1,
-    },
+    ...pageStyles(t, isMobile),
     subtitle: { fontSize: '13px', color: t.TEXT_MUTED, margin: '0 0 48px', fontWeight: '300' },
     section: {
       background: t.SURFACE, border: `1px solid ${t.BORDER}`,

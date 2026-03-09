@@ -25,6 +25,7 @@ import {
   STATUS_OPTIONS,
   TAX_BRACKET_OPTIONS,
   TIME_HORIZON_OPTIONS,
+  pageStyles,
 } from '../utils/hqConstants';
 import { useTokens } from '../context/ThemeContext';
 
@@ -209,41 +210,14 @@ export default function Clients() {
 
 
   const s = {
-    pageWrapper: {
-      background: t.BG,
-      minHeight: '100vh',
-      width: '100%',
-    },
-    page: {
-      padding: isMobile ? '100px 16px 60px' : '120px 40px 80px',
-      maxWidth: '1200px',
-      margin: '0 auto',
-      fontFamily: FONT_BODY,
-      color: t.TEXT,
-    },
+    ...pageStyles(t, isMobile),
     header: {
       display: 'flex',
       justifyContent: 'space-between',
-      alignItems: isMobile ? 'flex-start' : 'flex-start',
+      alignItems: 'flex-start',
       flexDirection: isMobile ? 'column' : 'row',
       gap: isMobile ? '16px' : '0',
       marginBottom: '28px',
-    },
-    title: {
-      fontFamily: FONT_DISPLAY,
-      fontSize: isMobile ? '32px' : '44px',
-      fontWeight: '300',
-      margin: '0 0 6px',
-      color: t.TEXT,
-      letterSpacing: '0.01em',
-      lineHeight: 1.1,
-    },
-    subtitle: {
-      fontSize: '13px',
-      color: t.TEXT_MUTED,
-      margin: 0,
-      fontWeight: '300',
-      letterSpacing: '0.03em',
     },
     addButton: {
       background: 'transparent',

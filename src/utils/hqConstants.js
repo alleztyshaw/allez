@@ -41,6 +41,13 @@ export const D_TEXT_SUBTLE = '#A8C0E8'; // Same as TEXT_MUTED in dark mode — c
 export const FONT_DISPLAY = "'Cormorant Garamond', Georgia, serif"; // Hero, client names, headlines
 export const FONT_BODY    = "'DM Sans', 'Segoe UI', sans-serif";    // All UI text, data, labels
 
+// ── Font weights ──────────────────────────────────────────────────────────────
+// Use these instead of hardcoding numbers — keeps weight consistent everywhere.
+export const FW_LIGHT    = '300'; // muted text, meta, subtitles, large numbers
+export const FW_REGULAR  = '400'; // body text, card content, names
+export const FW_MEDIUM   = '500'; // tabs, interactive elements
+export const FW_SEMIBOLD = '600'; // labels, badges, buttons, column headers
+
 // --- BORDER RADIUS ---
 export const RADIUS_SM   = '6px';
 export const RADIUS_MD   = '10px';
@@ -202,3 +209,46 @@ export const TEXT_MUTED   = D_TEXT_MUTED;
 export const INPUT_BG     = D_SURFACE_ALT;
 export const PAGE_PADDING = '48px 40px 80px';
 export const PAGE_FONT    = FONT_BODY;
+
+
+// ── Standard page layout styles ───────────────────────────────────────────────
+// Use in every page: const s = { ...pageStyles(t, isMobile), myCustomStyle: {...} }
+// This ensures consistent padding, typography, and structure across all pages.
+
+export function pageStyles(t, isMobile) {
+  return {
+    pageWrapper: {
+      background:  t.BG,
+      minHeight:   '100vh',
+      width:       '100%',
+    },
+    page: {
+      maxWidth:    '1200px',
+      margin:      '0 auto',
+      padding:     isMobile ? '100px 16px 60px' : '120px 40px 80px',
+      fontFamily:  FONT_BODY,
+      color:       t.TEXT,
+    },
+    header: {
+      display:         'flex',
+      justifyContent:  'space-between',
+      alignItems:      'flex-start',
+      marginBottom:    '32px',
+    },
+    title: {
+      fontFamily:     FONT_DISPLAY,
+      fontSize:       isMobile ? '32px' : '44px',
+      fontWeight:     '300',
+      color:          t.TEXT,
+      margin:         '0 0 6px',
+      letterSpacing:  '0.01em',
+      lineHeight:     1.1,
+    },
+    subtitle: {
+      fontSize:    '13px',
+      color:       t.TEXT_MUTED,
+      margin:      0,
+      fontWeight:  '300',
+    },
+  };
+}

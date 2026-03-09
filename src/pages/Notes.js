@@ -14,6 +14,7 @@ import {
   SHADOW_MD,
   STATUS_COLORS,
   WRITE_ROLES,
+  pageStyles,
 } from '../utils/hqConstants';
 import { useTokens } from '../context/ThemeContext';
 
@@ -304,15 +305,7 @@ export default function Notes() {
   // ── Styles ──────────────────────────────────────────────────────────────────
 
   const s = {
-    pageWrapper: { background: t.BG, minHeight: '100vh', width: '100%' },
-    page: {
-      maxWidth: '1200px', margin: '0 auto',
-      padding: isMobile ? '100px 16px 60px' : '120px 40px 80px',
-      fontFamily: FONT_BODY, color: t.TEXT,
-    },
-    header: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '32px' },
-    title: { fontFamily: FONT_DISPLAY, fontSize: isMobile ? '32px' : '44px', fontWeight: '300', margin: '0 0 6px', color: t.TEXT, letterSpacing: '0.01em', lineHeight: 1.1 },
-    subtitle: { fontSize: '13px', color: t.TEXT_MUTED, margin: 0, fontWeight: '300', letterSpacing: '0.03em' },
+    ...pageStyles(t, isMobile),
     addButton: { background: 'transparent', color: ACCENT, border: `1px solid ${ACCENT_BORDER}`, borderRadius: RADIUS_MD, padding: '10px 20px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: FONT_BODY },
     composeCard: { background: t.SURFACE, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_LG, padding: '24px', marginBottom: '32px', boxShadow: SHADOW_MD },
     composeHeader: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' },

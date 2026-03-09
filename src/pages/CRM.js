@@ -8,6 +8,7 @@ import {
   PIPELINE_STAGES, PIPELINE_STAGE_COLORS,
   RADIUS_LG, RADIUS_MD, RADIUS_PILL,
   SHADOW_MD,
+  pageStyles,
 } from '../utils/hqConstants';
 import { useTokens } from '../context/ThemeContext';
 
@@ -184,11 +185,8 @@ export default function CRM() {
   ].sort((a, b) => new Date(b.time) - new Date(a.time)).slice(0, 40);
 
   const s = {
-    pageWrapper: { background: t.BG, minHeight: '100vh', width: '100%' },
-    page: { maxWidth: '1200px', margin: '0 auto', padding: isMobile ? '100px 16px 60px' : '120px 40px 80px', fontFamily: FONT_BODY, color: t.TEXT },
-    pageHeader: { display: 'flex', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'flex-start', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? '12px' : '0', marginBottom: '32px' },
-    title: { fontFamily: FONT_DISPLAY, fontSize: isMobile ? '32px' : '44px', fontWeight: '300', color: t.TEXT, margin: '0 0 6px', letterSpacing: '0.01em', lineHeight: 1.1 },
-    subtitle: { fontSize: '13px', color: t.TEXT_MUTED, margin: 0, fontWeight: '300' },
+    ...pageStyles(t, isMobile),
+    pageHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? '12px' : '0', marginBottom: '32px' },
     addButton: { background: 'transparent', color: ACCENT, border: `1px solid ${ACCENT_BORDER}`, borderRadius: RADIUS_MD, padding: '10px 20px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: FONT_BODY },
 
     // BI bar

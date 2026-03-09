@@ -1,13 +1,14 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { useOrg } from '../context/OrgContext';
 import {
-  ACCENT, ACCENT_BORDER, ACCENT_MUTED,
+  ACCENT,
   FONT_BODY, FONT_DISPLAY,
   RADIUS_LG, RADIUS_MD, RADIUS_PILL,
   SHADOW_MD,
   FULL_ACCESS_ROLES,
+  pageStyles,
+  FW_LIGHT, FW_REGULAR, FW_SEMIBOLD,
 } from '../utils/hqConstants';
 import { useTokens } from '../context/ThemeContext';
 
@@ -116,15 +117,13 @@ function groupByDate(logs) {
 
 export default function AuditLog() {
   const t = useTokens();
-  const navigate = useNavigate();
-  const { orgId } = useOrg();
+  const { orgId, userRole: contextRole } = useOrg();
   const windowWidth = useWindowWidth();
   const isMobile = windowWidth < 600;
 
   const [logs, setLogs]           = useState([]);
   const [members, setMembers]     = useState([]);
   const [loading, setLoading]     = useState(true);
-  const [userRole, setUserRole]   = useState(null);
   const [expanded, setExpanded]   = useState({});
 
   // Filters
@@ -133,15 +132,6 @@ export default function AuditLog() {
   const [filterUser,   setFilterUser]   = useState('all');
   const [filterFrom,   setFilterFrom]   = useState('');
   const [filterTo,     setFilterTo]     = useState('');
-
-  const fetchRole = useCallback(async () => {
-    if (!orgId) return;
-    const { data: { user } } = await supabase.auth.getUser();
-    const { data } = await supabase.rpc('get_org_members', { p_org_id: orgId });
-    const me = data?.find(m => m.user_id === user?.id);
-    setUserRole(me?.role || null);
-    setMembers(data || []);
-  }, [orgId]);
 
   const fetchLogs = useCallback(async () => {
     if (!orgId) return;
@@ -160,13 +150,23 @@ export default function AuditLog() {
     if (filterTo)               query = query.lte('changed_at', filterTo + 'T23:59:59');
 
     const { data, error } = await query;
-    if (error) console.error('audit_log fetch error:', error);
-    setLogs(data || []);
+    if (error) {
+      console.error('audit_log fetch error:', error.message || error);
+      setLogs([]);
+    } else {
+      setLogs(data || []);
+    }
     setLoading(false);
   }, [orgId, filterTable, filterAction, filterUser, filterFrom, filterTo]);
 
-  useEffect(() => { fetchRole(); }, [fetchRole]);
-  useEffect(() => { if (userRole) fetchLogs(); }, [fetchLogs, userRole]);
+  // Fetch org members for the user filter dropdown
+  useEffect(() => {
+    if (!orgId) return;
+    supabase.from('org_members').select('user_id, first_name, last_name').eq('org_id', orgId)
+      .then(({ data }) => setMembers(data || []));
+  }, [orgId]);
+
+  useEffect(() => { if (contextRole) fetchLogs(); }, [fetchLogs, contextRole]);
 
   function memberName(userId) {
     const m = members.find(m => m.user_id === userId);
@@ -179,7 +179,7 @@ export default function AuditLog() {
   }
 
   // ── Access gate ─────────────────────────────────────────────────────────────
-  if (userRole && !FULL_ACCESS_ROLES.includes(userRole)) {
+  if (contextRole && !FULL_ACCESS_ROLES.includes(contextRole)) {
     return (
       <div style={{ padding: '80px 32px', textAlign: 'center' }}>
         <p style={{ color: t.TEXT_MUTED, fontFamily: FONT_BODY }}>
@@ -192,47 +192,54 @@ export default function AuditLog() {
   const grouped = groupByDate(logs);
 
   const s = {
-    page:         { padding: isMobile ? '24px 16px' : '48px 32px', maxWidth: '900px', margin: '0 auto' },
-    title:        { fontFamily: FONT_DISPLAY, fontSize: isMobile ? '32px' : '42px', fontWeight: '300', color: t.TEXT, margin: '0 0 6px' },
-    subtitle:     { fontSize: '13px', color: t.TEXT_MUTED, fontWeight: '300', margin: '0 0 32px' },
+    ...pageStyles(t, isMobile),
     filterRow:    { display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '32px', alignItems: 'flex-end' },
     filterGroup:  { display: 'flex', flexDirection: 'column', gap: '4px' },
-    filterLabel:  { fontSize: '10px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.08em', color: t.TEXT_MUTED },
+    filterLabel:  { fontSize: '10px', fontWeight: FW_SEMIBOLD, textTransform: 'uppercase', letterSpacing: '0.08em', color: t.TEXT_MUTED, fontFamily: FONT_BODY },
     filterSelect: { fontFamily: FONT_BODY, fontSize: '13px', background: t.SURFACE, color: t.TEXT, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_MD, padding: '7px 10px', cursor: 'pointer' },
     filterInput:  { fontFamily: FONT_BODY, fontSize: '13px', background: t.SURFACE, color: t.TEXT, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_MD, padding: '7px 10px' },
-    dateLabel:    { fontSize: '13px', fontWeight: '600', color: t.TEXT_MUTED, margin: '0 0 12px', letterSpacing: '0.02em' },
+    dateLabel:    { fontSize: '11px', fontWeight: FW_SEMIBOLD, textTransform: 'uppercase', letterSpacing: '0.08em', color: t.TEXT_MUTED, margin: '0 0 10px', fontFamily: FONT_BODY },
     logCard:      { background: t.SURFACE, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_LG, padding: '14px 18px', marginBottom: '8px', boxShadow: SHADOW_MD },
     logRow:       { display: 'flex', alignItems: 'flex-start', gap: '12px' },
     actionBadge:  (action) => ({
-      fontSize: '10px', fontWeight: '700', padding: '2px 9px',
+      fontSize: '10px', fontWeight: FW_SEMIBOLD, padding: '2px 9px', fontFamily: FONT_BODY,
       borderRadius: RADIUS_PILL, flexShrink: 0, marginTop: '2px',
       background: ACTION_COLORS[action]?.bg || t.SURFACE_ALT,
       color: ACTION_COLORS[action]?.color || t.TEXT_MUTED,
       border: `1px solid ${ACTION_COLORS[action]?.color || t.BORDER}44`,
       textTransform: 'uppercase', letterSpacing: '0.06em',
     }),
-    tableBadge:   { fontSize: '10px', fontWeight: '600', padding: '2px 9px', borderRadius: RADIUS_PILL, background: t.SURFACE_ALT, color: t.TEXT_MUTED, border: `1px solid ${t.BORDER}`, flexShrink: 0, marginTop: '2px', letterSpacing: '0.04em' },
+    tableBadge:   { fontSize: '10px', fontWeight: FW_SEMIBOLD, padding: '2px 9px', borderRadius: RADIUS_PILL, fontFamily: FONT_BODY, background: t.SURFACE_ALT, color: t.TEXT_MUTED, border: `1px solid ${t.BORDER}`, flexShrink: 0, marginTop: '2px', letterSpacing: '0.04em' },
     logMain:      { flex: 1, minWidth: 0 },
-    logLabel:     { fontSize: '14px', fontWeight: '500', color: t.TEXT, margin: '0 0 2px' },
-    logMeta:      { fontSize: '11px', color: t.TEXT_MUTED, fontWeight: '300' },
-    expandBtn:    { background: 'none', border: 'none', color: ACCENT, fontSize: '11px', fontWeight: '600', cursor: 'pointer', padding: '4px 0 0', fontFamily: FONT_BODY },
+    logLabel:     { fontSize: '15px', fontWeight: FW_REGULAR, color: t.TEXT, margin: '0 0 2px', fontFamily: FONT_DISPLAY, letterSpacing: '0.01em' },
+    logMeta:      { fontSize: '12px', color: t.TEXT_MUTED, fontWeight: FW_LIGHT, fontFamily: FONT_BODY },
+    expandBtn:    { background: 'none', border: 'none', color: ACCENT, fontSize: '11px', fontWeight: FW_SEMIBOLD, cursor: 'pointer', padding: '4px 0 0', fontFamily: FONT_BODY },
     changeRow:    { display: 'flex', gap: '8px', alignItems: 'baseline', padding: '4px 0', borderBottom: `1px solid ${t.BORDER}` },
-    changeField:  { fontSize: '11px', fontWeight: '600', color: t.TEXT_MUTED, minWidth: '140px', flexShrink: 0 },
-    changeOld:    { fontSize: '12px', color: '#f87171', fontWeight: '300', textDecoration: 'line-through', flex: 1 },
-    changeNew:    { fontSize: '12px', color: '#34d399', fontWeight: '400', flex: 1 },
-    emptyState:   { padding: '60px 0', textAlign: 'center', color: t.TEXT_MUTED, fontSize: '14px', fontWeight: '300' },
+    changeField:  { fontSize: '11px', fontWeight: FW_SEMIBOLD, color: t.TEXT_MUTED, fontFamily: FONT_BODY, minWidth: '140px', flexShrink: 0 },
+    changeOld:    { fontSize: '12px', color: '#f87171', fontWeight: FW_LIGHT, fontFamily: FONT_BODY, textDecoration: 'line-through', flex: 1 },
+    changeNew:    { fontSize: '12px', color: '#34d399', fontWeight: FW_REGULAR, fontFamily: FONT_BODY, flex: 1 },
+    emptyState:   { background: t.SURFACE, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_LG, padding: '48px', textAlign: 'center', color: t.TEXT_MUTED, fontSize: '14px', fontWeight: FW_LIGHT, fontFamily: FONT_BODY },
     clearBtn:     { background: 'none', border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_MD, padding: '7px 14px', fontSize: '12px', color: t.TEXT_MUTED, cursor: 'pointer', fontFamily: FONT_BODY },
   };
 
   const hasFilters = filterTable !== 'all' || filterAction !== 'all' || filterUser !== 'all' || filterFrom || filterTo;
 
   return (
-    <div style={s.page}>
-      <h1 style={s.title}>Audit Log</h1>
-      <p style={s.subtitle}>
-        A record of all writes to client, note, and task data across your organization.
-        Visible to admin and compliance roles only.
-      </p>
+    <div style={s.pageWrapper}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=DM+Sans:wght@300;400;500;600&display=swap');
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+      `}</style>
+      <div style={s.page}>
+        <div style={s.header}>
+          <div>
+            <h1 style={s.title}>Audit Log</h1>
+            <p style={s.subtitle}>
+              A record of all writes to client, note, and task data across your organization.
+              Visible to admin and compliance roles only.
+            </p>
+          </div>
+        </div>
 
       {/* Filters */}
       <div style={s.filterRow}>
@@ -357,6 +364,7 @@ export default function AuditLog() {
           </div>
         ))
       )}
+      </div>
     </div>
   );
 }
