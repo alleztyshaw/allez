@@ -3,9 +3,6 @@ import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { useOrg } from '../context/OrgContext';
 import {
-  ACCENT,
-  ACCENT_BORDER,
-  ACCENT_MUTED,
   ASSET_LEVEL_OPTIONS,
   COMMUNICATION_FREQUENCY_OPTIONS,
   CONTACT_METHOD_OPTIONS,
@@ -142,9 +139,9 @@ export default function ClientDetail() {
       gap: '10px',
     },
     editButton: {
-      background: ACCENT_MUTED,
-      color: ACCENT,
-      border: `1px solid ${ACCENT_BORDER}`,
+      background: t.ACCENT_MUTED,
+      color: t.ACCENT,
+      border: `1px solid ${t.ACCENT_BORDER}`,
       borderRadius: RADIUS_MD,
       padding: '8px 18px',
       fontSize: '13px',
@@ -173,9 +170,9 @@ export default function ClientDetail() {
       width: '64px',
       height: '64px',
       borderRadius: '50%',
-      background: ACCENT_MUTED,
-      border: `1px solid ${ACCENT_BORDER}`,
-      color: ACCENT,
+      background: t.ACCENT_MUTED,
+      border: `1px solid ${t.ACCENT_BORDER}`,
+      color: t.ACCENT,
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -234,7 +231,7 @@ export default function ClientDetail() {
       fontWeight: '600',
       textTransform: 'uppercase',
       letterSpacing: '0.12em',
-      color: ACCENT,
+      color: t.ACCENT,
       margin: '0 0 16px',
     },
     fieldGrid: {
@@ -330,7 +327,7 @@ export default function ClientDetail() {
       fontWeight: '600',
       textTransform: 'uppercase',
       letterSpacing: '0.12em',
-      color: ACCENT,
+      color: t.ACCENT,
       margin: '20px 0 12px',
     },
     formGrid: {
@@ -399,9 +396,9 @@ export default function ClientDetail() {
     saveButton: {
       padding: '9px 20px',
       borderRadius: RADIUS_MD,
-      border: `1px solid ${ACCENT_BORDER}`,
-      background: ACCENT_MUTED,
-      color: ACCENT,
+      border: `1px solid ${t.ACCENT_BORDER}`,
+      background: t.ACCENT_MUTED,
+      color: t.ACCENT,
       fontSize: '14px',
       fontWeight: '600',
       cursor: 'pointer',
@@ -722,8 +719,8 @@ export default function ClientDetail() {
           {client.status && (
             <span style={{
               ...s.badge,
-              backgroundColor: STATUS_COLORS?.[client.status]?.bg || ACCENT_MUTED,
-              color: STATUS_COLORS?.[client.status]?.color || ACCENT,
+              backgroundColor: STATUS_COLORS?.[client.status]?.bg || t.ACCENT_MUTED,
+              color: STATUS_COLORS?.[client.status]?.color || t.ACCENT,
             }}>
               {client.status}
             </span>
@@ -739,7 +736,7 @@ export default function ClientDetail() {
             {canManageAdvisors && (
               <button
                 onClick={() => setShowAdvisorModal(true)}
-                style={{ background: 'none', border: `1px solid ${ACCENT_BORDER}`, borderRadius: RADIUS_MD, padding: '3px 10px', fontSize: '12px', color: ACCENT, cursor: 'pointer', fontFamily: FONT_BODY }}
+                style={{ background: 'none', border: `1px solid ${t.ACCENT_BORDER}`, borderRadius: RADIUS_MD, padding: '3px 10px', fontSize: '12px', color: t.ACCENT, cursor: 'pointer', fontFamily: FONT_BODY }}
               >
                 + Assign
               </button>
@@ -754,8 +751,8 @@ export default function ClientDetail() {
                   key={a.id}
                   style={{
                     display: 'flex', alignItems: 'center', gap: '8px',
-                    background: a.is_primary ? ACCENT_MUTED : t.SURFACE,
-                    border: `1px solid ${a.is_primary ? ACCENT_BORDER : t.BORDER}`,
+                    background: a.is_primary ? t.ACCENT_MUTED : t.SURFACE,
+                    border: `1px solid ${a.is_primary ? t.ACCENT_BORDER : t.BORDER}`,
                     borderRadius: RADIUS_MD, padding: '6px 12px',
                     transition: 'all 0.3s ease',
                   }}
@@ -764,7 +761,7 @@ export default function ClientDetail() {
                     {a.first_name && a.last_name ? `${a.first_name} ${a.last_name}` : a.user_id.slice(0, 8) + '…'}
                   </span>
                   {a.is_primary && (
-                    <span style={{ fontSize: '10px', color: ACCENT, letterSpacing: '0.06em', fontWeight: '600' }}>Primary</span>
+                    <span style={{ fontSize: '10px', color: t.ACCENT, letterSpacing: '0.06em', fontWeight: '600' }}>Primary</span>
                   )}
                   {canManageAdvisors && !a.is_primary && (
                     <button onClick={() => handleSetPrimary(a.id)} style={{ background: 'none', border: 'none', fontSize: '11px', color: t.TEXT_MUTED, cursor: 'pointer', padding: 0 }}>Set primary</button>
@@ -795,7 +792,7 @@ export default function ClientDetail() {
                       {assigned ? (
                         <span style={{ fontSize: '11px', color: t.TEXT_MUTED }}>Assigned</span>
                       ) : (
-                        <button onClick={() => handleAssignAdvisor(m.user_id)} style={{ background: ACCENT_MUTED, border: `1px solid ${ACCENT_BORDER}`, borderRadius: RADIUS_MD, padding: '4px 12px', fontSize: '12px', color: ACCENT, cursor: 'pointer', fontWeight: '600', fontFamily: FONT_BODY }}>Assign</button>
+                        <button onClick={() => handleAssignAdvisor(m.user_id)} style={{ background: t.ACCENT_MUTED, border: `1px solid ${t.ACCENT_BORDER}`, borderRadius: RADIUS_MD, padding: '4px 12px', fontSize: '12px', color: t.ACCENT, cursor: 'pointer', fontWeight: '600', fontFamily: FONT_BODY }}>Assign</button>
                       )}
                     </div>
                   );
@@ -867,7 +864,7 @@ export default function ClientDetail() {
 
           {canWrite && showNoteCompose && (
             <div style={{ ...s.notesCard, marginBottom: '16px' }}>
-              <p style={{ fontSize: '10px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.12em', color: ACCENT, margin: '0 0 14px' }}>New Note</p>
+              <p style={{ fontSize: '10px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.12em', color: t.ACCENT, margin: '0 0 14px' }}>New Note</p>
               <div style={{ display: 'flex', gap: '10px', marginBottom: '10px', flexWrap: 'wrap' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1, minWidth: '140px' }}>
                   <label style={s.label}>Type</label>
@@ -898,7 +895,7 @@ export default function ClientDetail() {
             <div style={{ ...s.notesCard, textAlign: 'center', color: t.TEXT_MUTED, fontSize: '14px' }}>
               No notes yet.{' '}
               {canWrite && (
-                <span style={{ color: ACCENT, cursor: 'pointer' }} onClick={() => setShowNoteCompose(true)}>
+                <span style={{ color: t.ACCENT, cursor: 'pointer' }} onClick={() => setShowNoteCompose(true)}>
                   Add the first note →
                 </span>
               )}
@@ -914,7 +911,7 @@ export default function ClientDetail() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: note.body ? '8px' : '0', flexWrap: 'wrap' }}>
                       <span style={{ fontFamily: FONT_DISPLAY, fontSize: '17px', fontWeight: '400', color: t.TEXT, flex: 1, letterSpacing: '0.01em' }}>{note.title}</span>
                       {note.note_type && (
-                        <span style={{ fontSize: '10px', fontWeight: '600', padding: '2px 10px', borderRadius: RADIUS_PILL, background: ACCENT_MUTED, color: ACCENT, border: `1px solid ${ACCENT_BORDER}`, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                        <span style={{ fontSize: '10px', fontWeight: '600', padding: '2px 10px', borderRadius: RADIUS_PILL, background: t.ACCENT_MUTED, color: t.ACCENT, border: `1px solid ${t.ACCENT_BORDER}`, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
                           {note.note_type}
                         </span>
                       )}

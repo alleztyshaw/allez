@@ -3,9 +3,6 @@ import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { useOrg } from '../context/OrgContext';
 import {
-  ACCENT,
-  ACCENT_BORDER,
-  ACCENT_MUTED,
   FONT_BODY,
   FONT_DISPLAY,
   RADIUS_LG,
@@ -15,6 +12,7 @@ import {
   STATUS_COLORS,
   WRITE_ROLES,
   pageStyles,
+  MOBILE_BREAKPOINT,
 } from '../utils/hqConstants';
 import { useTokens } from '../context/ThemeContext';
 
@@ -60,7 +58,7 @@ const emptyForm = { client_id: '', title: '', body: '', note_type: 'General' };
 export default function Notes() {
   const t = useTokens();
   const windowWidth = useWindowWidth();
-  const isMobile = windowWidth < 600;
+  const isMobile = windowWidth < MOBILE_BREAKPOINT;
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { orgId } = useOrg();
@@ -306,11 +304,11 @@ export default function Notes() {
 
   const s = {
     ...pageStyles(t, isMobile),
-    addButton: { background: 'transparent', color: ACCENT, border: `1px solid ${ACCENT_BORDER}`, borderRadius: RADIUS_MD, padding: '10px 20px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: FONT_BODY },
+    addButton: { background: 'transparent', color: t.ACCENT, border: `1px solid ${t.ACCENT_BORDER}`, borderRadius: RADIUS_MD, padding: '10px 20px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: FONT_BODY },
     composeCard: { background: t.SURFACE, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_LG, padding: '24px', marginBottom: '32px', boxShadow: SHADOW_MD },
     composeHeader: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' },
     modeToggle: { display: 'flex', gap: '2px', background: t.SURFACE_ALT, borderRadius: RADIUS_MD, padding: '3px', border: `1px solid ${t.BORDER}` },
-    modeTabActive: { padding: '5px 14px', fontSize: '12px', fontWeight: '600', letterSpacing: '0.04em', borderRadius: '4px', border: 'none', cursor: 'pointer', fontFamily: FONT_BODY, background: ACCENT_MUTED, color: ACCENT },
+    modeTabActive: { padding: '5px 14px', fontSize: '12px', fontWeight: '600', letterSpacing: '0.04em', borderRadius: '4px', border: 'none', cursor: 'pointer', fontFamily: FONT_BODY, background: t.ACCENT_MUTED, color: t.ACCENT },
     modeTabInactive: { padding: '5px 14px', fontSize: '12px', fontWeight: '600', letterSpacing: '0.04em', borderRadius: '4px', border: 'none', cursor: 'pointer', fontFamily: FONT_BODY, background: 'transparent', color: t.TEXT_MUTED },
     aiBadge: { fontSize: '10px', fontWeight: '600', letterSpacing: '0.08em', padding: '2px 8px', borderRadius: RADIUS_PILL, background: 'rgba(139,92,246,0.12)', color: '#a78bfa', border: '1px solid rgba(139,92,246,0.25)', textTransform: 'uppercase' },
     manualBadge: { fontSize: '10px', fontWeight: '600', letterSpacing: '0.08em', padding: '2px 8px', borderRadius: RADIUS_PILL, background: t.SURFACE_ALT, color: t.TEXT_MUTED, border: `1px solid ${t.BORDER}`, textTransform: 'uppercase' },
@@ -322,7 +320,7 @@ export default function Notes() {
     transcriptArea: { width: '100%', border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_MD, padding: '12px', fontSize: '13px', minHeight: '180px', resize: 'vertical', outline: 'none', color: t.TEXT, background: t.SURFACE_ALT, fontFamily: FONT_BODY, boxSizing: 'border-box', marginBottom: '12px', lineHeight: '1.6' },
     composeFooter: { display: 'flex', justifyContent: 'flex-end', gap: '10px', alignItems: 'center' },
     cancelButton: { padding: '8px 18px', borderRadius: RADIUS_MD, border: `1px solid ${t.BORDER}`, background: 'transparent', fontSize: '13px', cursor: 'pointer', color: t.TEXT_MUTED, fontFamily: FONT_BODY },
-    saveButton: { padding: '8px 18px', borderRadius: RADIUS_MD, border: `1px solid ${ACCENT_BORDER}`, background: ACCENT_MUTED, color: ACCENT, fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: FONT_BODY },
+    saveButton: { padding: '8px 18px', borderRadius: RADIUS_MD, border: `1px solid ${t.ACCENT_BORDER}`, background: t.ACCENT_MUTED, color: t.ACCENT, fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: FONT_BODY },
     processButton: { padding: '8px 20px', borderRadius: RADIUS_MD, border: '1px solid rgba(139,92,246,0.4)', background: 'rgba(139,92,246,0.12)', color: '#a78bfa', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: FONT_BODY },
     errorText: { color: '#f87171', fontSize: '13px', marginBottom: '10px' },
     resultCard: { background: t.SURFACE_ALT, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_MD, padding: '20px', marginBottom: '16px' },
@@ -336,7 +334,7 @@ export default function Notes() {
     noteCard: { background: t.SURFACE, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_LG, padding: '18px 20px', marginBottom: '10px', boxShadow: SHADOW_MD },
     noteHeader: { display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px', flexWrap: 'wrap' },
     noteTitle: { fontFamily: FONT_DISPLAY, fontSize: '17px', fontWeight: '400', color: t.TEXT, flex: 1, letterSpacing: '0.01em' },
-    noteTypeBadge: { fontSize: '10px', fontWeight: '600', padding: '2px 10px', borderRadius: RADIUS_PILL, background: ACCENT_MUTED, color: ACCENT, border: `1px solid ${ACCENT_BORDER}`, letterSpacing: '0.06em', textTransform: 'uppercase' },
+    noteTypeBadge: { fontSize: '10px', fontWeight: '600', padding: '2px 10px', borderRadius: RADIUS_PILL, background: t.ACCENT_MUTED, color: t.ACCENT, border: `1px solid ${t.ACCENT_BORDER}`, letterSpacing: '0.06em', textTransform: 'uppercase' },
     noteAiBadge: { fontSize: '10px', fontWeight: '600', padding: '2px 10px', borderRadius: RADIUS_PILL, background: 'rgba(139,92,246,0.12)', color: '#a78bfa', border: '1px solid rgba(139,92,246,0.25)', letterSpacing: '0.06em', textTransform: 'uppercase' },
     clientBadge: { fontSize: '11px', fontWeight: '600', padding: '2px 10px', borderRadius: RADIUS_PILL, background: 'rgba(96,165,250,0.12)', color: '#60a5fa', border: 'rgba(96,165,250,0.2)', textDecoration: 'none', transition: 'background 0.15s, box-shadow 0.15s' },
     noteBody: { fontSize: '14px', color: t.TEXT_MUTED, lineHeight: '1.65', margin: '0 0 10px', whiteSpace: 'pre-wrap', fontWeight: '300' },
@@ -367,7 +365,7 @@ export default function Notes() {
           @keyframes fadeUp { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
           @keyframes aiPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
           .note-card { animation: fadeUp 0.4s ease both; }
-          .note-card:hover { transform: translateY(-2px) !important; border-color: ${ACCENT_BORDER} !important; box-shadow: 0 8px 32px rgba(29,185,84,0.08) !important; }
+          .note-card:hover { transform: translateY(-2px) !important; border-color: ${t.ACCENT_BORDER} !important; box-shadow: 0 8px 32px ${t.ACCENT_MUTED} !important; }
           .client-name-badge:hover { background: rgba(96,165,250,0.25) !important; box-shadow: 0 0 0 2px rgba(96,165,250,0.3); }
           .expand-triangle { display: inline-block; width: 0; height: 0; border-top: 4px solid transparent; border-bottom: 4px solid transparent; border-left: 5px solid currentColor; transition: transform 0.2s ease; margin-left: 4px; vertical-align: middle; }
           .expand-triangle.open { transform: rotate(90deg); }

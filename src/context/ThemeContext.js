@@ -4,6 +4,8 @@ import {
   D_TEXT, D_TEXT_MUTED, D_TEXT_SUBTLE,
   L_BG, L_SURFACE, L_SURFACE_ALT, L_BORDER,
   L_TEXT, L_TEXT_MUTED, L_TEXT_SUBTLE,
+  ACCENT,        ACCENT_HOVER,        ACCENT_MUTED,        ACCENT_BORDER,
+  ACCENT_LIGHT,  ACCENT_HOVER_LIGHT,  ACCENT_MUTED_LIGHT,  ACCENT_BORDER_LIGHT,
 } from '../utils/hqConstants';
 
 const ThemeContext = createContext();
@@ -48,6 +50,10 @@ export function useTokens() {
     TEXT:        dark ? D_TEXT        : L_TEXT,
     TEXT_MUTED:  dark ? D_TEXT_MUTED  : L_TEXT_MUTED,
     TEXT_SUBTLE: dark ? D_TEXT_SUBTLE : L_TEXT_SUBTLE,
+    ACCENT:        dark ? ACCENT        : ACCENT_LIGHT,
+    ACCENT_HOVER:  dark ? ACCENT_HOVER  : ACCENT_HOVER_LIGHT,
+    ACCENT_MUTED:  dark ? ACCENT_MUTED  : ACCENT_MUTED_LIGHT,
+    ACCENT_BORDER: dark ? ACCENT_BORDER : ACCENT_BORDER_LIGHT,
     theme,
     isDark: dark,
   };

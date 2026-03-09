@@ -3,9 +3,6 @@ import { Link } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { useOrg } from '../context/OrgContext';
 import {
-  ACCENT,
-  ACCENT_BORDER,
-  ACCENT_MUTED,
   ASSET_LEVEL_OPTIONS,
   COMMUNICATION_FREQUENCY_OPTIONS,
   CONTACT_METHOD_OPTIONS,
@@ -20,12 +17,12 @@ import {
   RADIUS_PILL,
   REFERRAL_SOURCE_OPTIONS,
   RISK_TOLERANCE_OPTIONS,
-  SHADOW_MD,
   STATUS_COLORS,
   STATUS_OPTIONS,
   TAX_BRACKET_OPTIONS,
   TIME_HORIZON_OPTIONS,
   pageStyles,
+  MOBILE_BREAKPOINT,
 } from '../utils/hqConstants';
 import { useTokens } from '../context/ThemeContext';
 
@@ -66,7 +63,7 @@ export default function Clients() {
   const [advisorMapLoaded, setAdvisorMapLoaded] = useState(false);
   const windowWidth = useWindowWidth();
   const isCompact = windowWidth < 1050;
-  const isMobile = windowWidth < 600;
+  const isMobile = windowWidth < MOBILE_BREAKPOINT;
   const canSeeAdvisorPill = FULL_ACCESS_ROLES.includes(userRole);
 
   useEffect(() => {
@@ -221,8 +218,8 @@ export default function Clients() {
     },
     addButton: {
       background: 'transparent',
-      color: ACCENT,
-      border: `1px solid ${ACCENT_BORDER}`,
+      color: t.ACCENT,
+      border: `1px solid ${t.ACCENT_BORDER}`,
       borderRadius: RADIUS_MD,
       padding: '10px 20px',
       fontSize: '14px',
@@ -266,27 +263,27 @@ export default function Clients() {
       fontFamily: FONT_BODY,
     },
     tabActive: {
-      background: ACCENT_MUTED,
-      color: ACCENT,
-      border: `1px solid ${ACCENT_BORDER}`,
+      background: t.ACCENT_MUTED,
+      color: t.ACCENT,
+      border: `1px solid ${t.ACCENT_BORDER}`,
     },
     cardGrid: {
       display: 'flex',
       flexDirection: 'column',
-      gap: '10px',
-    },
-    card: {
-      background: t.SURFACE,
       border: `1px solid ${t.BORDER}`,
       borderRadius: RADIUS_LG,
-      padding: '18px 24px',
+      overflow: 'hidden',
+      background: t.SURFACE,
+    },
+    card: {
+      padding: '16px 24px',
       cursor: 'pointer',
-      transition: 'transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease',
+      transition: 'background 0.15s ease',
       display: 'flex',
       alignItems: isMobile ? 'flex-start' : 'center',
       flexDirection: isMobile ? 'column' : 'row',
       gap: isMobile ? '12px' : '24px',
-      boxShadow: SHADOW_MD,
+      borderBottom: `1px solid ${t.BORDER}`,
     },
     cardTop: {
       display: 'flex',
@@ -301,9 +298,9 @@ export default function Clients() {
       width: '40px',
       height: '40px',
       borderRadius: '50%',
-      background: ACCENT_MUTED,
-      border: `1px solid ${ACCENT_BORDER}`,
-      color: ACCENT,
+      background: t.ACCENT_MUTED,
+      border: `1px solid ${t.ACCENT_BORDER}`,
+      color: t.ACCENT,
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -327,13 +324,7 @@ export default function Clients() {
       margin: 0,
       fontWeight: '300',
     },
-    cardDivider: {
-      width: isMobile ? '100%' : '1px',
-      height: isMobile ? '1px' : 'auto',
-      alignSelf: 'stretch',
-      background: t.BORDER,
-      flexShrink: 0,
-    },
+    cardDivider: { display: 'none' },
     cardStats: {
       display: 'flex',
       gap: isMobile ? '16px' : '32px',
@@ -376,7 +367,7 @@ export default function Clients() {
       fontWeight: '300',
     },
     emptyLink: {
-      color: ACCENT,
+      color: t.ACCENT,
       cursor: 'pointer',
       textDecoration: 'underline',
     },
@@ -437,7 +428,7 @@ export default function Clients() {
       fontWeight: '600',
       textTransform: 'uppercase',
       letterSpacing: '0.12em',
-      color: ACCENT,
+      color: t.ACCENT,
       margin: '20px 0 12px',
     },
     formGrid: {
@@ -506,9 +497,9 @@ export default function Clients() {
     saveButton: {
       padding: '9px 20px',
       borderRadius: RADIUS_MD,
-      border: `1px solid ${ACCENT_BORDER}`,
-      background: ACCENT_MUTED,
-      color: ACCENT,
+      border: `1px solid ${t.ACCENT_BORDER}`,
+      background: t.ACCENT_MUTED,
+      color: t.ACCENT,
       fontSize: '14px',
       fontWeight: '600',
       cursor: 'pointer',
@@ -638,7 +629,7 @@ export default function Clients() {
                     )
                   )}
                   {client.status && (
-                    <span style={{ ...s.badge, backgroundColor: STATUS_COLORS[client.status]?.bg || ACCENT_MUTED, color: STATUS_COLORS[client.status]?.color || ACCENT }}>
+                    <span style={{ ...s.badge, backgroundColor: STATUS_COLORS[client.status]?.bg || t.ACCENT_MUTED, color: STATUS_COLORS[client.status]?.color || t.ACCENT }}>
                       {client.status}
                     </span>
                   )}
@@ -655,19 +646,16 @@ export default function Clients() {
             to   { opacity: 1; transform: translateY(0); }
           }
           .client-card { animation: fadeUp 0.45s ease both; }
-          .client-card:hover {
-            transform: translateY(-2px) !important;
-            border-color: ${ACCENT_BORDER} !important;
-            box-shadow: 0 8px 32px rgba(29,185,84,0.08) !important;
-          }
+          .client-card:hover { background: ${t.SURFACE_ALT} !important; }
+          .client-card:last-child { border-bottom: none !important; }
           .client-avatar { transition: background 0.2s, box-shadow 0.2s, transform 0.2s; }
           .client-avatar-link:hover .client-avatar {
-            background: ${ACCENT_MUTED} !important;
-            box-shadow: 0 0 0 2px ${ACCENT_BORDER};
+            background: ${t.ACCENT_MUTED} !important;
+            box-shadow: 0 0 0 2px ${t.ACCENT_BORDER};
             transform: scale(1.06);
           }
           .client-name-link { text-decoration: none; }
-          .client-name-link:hover h3 { color: ${ACCENT} !important; }
+          .client-name-link:hover h3 { color: ${t.ACCENT} !important; }
           .client-name-link h3 { transition: color 0.2s; }
         `}</style>
 

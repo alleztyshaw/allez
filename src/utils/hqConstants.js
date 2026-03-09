@@ -4,11 +4,17 @@
 // One edit here flows through every component automatically.
 // ============================================================
 
-// --- ACCENT — Allez Vert ---
-export const ACCENT        = '#1DB954'; // Neon emerald — same as Spotify
-export const ACCENT_HOVER  = '#24E066'; // Slightly brighter for hover states
-export const ACCENT_MUTED  = 'rgba(29, 185, 84, 0.13)';
-export const ACCENT_BORDER = 'rgba(29, 185, 84, 0.25)';
+// --- ACCENT — Allez Jade ---
+// Dark mode default
+export const ACCENT        = '#2E8B6E'; // Jewel jade — rich, premium, distinctive
+export const ACCENT_HOVER  = '#38A882'; // Slightly lighter for hover states
+export const ACCENT_MUTED  = 'rgba(46, 139, 110, 0.13)';
+export const ACCENT_BORDER = 'rgba(46, 139, 110, 0.25)';
+// Light mode variants (deeper for contrast on light surfaces)
+export const ACCENT_LIGHT        = '#1F6B52';
+export const ACCENT_HOVER_LIGHT  = '#2E8B6E';
+export const ACCENT_MUTED_LIGHT  = 'rgba(31, 107, 82, 0.13)';
+export const ACCENT_BORDER_LIGHT = 'rgba(31, 107, 82, 0.25)';
 
 // --- SITE ACCENT — Allez Capital Portfolio (allezcapital.com) ---
 export const SITE_ACCENT        = '#667eea'; // Purple — portfolio brand colour
@@ -64,6 +70,11 @@ export const SPACE_2XL = '64px';
 
 // --- SHADOWS ---
 export const SHADOW_SM = '0 1px 3px rgba(0,0,0,0.08)';
+
+// ── Layout ────────────────────────────────────────────────────────────────────
+export const SIDEBAR_WIDTH      = 220;  // px — desktop sidebar width
+export const SIDEBAR_BREAKPOINT = 900;  // px — sidebar collapses below this
+export const MOBILE_BREAKPOINT  = 900;  // px — single source of truth for isMobile
 export const SHADOW_MD = '0 4px 16px rgba(0,0,0,0.12)';
 export const SHADOW_LG = '0 8px 32px rgba(0,0,0,0.18)';
 
@@ -178,7 +189,7 @@ export const PIPELINE_STAGE_COLORS = {
   Proposal:   { bg: 'rgba(167,139,250,0.12)',  color: '#a78bfa' },
   Agreement:  { bg: 'rgba(251,191,36,0.12)',   color: '#fbbf24' },
   Onboarding: { bg: 'rgba(52,211,153,0.12)',   color: '#34d399' },
-  Active:     { bg: 'rgba(29,185,84,0.12)',    color: '#1DB954' },
+  Active:     { bg: 'rgba(46,139,110,0.12)',    color: '#2E8B6E' },
 };
 
 // ── Role tiers ────────────────────────────────────────────────────────────────

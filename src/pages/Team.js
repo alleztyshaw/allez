@@ -3,9 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { useOrg } from '../context/OrgContext';
 import {
-  ACCENT,
-  ACCENT_BORDER,
-  ACCENT_MUTED,
   FONT_BODY,
   FONT_DISPLAY,
   RADIUS_LG,
@@ -13,6 +10,10 @@ import {
   RADIUS_PILL,
   SHADOW_MD,
   pageStyles,
+  MOBILE_BREAKPOINT,
+  ACCENT,
+  ACCENT_MUTED,
+  ACCENT_BORDER,
 } from '../utils/hqConstants';
 import { useTokens } from '../context/ThemeContext';
 
@@ -37,7 +38,7 @@ const ROLE_DESCRIPTIONS = {
 };
 
 const ROLE_COLORS = {
-  admin:      { bg: ACCENT_MUTED,                    color: ACCENT },
+  admin:      { bg: ACCENT_MUTED, color: ACCENT },
   manager:    { bg: 'rgba(96,165,250,0.15)',          color: '#60a5fa' },
   advisor:    { bg: 'rgba(167,139,250,0.15)',         color: '#a78bfa' },
   associate:  { bg: 'rgba(251,191,36,0.15)',          color: '#fbbf24' },
@@ -47,7 +48,7 @@ const ROLE_COLORS = {
 export default function Team() {
   const t = useTokens();
   const windowWidth = useWindowWidth();
-  const isMobile = windowWidth < 600;
+  const isMobile = windowWidth < MOBILE_BREAKPOINT;
   const { orgId, isPlatformAdmin, isAdmin, orgLoading } = useOrg();
   const navigate = useNavigate();
 
@@ -142,9 +143,9 @@ export default function Team() {
       cursor: 'pointer', fontFamily: FONT_BODY,
     },
     orgTabActive: {
-      border: `1px solid ${ACCENT_BORDER}`,
-      background: ACCENT_MUTED,
-      color: ACCENT,
+      border: `1px solid ${t.ACCENT_BORDER}`,
+      background: t.ACCENT_MUTED,
+      color: t.ACCENT,
     },
     card: {
       background: t.SURFACE,
@@ -159,9 +160,9 @@ export default function Team() {
     },
     avatar: {
       width: '38px', height: '38px', borderRadius: '50%',
-      background: ACCENT_MUTED,
-      border: `1px solid ${ACCENT_BORDER}`,
-      color: ACCENT,
+      background: t.ACCENT_MUTED,
+      border: `1px solid ${t.ACCENT_BORDER}`,
+      color: t.ACCENT,
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       fontFamily: FONT_DISPLAY,
       fontSize: '16px', fontWeight: '400', flexShrink: 0,
@@ -182,9 +183,9 @@ export default function Team() {
       fontFamily: FONT_BODY, cursor: 'pointer',
     },
     saveButton: {
-      background: ACCENT_MUTED, border: `1px solid ${ACCENT_BORDER}`,
+      background: t.ACCENT_MUTED, border: `1px solid ${t.ACCENT_BORDER}`,
       borderRadius: RADIUS_MD, padding: '6px 14px',
-      fontSize: '12px', color: ACCENT, fontWeight: '600',
+      fontSize: '12px', color: t.ACCENT, fontWeight: '600',
       cursor: 'pointer', fontFamily: FONT_BODY,
     },
     cancelButton: {
@@ -205,7 +206,7 @@ export default function Team() {
     inviteTitle: {
       fontSize: '10px', fontWeight: '600',
       textTransform: 'uppercase', letterSpacing: '0.12em',
-      color: ACCENT, margin: '0 0 16px',
+      color: t.ACCENT, margin: '0 0 16px',
     },
     input: {
       background: t.SURFACE_ALT, border: `1px solid ${t.BORDER}`,
@@ -215,9 +216,9 @@ export default function Team() {
       boxSizing: 'border-box', outline: 'none',
     },
     addButton: {
-      background: 'transparent', border: `1px solid ${ACCENT_BORDER}`,
+      background: 'transparent', border: `1px solid ${t.ACCENT_BORDER}`,
       borderRadius: RADIUS_MD, padding: '10px 20px',
-      fontSize: '14px', color: ACCENT, fontWeight: '600',
+      fontSize: '14px', color: t.ACCENT, fontWeight: '600',
       cursor: 'pointer', fontFamily: FONT_BODY,
     },
   };
@@ -228,7 +229,7 @@ export default function Team() {
           @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=DM+Sans:wght@300;400;500;600&display=swap');
           @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
           .member-card { transition: border-color 0.2s ease, box-shadow 0.2s ease; }
-          .member-card:hover { border-color: ${ACCENT_BORDER} !important; box-shadow: 0 4px 20px rgba(29,185,84,0.07) !important; }
+          .member-card:hover { border-color: ${t.ACCENT_BORDER} !important; box-shadow: 0 4px 20px ${t.ACCENT_MUTED} !important; }
         `}</style>
       <div style={s.page}>
 
@@ -236,9 +237,9 @@ export default function Team() {
         {toast && (
           <div style={{
             position: 'fixed', bottom: '32px', right: '32px',
-            background: toast.type === 'success' ? ACCENT_MUTED : 'rgba(248,113,113,0.15)',
-            border: `1px solid ${toast.type === 'success' ? ACCENT_BORDER : '#f87171'}`,
-            color: toast.type === 'success' ? ACCENT : '#f87171',
+            background: toast.type === 'success' ? t.ACCENT_MUTED : 'rgba(248,113,113,0.15)',
+            border: `1px solid ${toast.type === 'success' ? t.ACCENT_BORDER : '#f87171'}`,
+            color: toast.type === 'success' ? t.ACCENT : '#f87171',
             borderRadius: RADIUS_LG, padding: '14px 20px',
             fontSize: '14px', fontFamily: FONT_BODY,
             zIndex: 1000, backdropFilter: 'blur(8px)',

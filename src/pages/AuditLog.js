@@ -2,13 +2,13 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../supabaseClient';
 import { useOrg } from '../context/OrgContext';
 import {
-  ACCENT,
   FONT_BODY, FONT_DISPLAY,
   RADIUS_LG, RADIUS_MD, RADIUS_PILL,
   SHADOW_MD,
   FULL_ACCESS_ROLES,
   pageStyles,
   FW_LIGHT, FW_REGULAR, FW_SEMIBOLD,
+  MOBILE_BREAKPOINT,
 } from '../utils/hqConstants';
 import { useTokens } from '../context/ThemeContext';
 
@@ -119,7 +119,7 @@ export default function AuditLog() {
   const t = useTokens();
   const { orgId, userRole: contextRole } = useOrg();
   const windowWidth = useWindowWidth();
-  const isMobile = windowWidth < 600;
+  const isMobile = windowWidth < MOBILE_BREAKPOINT;
 
   const [logs, setLogs]           = useState([]);
   const [members, setMembers]     = useState([]);
@@ -214,7 +214,7 @@ export default function AuditLog() {
     logMain:      { flex: 1, minWidth: 0 },
     logLabel:     { fontSize: '15px', fontWeight: FW_REGULAR, color: t.TEXT, margin: '0 0 2px', fontFamily: FONT_DISPLAY, letterSpacing: '0.01em' },
     logMeta:      { fontSize: '12px', color: t.TEXT_MUTED, fontWeight: FW_LIGHT, fontFamily: FONT_BODY },
-    expandBtn:    { background: 'none', border: 'none', color: ACCENT, fontSize: '11px', fontWeight: FW_SEMIBOLD, cursor: 'pointer', padding: '4px 0 0', fontFamily: FONT_BODY },
+    expandBtn:    { background: 'none', border: 'none', color: t.ACCENT, fontSize: '11px', fontWeight: FW_SEMIBOLD, cursor: 'pointer', padding: '4px 0 0', fontFamily: FONT_BODY },
     changeRow:    { display: 'flex', gap: '8px', alignItems: 'baseline', padding: '4px 0', borderBottom: `1px solid ${t.BORDER}` },
     changeField:  { fontSize: '11px', fontWeight: FW_SEMIBOLD, color: t.TEXT_MUTED, fontFamily: FONT_BODY, minWidth: '140px', flexShrink: 0 },
     changeOld:    { fontSize: '12px', color: '#f87171', fontWeight: FW_LIGHT, fontFamily: FONT_BODY, textDecoration: 'line-through', flex: 1 },

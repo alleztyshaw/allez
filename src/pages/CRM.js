@@ -3,12 +3,12 @@ import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { useOrg } from '../context/OrgContext';
 import {
-  ACCENT, ACCENT_BORDER, ACCENT_MUTED,
   FONT_BODY, FONT_DISPLAY,
   PIPELINE_STAGES, PIPELINE_STAGE_COLORS,
   RADIUS_LG, RADIUS_MD, RADIUS_PILL,
   SHADOW_MD,
   pageStyles,
+  MOBILE_BREAKPOINT,
 } from '../utils/hqConstants';
 import { useTokens } from '../context/ThemeContext';
 
@@ -78,8 +78,8 @@ export default function CRM() {
   const navigate = useNavigate();
   const { orgId } = useOrg();
   const windowWidth = useWindowWidth();
-  const isMobile = windowWidth < 600;
-  const isTablet = windowWidth < 900;
+  const isMobile = windowWidth < MOBILE_BREAKPOINT;
+  const isTablet = windowWidth < 1100;
 
   const [tab, setTab] = useState('Tasks');
   const [clients, setClients] = useState([]);
@@ -187,7 +187,7 @@ export default function CRM() {
   const s = {
     ...pageStyles(t, isMobile),
     pageHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? '12px' : '0', marginBottom: '32px' },
-    addButton: { background: 'transparent', color: ACCENT, border: `1px solid ${ACCENT_BORDER}`, borderRadius: RADIUS_MD, padding: '10px 20px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: FONT_BODY },
+    addButton: { background: 'transparent', color: t.ACCENT, border: `1px solid ${t.ACCENT_BORDER}`, borderRadius: RADIUS_MD, padding: '10px 20px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: FONT_BODY },
 
     // BI bar
     biBar: { display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : isTablet ? 'repeat(3, 1fr)' : 'repeat(5, 1fr)', gap: '12px', marginBottom: '32px' },
@@ -200,9 +200,9 @@ export default function CRM() {
     tabRow: { display: 'flex', gap: '4px', marginBottom: '28px', borderBottom: `1px solid ${t.BORDER}`, paddingBottom: '0' },
     tab: (active) => ({
       padding: '10px 20px', fontSize: '13px', fontWeight: '500',
-      color: active ? ACCENT : t.TEXT_MUTED,
+      color: active ? t.ACCENT : t.TEXT_MUTED,
       background: 'none', border: 'none', cursor: 'pointer',
-      borderBottom: active ? `2px solid ${ACCENT}` : '2px solid transparent',
+      borderBottom: active ? `2px solid ${t.ACCENT}` : '2px solid transparent',
       marginBottom: '-1px', fontFamily: FONT_BODY,
       transition: 'color 0.15s',
     }),
@@ -223,9 +223,9 @@ export default function CRM() {
     dueBadge: (today, soon, overdue) => ({
       fontSize: '10px', fontWeight: '600', padding: '2px 10px',
       borderRadius: RADIUS_PILL,
-      background: overdue ? 'rgba(248,113,113,0.12)' : today ? ACCENT_MUTED : soon ? 'rgba(251,191,36,0.12)' : 'rgba(96,165,250,0.12)',
-      color: overdue ? '#f87171' : today ? ACCENT : soon ? '#fbbf24' : '#60a5fa',
-      border: `1px solid ${overdue ? 'rgba(248,113,113,0.3)' : today ? ACCENT_BORDER : soon ? 'rgba(251,191,36,0.3)' : 'rgba(96,165,250,0.3)'}`,
+      background: overdue ? 'rgba(248,113,113,0.12)' : today ? t.ACCENT_MUTED : soon ? 'rgba(251,191,36,0.12)' : 'rgba(96,165,250,0.12)',
+      color: overdue ? '#f87171' : today ? t.ACCENT : soon ? '#fbbf24' : '#60a5fa',
+      border: `1px solid ${overdue ? 'rgba(248,113,113,0.3)' : today ? t.ACCENT_BORDER : soon ? 'rgba(251,191,36,0.3)' : 'rgba(96,165,250,0.3)'}`,
       flexShrink: 0,
     }),
     deleteAction: { background: 'none', border: 'none', cursor: 'pointer', fontSize: '11px', color: t.TEXT_MUTED, padding: 0, fontFamily: FONT_BODY },
@@ -238,11 +238,11 @@ export default function CRM() {
     input: { border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_MD, padding: '8px 12px', fontSize: '14px', outline: 'none', color: t.TEXT, background: t.SURFACE_ALT, fontFamily: FONT_BODY },
     formFooter: { display: 'flex', justifyContent: 'flex-end', gap: '10px' },
     cancelButton: { padding: '8px 18px', borderRadius: RADIUS_MD, border: `1px solid ${t.BORDER}`, background: 'transparent', fontSize: '13px', cursor: 'pointer', color: t.TEXT_MUTED, fontFamily: FONT_BODY },
-    saveButton: { padding: '8px 18px', borderRadius: RADIUS_MD, border: `1px solid ${ACCENT_BORDER}`, background: ACCENT_MUTED, color: ACCENT, fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: FONT_BODY },
+    saveButton: { padding: '8px 18px', borderRadius: RADIUS_MD, border: `1px solid ${t.ACCENT_BORDER}`, background: t.ACCENT_MUTED, color: t.ACCENT, fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: FONT_BODY },
 
     // Activity
     activityCard: { background: t.SURFACE, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_LG, padding: '14px 20px', marginBottom: '8px', boxShadow: SHADOW_MD, display: 'flex', alignItems: 'center', gap: '14px' },
-    activityDot: (type) => ({ width: '8px', height: '8px', borderRadius: '50%', flexShrink: 0, background: type === 'note' ? ACCENT : '#60a5fa' }),
+    activityDot: (type) => ({ width: '8px', height: '8px', borderRadius: '50%', flexShrink: 0, background: type === 'note' ? t.ACCENT : '#60a5fa' }),
     activityLabel: { flex: 1, fontSize: '14px', color: t.TEXT, margin: 0 },
     activitySub: { fontSize: '11px', color: t.TEXT_MUTED, margin: '2px 0 0', fontWeight: '300' },
     activityTime: { fontSize: '11px', color: t.TEXT_SUBTLE, flexShrink: 0, fontWeight: '300' },
@@ -263,7 +263,7 @@ export default function CRM() {
     <div style={s.pageWrapper}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=DM+Sans:wght@300;400;500;600&display=swap');
-        .task-check:hover { border-color: ${ACCENT} !important; }
+        .task-check:hover { border-color: ${t.ACCENT} !important; }
       `}</style>
       <div style={s.page}>
 
@@ -332,7 +332,7 @@ export default function CRM() {
                 {/* New task form */}
                 {showTaskForm && (
                   <div style={s.formCard}>
-                    <p style={{ fontSize: '10px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.12em', color: ACCENT, margin: '0 0 14px' }}>New Task</p>
+                    <p style={{ fontSize: '10px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.12em', color: t.ACCENT, margin: '0 0 14px' }}>New Task</p>
                     <div style={s.formRow}>
                       <div style={{ ...s.formField, flex: 3, minWidth: '220px' }}>
                         <label style={s.label}>Task *</label>
@@ -377,7 +377,7 @@ export default function CRM() {
                 {/* Due Today */}
                 {tasks.filter(t => !t.completed && isToday(t.due_date)).length > 0 && (
                   <div style={{ marginBottom: '24px' }}>
-                    <p style={{ ...s.sectionLabel, color: ACCENT }}>Due Today</p>
+                    <p style={{ ...s.sectionLabel, color: t.ACCENT }}>Due Today</p>
                     {tasks.filter(t => !t.completed && isToday(t.due_date)).map(task => (
                       <TaskRow key={task.id} task={task} clientName={clientName} onComplete={handleCompleteTask} onDelete={handleDeleteTask} onEdit={openEditTask} s={s} t={t} navigate={navigate} clients={clients} />
                     ))}
@@ -410,8 +410,8 @@ export default function CRM() {
                     <p style={{ ...s.sectionLabel, opacity: 0.6 }}>Completed</p>
                     {tasks.filter(t => t.completed).slice(0, 10).map(task => (
                       <div key={task.id} style={{ ...s.taskCard, opacity: 0.5 }}>
-                        <div style={{ ...s.taskCheck, background: ACCENT_MUTED, borderColor: ACCENT }}>
-                          <span style={{ fontSize: '9px', color: ACCENT }}>✓</span>
+                        <div style={{ ...s.taskCheck, background: t.ACCENT_MUTED, borderColor: t.ACCENT }}>
+                          <span style={{ fontSize: '9px', color: t.ACCENT }}>✓</span>
                         </div>
                         <div style={{ flex: 1 }}>
                           <p style={{ ...s.taskTitle, textDecoration: 'line-through', color: t.TEXT_MUTED }}>{task.title}</p>
@@ -486,7 +486,7 @@ export default function CRM() {
                           {item.type === 'note' ? item.sub : 'Task completed'}
                           {item.client_id && ` · `}
                           {item.client_id && (
-                            <Link to={`/hq/clients/${item.client_id}`} state={{ from: '/hq/crm' }} style={{ color: ACCENT, textDecoration: 'none' }}>
+                            <Link to={`/hq/clients/${item.client_id}`} state={{ from: '/hq/crm' }} style={{ color: t.ACCENT, textDecoration: 'none' }}>
                               {clientName(item.client_id)}
                             </Link>
                           )}
@@ -511,9 +511,9 @@ function TaskRow({ task, clientName, onComplete, onDelete, onEdit, s, t, navigat
   const overdue = isOverdue(task.due_date);
   const soon = isDueSoon(task.due_date);
   const today = isToday(task.due_date);
-  const checkColor = overdue ? '#f87171' : today ? ACCENT : soon ? '#fbbf24' : '#60a5fa';
+  const checkColor = overdue ? '#f87171' : today ? t.ACCENT : soon ? '#fbbf24' : '#60a5fa';
   const hasNotes = task.notes && task.notes.trim().length > 0;
-  const dueDateColor = overdue ? '#f87171' : today ? ACCENT : soon ? '#fbbf24' : t.TEXT_MUTED;
+  const dueDateColor = overdue ? '#f87171' : today ? t.ACCENT : soon ? '#fbbf24' : t.TEXT_MUTED;
 
   return (
     <div style={{ background: t.SURFACE, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_LG, marginBottom: '10px', boxShadow: SHADOW_MD, overflow: 'hidden' }}>
@@ -656,9 +656,9 @@ function PipelineTable({ clients, navigate, s, t, isMobile, orgId, onStageChange
           onClick={() => setStageFilter('All')}
           style={{
             padding: '5px 14px', borderRadius: RADIUS_PILL, fontSize: '12px', fontWeight: '600',
-            cursor: 'pointer', fontFamily: FONT_BODY, border: `1px solid ${stageFilter === 'All' ? ACCENT : 'transparent'}`,
-            background: stageFilter === 'All' ? ACCENT_MUTED : t.SURFACE_ALT,
-            color: stageFilter === 'All' ? ACCENT : t.TEXT_MUTED, transition: 'all 0.15s',
+            cursor: 'pointer', fontFamily: FONT_BODY, border: `1px solid ${stageFilter === 'All' ? t.ACCENT : 'transparent'}`,
+            background: stageFilter === 'All' ? t.ACCENT_MUTED : t.SURFACE_ALT,
+            color: stageFilter === 'All' ? t.ACCENT : t.TEXT_MUTED, transition: 'all 0.15s',
           }}
         >
           All ({pipelineClients.length})
@@ -736,7 +736,7 @@ function PipelineTable({ clients, navigate, s, t, isMobile, orgId, onStageChange
                   opacity: isSaving ? 0.6 : 1,
                   transition: 'opacity 0.2s',
                 }}
-                onMouseEnter={e => e.currentTarget.style.background = `${ACCENT}08`}
+                onMouseEnter={e => e.currentTarget.style.background = `${t.ACCENT}08`}
                 onMouseLeave={e => e.currentTarget.style.background = i % 2 === 0 ? t.SURFACE : t.SURFACE_ALT}
               >
                 {/* Name — clickable */}
@@ -790,7 +790,7 @@ function PipelineTable({ clients, navigate, s, t, isMobile, orgId, onStageChange
 
                 {/* AUM */}
                 {!isMobile && (
-                  <div style={{ fontSize: '13px', color: client.aum ? ACCENT : t.TEXT_SUBTLE, fontWeight: client.aum ? '500' : '300' }}>
+                  <div style={{ fontSize: '13px', color: client.aum ? t.ACCENT : t.TEXT_SUBTLE, fontWeight: client.aum ? '500' : '300' }}>
                     {formatAUM(client.aum)}
                   </div>
                 )}
@@ -819,9 +819,9 @@ function PipelineTable({ clients, navigate, s, t, isMobile, orgId, onStageChange
                       onClick={() => handleStageChange(client, nextStage.key)}
                       disabled={isSaving}
                       style={{
-                        background: ACCENT_MUTED, border: `1px solid ${ACCENT_BORDER}`,
+                        background: t.ACCENT_MUTED, border: `1px solid ${t.ACCENT_BORDER}`,
                         borderRadius: RADIUS_MD, padding: '3px 8px',
-                        fontSize: '11px', color: ACCENT, fontWeight: '600',
+                        fontSize: '11px', color: t.ACCENT, fontWeight: '600',
                         cursor: 'pointer', fontFamily: FONT_BODY,
                         display: 'flex', alignItems: 'center', gap: '3px',
                       }}

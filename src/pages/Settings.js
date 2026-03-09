@@ -2,11 +2,11 @@ import { useState, useEffect } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { supabase } from '../supabaseClient';
 import {
-  ACCENT, ACCENT_MUTED, ACCENT_BORDER,
   FONT_BODY,
   RADIUS_MD, RADIUS_LG,
   SHADOW_MD,
   pageStyles,
+  MOBILE_BREAKPOINT,
 } from '../utils/hqConstants';
 import { useTokens } from '../context/ThemeContext';
 
@@ -24,7 +24,7 @@ export default function Settings() {
   const { theme, toggleTheme } = useTheme();
   const t = useTokens();
   const windowWidth = useWindowWidth();
-  const isMobile = windowWidth < 600;
+  const isMobile = windowWidth < MOBILE_BREAKPOINT;
   const [displayName, setDisplayName] = useState('');
   const [displayNameInput, setDisplayNameInput] = useState('');
   const [displayNameEditing, setDisplayNameEditing] = useState(false);
@@ -102,7 +102,7 @@ export default function Settings() {
     },
     sectionLabel: {
       fontSize: '10px', fontWeight: '600', textTransform: 'uppercase',
-      letterSpacing: '0.12em', color: ACCENT,
+      letterSpacing: '0.12em', color: t.ACCENT,
       padding: '20px 24px 0', margin: '0 0 4px',
     },
     row: {
@@ -127,9 +127,9 @@ export default function Settings() {
       outline: 'none', width: '100%', boxSizing: 'border-box',
     },
     saveButton: {
-      background: ACCENT_MUTED, border: `1px solid ${ACCENT_BORDER}`,
+      background: t.ACCENT_MUTED, border: `1px solid ${t.ACCENT_BORDER}`,
       borderRadius: RADIUS_MD, padding: '7px 16px',
-      fontSize: '12px', color: ACCENT, fontWeight: '600',
+      fontSize: '12px', color: t.ACCENT, fontWeight: '600',
       cursor: 'pointer', fontFamily: FONT_BODY, flexShrink: 0,
     },
     cancelButton: {
@@ -138,13 +138,13 @@ export default function Settings() {
       fontSize: '12px', color: t.TEXT_MUTED,
       cursor: 'pointer', fontFamily: FONT_BODY, flexShrink: 0,
     },
-    successText: { fontSize: '12px', color: ACCENT, margin: 0, fontWeight: '400' },
+    successText: { fontSize: '12px', color: t.ACCENT, margin: 0, fontWeight: '400' },
     errorText: { fontSize: '12px', color: '#f87171', margin: '8px 0 0' },
     track: {
       position: 'relative', width: '51px', height: '31px',
       borderRadius: '31px',
-      background: isDark ? ACCENT : t.BORDER,
-      border: `2px solid ${isDark ? ACCENT : t.BORDER}`,
+      background: isDark ? t.ACCENT : t.BORDER,
+      border: `2px solid ${isDark ? t.ACCENT : t.BORDER}`,
       cursor: 'pointer', flexShrink: 0,
       transition: 'background 0.25s ease, border-color 0.25s ease',
     },

@@ -201,8 +201,8 @@ export default function Login() {
                 <div style={s.featureCardTop}>
                   <span style={{
                     ...s.featureBadge,
-                    background: f.status === 'Live' ? 'rgba(29,185,84,0.12)' : 'rgba(0,0,0,0.06)',
-                    color: f.status === 'Live' ? '#1DB954' : '#999',
+                    background: f.status === 'Live' ? '${t.ACCENT_MUTED}' : 'rgba(0,0,0,0.06)',
+                    color: f.status === 'Live' ? '${t.ACCENT}' : '#999',
                   }}>
                     {f.status}
                   </span>

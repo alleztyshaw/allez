@@ -3,11 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { useOrg } from '../context/OrgContext';
 import {
-  ACCENT, ACCENT_MUTED, ACCENT_BORDER,
   FONT_DISPLAY, FONT_BODY,
   RADIUS_MD, RADIUS_LG, RADIUS_PILL,
   SHADOW_MD,
   pageStyles,
+  MOBILE_BREAKPOINT,
 } from '../utils/hqConstants';
 import { useTokens } from '../context/ThemeContext';
 
@@ -26,7 +26,7 @@ export default function Orgs() {
   const navigate = useNavigate();
   const t = useTokens();
   const windowWidth = useWindowWidth();
-  const isMobile = windowWidth < 600;
+  const isMobile = windowWidth < MOBILE_BREAKPOINT;
 
   const [orgs, setOrgs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -123,9 +123,9 @@ export default function Orgs() {
   const s = {
     ...pageStyles(t, isMobile),
     addButton: {
-      background: 'transparent', border: `1px solid ${ACCENT_BORDER}`,
+      background: 'transparent', border: `1px solid ${t.ACCENT_BORDER}`,
       borderRadius: RADIUS_MD, padding: '10px 20px',
-      fontSize: '14px', color: ACCENT, fontWeight: '600',
+      fontSize: '14px', color: t.ACCENT, fontWeight: '600',
       cursor: 'pointer', fontFamily: FONT_BODY,
     },
     formCard: {
@@ -135,7 +135,7 @@ export default function Orgs() {
     },
     formLabel: {
       fontSize: '10px', fontWeight: '600', textTransform: 'uppercase',
-      letterSpacing: '0.12em', color: ACCENT, margin: '0 0 16px',
+      letterSpacing: '0.12em', color: t.ACCENT, margin: '0 0 16px',
     },
     input: {
       background: t.SURFACE_ALT, border: `1px solid ${t.BORDER}`,
@@ -147,9 +147,9 @@ export default function Orgs() {
     checkLabel: { fontSize: '13px', color: t.TEXT_MUTED, fontWeight: '300' },
     formActions: { display: 'flex', gap: '10px', marginTop: '20px' },
     saveButton: {
-      background: ACCENT_MUTED, border: `1px solid ${ACCENT_BORDER}`,
+      background: t.ACCENT_MUTED, border: `1px solid ${t.ACCENT_BORDER}`,
       borderRadius: RADIUS_MD, padding: '8px 20px',
-      fontSize: '13px', color: ACCENT, fontWeight: '600',
+      fontSize: '13px', color: t.ACCENT, fontWeight: '600',
       cursor: 'pointer', fontFamily: FONT_BODY,
     },
     cancelButton: {
@@ -163,8 +163,8 @@ export default function Orgs() {
       background: t.SURFACE, border: `1px solid ${t.BORDER}`,
       borderRadius: RADIUS_LG, boxShadow: SHADOW_MD,
       marginBottom: '10px', overflow: 'hidden',
-      '--pulse-color': ACCENT_BORDER,
-      '--pulse-glow': `${ACCENT}22`,
+      '--pulse-color': t.ACCENT_BORDER,
+      '--pulse-glow': `${t.ACCENT}22`,
       '--border-color': t.BORDER,
     },
     orgRow: {
@@ -175,8 +175,8 @@ export default function Orgs() {
     },
     avatar: {
       width: '38px', height: '38px', borderRadius: '50%',
-      background: ACCENT_MUTED, border: `1px solid ${ACCENT_BORDER}`,
-      color: ACCENT, display: 'flex', alignItems: 'center',
+      background: t.ACCENT_MUTED, border: `1px solid ${t.ACCENT_BORDER}`,
+      color: t.ACCENT, display: 'flex', alignItems: 'center',
       justifyContent: 'center', fontFamily: FONT_DISPLAY,
       fontSize: '16px', fontWeight: '400', flexShrink: 0,
     },
@@ -186,7 +186,7 @@ export default function Orgs() {
     platformBadge: {
       fontSize: '10px', fontWeight: '600', textTransform: 'uppercase',
       letterSpacing: '0.08em', padding: '3px 10px', borderRadius: RADIUS_PILL,
-      background: ACCENT_MUTED, color: ACCENT, border: `1px solid ${ACCENT_BORDER}`,
+      background: t.ACCENT_MUTED, color: t.ACCENT, border: `1px solid ${t.ACCENT_BORDER}`,
     },
     regularBadge: {
       fontSize: '10px', fontWeight: '500', textTransform: 'uppercase',
@@ -195,7 +195,7 @@ export default function Orgs() {
     },
     statusBadge: (status) => {
       const map = {
-        active:     { bg: 'rgba(29,185,84,0.12)',   color: '#1DB954' },
+        active:     { bg: '${t.ACCENT_MUTED}',   color: '${t.ACCENT}' },
         onboarding: { bg: 'rgba(251,191,36,0.15)',  color: '#fbbf24' },
         former:     { bg: 'rgba(156,163,175,0.15)', color: '#9ca3af' },
       };
@@ -224,7 +224,7 @@ export default function Orgs() {
     statBlock: { display: 'flex', flexDirection: 'column', gap: '4px' },
     statNumber: {
       fontFamily: FONT_BODY, fontSize: '24px',
-      fontWeight: '300', color: ACCENT, lineHeight: 1,
+      fontWeight: '300', color: t.ACCENT, lineHeight: 1,
     },
     statLabel: {
       fontSize: '10px', color: t.TEXT_MUTED, fontWeight: '500',
@@ -252,9 +252,9 @@ export default function Orgs() {
       {toast && (
         <div style={{
           position: 'fixed', bottom: '32px', right: '32px',
-          background: toast.type === 'success' ? ACCENT_MUTED : 'rgba(248,113,113,0.15)',
-          border: `1px solid ${toast.type === 'success' ? ACCENT_BORDER : '#f87171'}`,
-          color: toast.type === 'success' ? ACCENT : '#f87171',
+          background: toast.type === 'success' ? t.ACCENT_MUTED : 'rgba(248,113,113,0.15)',
+          border: `1px solid ${toast.type === 'success' ? t.ACCENT_BORDER : '#f87171'}`,
+          color: toast.type === 'success' ? t.ACCENT : '#f87171',
           borderRadius: RADIUS_LG, padding: '14px 20px',
           fontSize: '14px', fontFamily: FONT_BODY, zIndex: 1000,
           backdropFilter: 'blur(8px)', boxShadow: '0 8px 24px rgba(0,0,0,0.3)',

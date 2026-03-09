@@ -2,9 +2,6 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import {
-  ACCENT,
-  ACCENT_BORDER,
-  ACCENT_MUTED,
   FONT_BODY,
   FONT_DISPLAY,
   RADIUS_LG,
@@ -12,6 +9,7 @@ import {
   RADIUS_PILL,
   SHADOW_MD,
   pageStyles,
+  MOBILE_BREAKPOINT,
 } from '../utils/hqConstants';
 import { useTokens } from '../context/ThemeContext';
 import { useOrg } from '../context/OrgContext';
@@ -42,7 +40,7 @@ export default function HQ() {
   const navigate = useNavigate();
   const t = useTokens();
   const windowWidth = useWindowWidth();
-  const isMobile = windowWidth < 600;
+  const isMobile = windowWidth < MOBILE_BREAKPOINT;
   const { orgId } = useOrg();
   const [metrics, setMetrics] = useState({});
   const [metricsLoading, setMetricsLoading] = useState(true);
@@ -73,22 +71,22 @@ export default function HQ() {
     header: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '28px' },
     date: { fontSize: '13px', color: t.TEXT_SUBTLE, fontWeight: 300, letterSpacing: '0.03em' },
     roleBadge: { display: 'flex', alignItems: 'center', gap: '6px', background: t.SURFACE, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_PILL, padding: '6px 14px', marginBottom: '4px' },
-    roleDot: { width: '6px', height: '6px', borderRadius: '50%', background: ACCENT, display: 'inline-block', flexShrink: 0 },
+    roleDot: { width: '6px', height: '6px', borderRadius: '50%', background: t.ACCENT, display: 'inline-block', flexShrink: 0 },
     roleText: { fontSize: '12px', fontWeight: 600, color: t.TEXT, letterSpacing: '0.04em' },
     divider: { height: '1px', background: t.BORDER, marginBottom: '36px' },
     grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '20px', marginBottom: '48px' },
     card: { background: t.SURFACE, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_LG, padding: '24px', display: 'flex', flexDirection: 'column', minHeight: '220px', boxShadow: SHADOW_MD },
     cardDimmed: { background: t.SURFACE_ALT, opacity: 0.6 },
     cardTop: { marginBottom: '16px' },
-    liveBadge: { fontSize: '10px', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: ACCENT, background: ACCENT_MUTED, border: `1px solid ${ACCENT_BORDER}`, padding: '3px 10px', borderRadius: RADIUS_PILL },
+    liveBadge: { fontSize: '10px', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: t.ACCENT, background: t.ACCENT_MUTED, border: `1px solid ${t.ACCENT_BORDER}`, padding: '3px 10px', borderRadius: RADIUS_PILL },
     soonBadge: { fontSize: '10px', fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase', color: t.TEXT_MUTED, background: t.SURFACE_ALT, padding: '3px 10px', borderRadius: RADIUS_PILL },
     cardTitle: { fontFamily: FONT_DISPLAY, fontSize: '22px', fontWeight: 400, color: t.TEXT, margin: '0 0 10px', letterSpacing: '0.01em', lineHeight: 1.2 },
     cardDesc: { fontSize: '13px', color: t.TEXT_MUTED, lineHeight: 1.65, fontWeight: 300, flex: 1, margin: '0 0 20px' },
     cardFooter: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 'auto' },
     metric: { display: 'flex', flexDirection: 'column', gap: '2px' },
-    metricNumber: { fontFamily: FONT_BODY, fontSize: '24px', fontWeight: 300, color: ACCENT, lineHeight: 1 },
+    metricNumber: { fontFamily: FONT_BODY, fontSize: '24px', fontWeight: 300, color: t.ACCENT, lineHeight: 1 },
     metricLabel: { fontSize: '10px', color: t.TEXT_MUTED, letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 500 },
-    openBtn: { background: 'transparent', border: `1px solid ${t.BORDER}`, color: ACCENT, borderRadius: RADIUS_MD, padding: '7px 16px', fontSize: '13px', fontWeight: 500, cursor: 'pointer', fontFamily: FONT_BODY },
+    openBtn: { background: 'transparent', border: `1px solid ${t.BORDER}`, color: t.ACCENT, borderRadius: RADIUS_MD, padding: '7px 16px', fontSize: '13px', fontWeight: 500, cursor: 'pointer', fontFamily: FONT_BODY },
   };
 
   return (
@@ -99,8 +97,8 @@ export default function HQ() {
           @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
           .hq-card { animation: fadeUp 0.4s ease both; }
           .hq-card-live { transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease; cursor: pointer; }
-          .hq-card-live:hover { border-color: ${ACCENT_BORDER} !important; transform: translateY(-2px); box-shadow: 0 8px 32px rgba(29,185,84,0.1) !important; }
-          .hq-open-btn:hover { background: ${ACCENT} !important; color: #fff !important; }
+          .hq-card-live:hover { border-color: ${t.ACCENT_BORDER} !important; transform: translateY(-2px); box-shadow: 0 8px 32px ${t.ACCENT_MUTED} !important; }
+          .hq-open-btn:hover { background: ${t.ACCENT} !important; color: #fff !important; }
         `}</style>
 
         <div style={s.header}>
