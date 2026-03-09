@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { ACCENT, ACCENT_MUTED } from '../utils/hqConstants';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 
 export default function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const wasIdled  = new URLSearchParams(location.search).get('reason') === 'idle';
   const [showLogin, setShowLogin] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -96,6 +98,24 @@ export default function Login() {
           {showLogin ? 'Close' : 'Sign In'}
         </button>
       </header>
+
+      {/* Idle timeout notice */}
+      {wasIdled && (
+        <div style={{
+          position: 'fixed', top: '24px', left: '50%', transform: 'translateX(-50%)',
+          backgroundColor: 'rgba(255,255,255,0.07)',
+          border: '1px solid rgba(255,255,255,0.12)',
+          borderRadius: '8px',
+          padding: '12px 20px',
+          fontSize: '13px',
+          color: 'rgba(255,255,255,0.6)',
+          fontFamily: "'DM Sans', sans-serif",
+          whiteSpace: 'nowrap',
+          zIndex: 100,
+        }}>
+          You were signed out due to inactivity. Please sign in again.
+        </div>
+      )}
 
       {/* Login card */}
       {showLogin && (

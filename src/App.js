@@ -17,10 +17,12 @@ import Settings from './pages/Settings';
 import Orgs from './pages/Orgs';
 import AuditLog from './pages/AuditLog';
 import { TOPBAR_HEIGHT } from './utils/hqConstants';
+import useIdleTimeout from './hooks/useIdleTimeout';
 import './App.css';
 
 function ProtectedLayout({ children }) {
   const t = useTokens();
+  useIdleTimeout();
   return (
     <ProtectedRoute>
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: t.BG }}>
