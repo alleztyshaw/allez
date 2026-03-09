@@ -11,6 +11,16 @@ body {
   overflow-x: hidden;
 }
 
+/* ── iOS auto-zoom fix ───────────────────────────────────────────────────── */
+/* iOS Safari zooms in on any input with font-size < 16px. This overrides    */
+/* the 14px we use on inputs in design, but only on mobile — desktop is      */
+/* unaffected. Visual difference is negligible at this size difference.      */
+@media screen and (max-width: 900px) {
+  input, textarea, select {
+    font-size: 16px !important;
+  }
+}
+
 .App {
   min-height: 100vh;
   display: flex;
