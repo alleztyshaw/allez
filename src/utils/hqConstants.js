@@ -81,6 +81,31 @@ export const ASSET_LEVEL_OPTIONS = [
   '$10M+',
 ];
 
+// Maps a raw AUM number to the corresponding asset_level bucket.
+// Used to keep asset_level in sync whenever AUM is manually entered or API-synced.
+export function aumToAssetLevel(aum) {
+  if (!aum || isNaN(aum)) return '';
+  const n = Number(aum);
+  if (n <    100_000) return 'Under $100K';
+  if (n <    250_000) return '$100K – $250K';
+  if (n <    500_000) return '$250K – $500K';
+  if (n <  1_000_000) return '$500K – $1M';
+  if (n <  5_000_000) return '$1M – $5M';
+  if (n < 10_000_000) return '$5M – $10M';
+  return '$10M+';
+}
+
+export const CUSTODIAN_OPTIONS = [
+  'Schwab',
+  'Fidelity',
+  'Pershing',
+  'TD Ameritrade',
+  'Vanguard',
+  'Interactive Brokers',
+  'Apex Clearing',
+  'Other',
+];
+
 export const RISK_TOLERANCE_OPTIONS = [
   'Conservative',
   'Moderately Conservative',

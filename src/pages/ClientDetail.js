@@ -25,6 +25,8 @@ import {
   TIME_HORIZON_OPTIONS,
   FULL_ACCESS_ROLES,
   WRITE_ROLES,
+  CUSTODIAN_OPTIONS,
+  aumToAssetLevel,
 } from '../utils/hqConstants';
 import { useTokens } from '../context/ThemeContext';
 
@@ -66,6 +68,41 @@ function SelectField({ label, name, value, onChange, options, s }) {
       </select>
     </div>
   );
+}
+
+// ── Formatting helpers ───────────────────────────────────────────────────────
+
+function formatAUM(val) {
+  if (!val) return '—';
+  const n = Number(val);
+  if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(2)}M`;
+  if (n >= 1_000)     return `$${(n / 1_000).toFixed(0)}K`;
+  return `$${n.toLocaleString()}`;
+}
+
+function formatFeeRate(val) {
+  if (val === null || val === undefined || val === '') return '—';
+  return `${(Number(val) * 100).toFixed(2)}%`;
+}
+
+function formatEstRevenue(aum, fee_rate) {
+  if (!aum || !fee_rate) return '—';
+  const rev = Number(aum) * Number(fee_rate);
+  if (rev >= 1_000_000) return `$${(rev / 1_000_000).toFixed(2)}M`;
+  if (rev >= 1_000)     return `$${(rev / 1_000).toFixed(0)}K`;
+  return `$${rev.toLocaleString()}`;
+}
+
+// Strips formatting from a dollar string back to a plain number string
+function stripAUMFormat(str) {
+  return str.replace(/[$,]/g, '');
+}
+
+// Formats a raw number string with commas for display in the input
+function formatAUMInput(str) {
+  const raw = str.replace(/[$,]/g, '');
+  if (!raw || isNaN(raw)) return str;
+  return Number(raw).toLocaleString('en-US');
 }
 
 export default function ClientDetail() {
@@ -585,14 +622,36 @@ export default function ClientDetail() {
     fetchNotes();
   }
 
+  const [aumInput, setAumInput] = useState('');
+
   function openEdit() {
     setFormData({ ...client });
+    // Initialize AUM display value with commas
+    setAumInput(client.aum ? Number(client.aum).toLocaleString('en-US') : '');
     setError('');
     setShowEdit(true);
   }
 
   function handleChange(e) {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    if (name === 'aum') {
+      // Keep formatted display in aumInput, store raw number in formData
+      setAumInput(value);
+      const raw = Number(stripAUMFormat(value));
+      const derived = aumToAssetLevel(raw);
+      setFormData(f => ({ ...f, aum: raw || null, asset_level: derived || f.asset_level }));
+    } else if (name === 'fee_rate') {
+      // User types percentage (e.g. 1.00), store as decimal (0.01)
+      setFormData(f => ({ ...f, fee_rate: value === '' ? null : Number(value) / 100 }));
+    } else {
+      setFormData(f => ({ ...f, [name]: value }));
+    }
+  }
+
+  function handleAumBlur() {
+    // Reformat on blur so commas appear after user finishes typing
+    const raw = Number(stripAUMFormat(aumInput));
+    if (raw) setAumInput(raw.toLocaleString('en-US'));
   }
 
   async function handleSave() {
@@ -745,6 +804,17 @@ export default function ClientDetail() {
             <Field label="Date of Birth" value={client.date_of_birth} s={s} />
             <Field label="Preferred Contact" value={client.preferred_contact_method} s={s} />
             <Field label="Communication Frequency" value={client.communication_frequency} s={s} />
+          </Section>
+          <Section title="Account Details" s={s}>
+            <Field label="AUM" value={formatAUM(client.aum)} s={s} />
+            <Field label="Fee Rate" value={formatFeeRate(client.fee_rate)} s={s} />
+            <Field label="Est. Annual Revenue" value={formatEstRevenue(client.aum, client.fee_rate)} s={s} />
+            <Field label="Custodian" value={client.custodian || '—'} s={s} />
+            {client.aum_source === 'api' && client.aum_synced_at && (
+              <div style={{ fontSize: '11px', color: t.TEXT_SUBTLE, fontWeight: '300', marginTop: '2px' }}>
+                Synced {new Date(client.aum_synced_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+              </div>
+            )}
           </Section>
           <Section title="Financial Profile" s={s}>
             <Field label="Asset Level" value={client.asset_level} s={s} />
@@ -913,6 +983,46 @@ export default function ClientDetail() {
                   <FormField label="Phone" name="phone" value={formData.phone || ''} onChange={handleChange} s={s} />
                   <FormField label="Date of Birth" name="date_of_birth" type="date" value={formData.date_of_birth || ''} onChange={handleChange} s={s} />
                   <SelectField label="Status" name="status" value={formData.status || ''} onChange={handleChange} options={STATUS_OPTIONS} s={s} />
+                </div>
+                <p style={s.formSectionLabel}>Account Details</p>
+                <div style={s.formGrid}>
+                  {/* AUM — formatted input, auto-derives asset_level */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <label style={{ fontSize: '11px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.08em', color: t.TEXT_MUTED }}>AUM</label>
+                    <div style={{ position: 'relative' }}>
+                      <span style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: t.TEXT_MUTED, fontSize: '13px', pointerEvents: 'none' }}>$</span>
+                      <input
+                        name="aum"
+                        value={aumInput}
+                        onChange={handleChange}
+                        onBlur={handleAumBlur}
+                        placeholder="0"
+                        inputMode="numeric"
+                        style={{ ...s.input, paddingLeft: '22px' }}
+                      />
+                    </div>
+                    {formData.aum && (
+                      <span style={{ fontSize: '11px', color: t.TEXT_SUBTLE, fontWeight: '300' }}>
+                        Asset level: {aumToAssetLevel(formData.aum)}
+                      </span>
+                    )}
+                  </div>
+                  {/* Fee rate — user enters percentage, stored as decimal */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <label style={{ fontSize: '11px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.08em', color: t.TEXT_MUTED }}>Fee Rate</label>
+                    <div style={{ position: 'relative' }}>
+                      <input
+                        name="fee_rate"
+                        value={formData.fee_rate !== null && formData.fee_rate !== undefined ? (Number(formData.fee_rate) * 100).toFixed(2) : ''}
+                        onChange={handleChange}
+                        placeholder="1.00"
+                        inputMode="decimal"
+                        style={{ ...s.input, paddingRight: '26px' }}
+                      />
+                      <span style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', color: t.TEXT_MUTED, fontSize: '13px', pointerEvents: 'none' }}>%</span>
+                    </div>
+                  </div>
+                  <SelectField label="Custodian" name="custodian" value={formData.custodian || ''} onChange={handleChange} options={CUSTODIAN_OPTIONS} s={s} />
                 </div>
                 <p style={s.formSectionLabel}>Financial Profile</p>
                 <div style={s.formGrid}>
