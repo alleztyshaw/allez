@@ -98,12 +98,6 @@ function stripAUMFormat(str) {
   return str.replace(/[$,]/g, '');
 }
 
-// Formats a raw number string with commas for display in the input
-function formatAUMInput(str) {
-  const raw = str.replace(/[$,]/g, '');
-  if (!raw || isNaN(raw)) return str;
-  return Number(raw).toLocaleString('en-US');
-}
 
 export default function ClientDetail() {
   const t = useTokens();
