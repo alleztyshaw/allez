@@ -159,10 +159,11 @@ export default function AuditLog() {
     setLoading(false);
   }, [orgId, filterTable, filterAction, filterUser, filterFrom, filterTo]);
 
-  // Fetch org members for the user filter dropdown
+  // Fetch org members for the user filter dropdown via SECURITY DEFINER RPC
+  // Direct org_members query only returns the current user's row due to RLS
   useEffect(() => {
     if (!orgId) return;
-    supabase.from('org_members').select('user_id, first_name, last_name').eq('org_id', orgId)
+    supabase.rpc('get_org_members', { target_org_id: orgId })
       .then(({ data }) => setMembers(data || []));
   }, [orgId]);
 
