@@ -4,17 +4,17 @@
 // One edit here flows through every component automatically.
 // ============================================================
 
-// --- ACCENT — Allez Jade ---
+// --- ACCENT — Allez Emerald ---
 // Dark mode default
-export const ACCENT        = '#2E8B6E'; // Jewel jade — rich, premium, distinctive
-export const ACCENT_HOVER  = '#38A882'; // Slightly lighter for hover states
-export const ACCENT_MUTED  = 'rgba(46, 139, 110, 0.13)';
-export const ACCENT_BORDER = 'rgba(46, 139, 110, 0.25)';
+export const ACCENT        = '#29C47A'; // Emerald — bright, readable on dark surfaces
+export const ACCENT_HOVER  = '#33D988'; // Slightly lighter for hover states
+export const ACCENT_MUTED  = 'rgba(41, 196, 122, 0.13)';
+export const ACCENT_BORDER = 'rgba(41, 196, 122, 0.25)';
 // Light mode variants (deeper for contrast on light surfaces)
-export const ACCENT_LIGHT        = '#1F6B52';
-export const ACCENT_HOVER_LIGHT  = '#2E8B6E';
-export const ACCENT_MUTED_LIGHT  = 'rgba(31, 107, 82, 0.13)';
-export const ACCENT_BORDER_LIGHT = 'rgba(31, 107, 82, 0.25)';
+export const ACCENT_LIGHT        = '#1A9E5F';
+export const ACCENT_HOVER_LIGHT  = '#29C47A';
+export const ACCENT_MUTED_LIGHT  = 'rgba(26, 158, 95, 0.12)';
+export const ACCENT_BORDER_LIGHT = 'rgba(26, 158, 95, 0.22)';
 
 // --- SITE ACCENT — Allez Capital Portfolio (allezcapital.com) ---
 export const SITE_ACCENT        = '#667eea'; // Purple — portfolio brand colour
@@ -73,7 +73,7 @@ export const SHADOW_SM = '0 1px 3px rgba(0,0,0,0.08)';
 
 // ── Layout ────────────────────────────────────────────────────────────────────
 export const TOPBAR_HEIGHT          = 52;   // px — fixed top bar height
-export const SIDEBAR_WIDTH          = 145;  // px — desktop sidebar expanded width
+export const SIDEBAR_WIDTH          = 154;  // px — desktop sidebar expanded width
 export const SIDEBAR_COLLAPSED_WIDTH = 24;  // px — desktop sidebar collapsed width
 export const SIDEBAR_BREAKPOINT     = 900;  // px — sidebar collapses to overlay below this
 export const MOBILE_BREAKPOINT      = 900;  // px — single source of truth for isMobile
