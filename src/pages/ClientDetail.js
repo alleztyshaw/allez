@@ -617,11 +617,13 @@ export default function ClientDetail() {
   }
 
   const [aumInput, setAumInput] = useState('');
+  const [feeRateInput, setFeeRateInput] = useState('');
 
   function openEdit() {
     setFormData({ ...client });
     // Initialize AUM display value with commas
     setAumInput(client.aum ? Number(client.aum).toLocaleString('en-US') : '');
+    setFeeRateInput(client.fee_rate !== null && client.fee_rate !== undefined ? (Number(client.fee_rate) * 100).toFixed(2) : '');
     setError('');
     setShowEdit(true);
   }
@@ -635,8 +637,8 @@ export default function ClientDetail() {
       const derived = aumToAssetLevel(raw);
       setFormData(f => ({ ...f, aum: raw || null, asset_level: derived || f.asset_level }));
     } else if (name === 'fee_rate') {
-      // User types percentage (e.g. 1.00), store as decimal (0.01)
-      setFormData(f => ({ ...f, fee_rate: value === '' ? null : Number(value) / 100 }));
+      // Just track the display string — convert to decimal on blur
+      setFeeRateInput(value);
     } else {
       setFormData(f => ({ ...f, [name]: value }));
     }
@@ -646,6 +648,18 @@ export default function ClientDetail() {
     // Reformat on blur so commas appear after user finishes typing
     const raw = Number(stripAUMFormat(aumInput));
     if (raw) setAumInput(raw.toLocaleString('en-US'));
+  }
+
+  function handleFeeRateBlur() {
+    // Convert display string to decimal and store in formData on blur
+    const pct = parseFloat(feeRateInput);
+    if (!isNaN(pct)) {
+      setFeeRateInput(pct.toFixed(2));
+      setFormData(f => ({ ...f, fee_rate: pct / 100 }));
+    } else {
+      setFeeRateInput('');
+      setFormData(f => ({ ...f, fee_rate: null }));
+    }
   }
 
   async function handleSave() {
@@ -1007,8 +1021,9 @@ export default function ClientDetail() {
                     <div style={{ position: 'relative' }}>
                       <input
                         name="fee_rate"
-                        value={formData.fee_rate !== null && formData.fee_rate !== undefined ? (Number(formData.fee_rate) * 100).toFixed(2) : ''}
+                        value={feeRateInput}
                         onChange={handleChange}
+                        onBlur={handleFeeRateBlur}
                         placeholder="1.00"
                         inputMode="decimal"
                         style={{ ...s.input, paddingRight: '26px' }}
