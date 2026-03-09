@@ -712,7 +712,6 @@ function PipelineTable({ clients, navigate, s, t, isMobile, orgId, onStageChange
 
           {/* Rows */}
           {filtered.map((client, i) => {
-            const sc = PIPELINE_STAGE_COLORS[client.pipeline_stage] || {};
             const isSaving = savingId === client.id;
             // Stages this client can move to
             const allStages = PIPELINE_STAGES.filter(st => st.key !== 'Active');
