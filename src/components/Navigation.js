@@ -9,7 +9,7 @@ function Navigation() {
   const [displayName, setDisplayName] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
-  const { isAdmin, isPlatformAdmin, orgLoading } = useOrg();
+  const { isAdmin, isPlatformAdmin, orgLoading, userRole } = useOrg();
   const t = useTokens();
   const navigate = useNavigate();
 
@@ -81,6 +81,9 @@ function Navigation() {
                 <Link to="/hq/crm" onClick={close} style={{ ...styles.menuLink, color: linkColor }}>CRM</Link>
                 {!orgLoading && isAdmin && (
                   <Link to="/hq/team" onClick={close} style={{ ...styles.menuLink, color: linkColor }}>Team</Link>
+                )}
+                {!orgLoading && (isAdmin || userRole === 'compliance') && (
+                  <Link to="/hq/audit" onClick={close} style={{ ...styles.menuLink, color: linkColor }}>Audit Log</Link>
                 )}
                 {!orgLoading && isPlatformAdmin && (
                   <Link to="/hq/orgs" onClick={close} style={{ ...styles.menuLink, color: linkColor }}>Orgs</Link>
