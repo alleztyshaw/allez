@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useSearchParams, useNavigate, Link } from 'react-router-dom';
+import { useSearchParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { useOrg } from '../context/OrgContext';
 import {
@@ -61,6 +61,11 @@ export default function Notes() {
   const isMobile = windowWidth < MOBILE_BREAKPOINT;
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const fromBrief = location.state?.from === '/hq/brief';
+  const fromClient = location.state?.from?.startsWith('/hq/clients/');
+  const backTo = fromBrief ? '/hq/brief' : fromClient ? location.state.from : null;
+  const backLabel = fromBrief ? '← Back to Daily Brief' : fromClient ? '← Back to Client' : null;
   const { orgId } = useOrg();
 
   // Core data
@@ -373,6 +378,12 @@ export default function Notes() {
           .ai-dot:nth-child(2) { animation-delay: 0.2s; }
           .ai-dot:nth-child(3) { animation-delay: 0.4s; }
         `}</style>
+
+        {backTo && (
+          <Link to={backTo} style={{ color: t.TEXT_MUTED, textDecoration: 'none', fontSize: '14px', fontWeight: '300', display: 'inline-block', marginBottom: '20px' }}>
+            {backLabel}
+          </Link>
+        )}
 
         {/* Page header */}
         <div style={s.header}>

@@ -198,6 +198,11 @@ export default function Login() {
           <div style={s.featureGrid}>
             {[
               {
+                label: 'Daily Brief',
+                desc: 'Your morning overview — upcoming client reviews, open tasks, and everything you need to start the day informed.',
+                status: 'Live',
+              },
+              {
                 label: 'Client Profiles',
                 desc: 'Every detail about every client — risk tolerance, asset levels, communication preferences, family notes — in one place.',
                 status: 'Live',
@@ -210,12 +215,7 @@ export default function Login() {
               {
                 label: 'CRM',
                 desc: 'Track touchpoints, log interactions, and see the full arc of a client relationship at a glance.',
-                status: 'Coming soon',
-              },
-              {
-                label: 'Onboarding',
-                desc: 'Guide new clients through the process with progress tracking, step completion, and outstanding task visibility.',
-                status: 'Coming soon',
+                status: 'Live',
               },
             ].map((f) => (
               <div key={f.label} className="feature-card" style={s.featureCard}>

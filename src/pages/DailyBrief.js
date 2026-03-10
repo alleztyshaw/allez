@@ -306,7 +306,7 @@ export default function DailyBrief() {
                       <button
                         className="brief-log-btn"
                         style={s.logBtn}
-                        onClick={() => navigate(`/hq/notes?client_id=${client.id}`)}
+                        onClick={() => navigate(`/hq/notes?client_id=${client.id}`, { state: { from: '/hq/brief' } })}
                       >
                         Log note
                       </button>
