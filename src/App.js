@@ -11,6 +11,7 @@ import ClientDetail from './pages/ClientDetail';
 import Notes from './pages/Notes';
 import CRM from './pages/CRM';
 import HQ from './pages/HQ';
+import DailyBrief from './pages/DailyBrief';
 import Team from './pages/Team';
 import Welcome from './pages/Welcome';
 import Settings from './pages/Settings';
@@ -65,6 +66,7 @@ function App() {
               <Route path="/welcome" element={<Welcome />} />
               <Route path="/contact"        element={<ProtectedLayout><Contact      /></ProtectedLayout>} />
               <Route path="/hq"             element={<ProtectedLayout><HQ           /></ProtectedLayout>} />
+              <Route path="/hq/brief"       element={<ProtectedLayout><DailyBrief   /></ProtectedLayout>} />
               <Route path="/hq/clients"     element={<ProtectedLayout><Clients      /></ProtectedLayout>} />
               <Route path="/hq/clients/:id" element={<ProtectedLayout><ClientDetail /></ProtectedLayout>} />
               <Route path="/hq/notes"       element={<ProtectedLayout><Notes        /></ProtectedLayout>} />

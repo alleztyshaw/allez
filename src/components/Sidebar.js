@@ -45,7 +45,7 @@ export default function Sidebar() {
   };
 
   const workspaceLinks = [
-    { to: '/hq',         label: 'Daily Brief' },
+    { to: '/hq/brief',   label: 'Daily Brief' },
     { to: '/hq/clients', label: 'Clients'     },
     { to: '/hq/notes',   label: 'Notes'       },
     { to: '/hq/crm',     label: 'CRM'         },

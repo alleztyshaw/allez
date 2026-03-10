@@ -22,7 +22,7 @@ export default function Login() {
       setError(error.message);
       setLoading(false);
     } else {
-      navigate('/hq');
+      navigate('/hq/brief');
     }
   }
 

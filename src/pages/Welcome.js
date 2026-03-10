@@ -46,7 +46,7 @@ export default function Welcome() {
           setSession(session);
           setLoading(false);
         } else if (session?.user?.user_metadata?.onboarding_complete) {
-          navigate('/hq');
+          navigate('/hq/brief');
         } else {
           setLinkError(true);
           setLoading(false);
@@ -61,7 +61,7 @@ export default function Welcome() {
         if (existing) await supabase.auth.signOut();
         const { data, error } = await supabase.auth.exchangeCodeForSession(code);
         if (error || !data?.session) { setLinkError(true); setLoading(false); return; }
-        if (data.session.user?.user_metadata?.onboarding_complete) { navigate('/hq'); return; }
+        if (data.session.user?.user_metadata?.onboarding_complete) { navigate('/hq/brief'); return; }
         setSession(data.session);
         setLoading(false);
         return;
@@ -70,7 +70,7 @@ export default function Welcome() {
       if (hasHashToken) {
         const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
           if (event === 'SIGNED_IN' && session) {
-            if (session.user?.user_metadata?.onboarding_complete) { navigate('/hq'); return; }
+            if (session.user?.user_metadata?.onboarding_complete) { navigate('/hq/brief'); return; }
             setSession(session);
             setLoading(false);
           }
@@ -145,7 +145,7 @@ export default function Welcome() {
       if (memberError) console.error('org_members update error:', memberError);
     }
 
-    navigate('/hq');
+    navigate('/hq/brief');
   }
 
   // ── Render states ──────────────────────────────────────────────────────────
