@@ -102,7 +102,7 @@ export default function Login() {
       {/* Idle timeout notice */}
       {wasIdled && (
         <div style={{
-          position: 'fixed', top: '24px', left: '50%', transform: 'translateX(-50%)',
+          position: 'fixed', bottom: '32px', left: '50%', transform: 'translateX(-50%)',
           backgroundColor: 'rgba(255,255,255,0.07)',
           border: '1px solid rgba(255,255,255,0.12)',
           borderRadius: '8px',

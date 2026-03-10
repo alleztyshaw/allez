@@ -1,4 +1,5 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { OrgProvider } from './context/OrgContext';
 import { ThemeProvider, useTokens } from './context/ThemeContext';
 import Sidebar from './components/Sidebar';
@@ -23,7 +24,11 @@ import './App.css';
 
 function ProtectedLayout({ children }) {
   const t = useTokens();
+  const { pathname } = useLocation();
   useIdleTimeout();
+
+  // Reset scroll position on every route change — React Router does not do this automatically
+  useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
   return (
     <ProtectedRoute>
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: t.BG }}>

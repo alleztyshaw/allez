@@ -23,15 +23,20 @@ function useWindowWidth() {
   return width;
 }
 
-function todayStr() {
-  return new Date().toISOString().split('T')[0]; // YYYY-MM-DD
-}
-function tomorrowStr() {
+// Build YYYY-MM-DD from LOCAL time — never use toISOString() for dates,
+// as it returns UTC which can be a different calendar day than the user's timezone
+function localDateStr(offsetDays = 0) {
   const d = new Date();
-  d.setDate(d.getDate() + 1);
-  return d.toISOString().split('T')[0];
+  d.setDate(d.getDate() + offsetDays);
+  const yyyy = d.getFullYear();
+  const mm   = String(d.getMonth() + 1).padStart(2, '0');
+  const dd   = String(d.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
 }
+function todayStr()    { return localDateStr(0); }
+function tomorrowStr() { return localDateStr(1); }
 function formatDate(d) {
+  // Append T00:00:00 to force local time parsing — bare date strings parse as UTC
   return new Date(d + 'T00:00:00').toLocaleDateString('en-US', {
     weekday: 'long', month: 'long', day: 'numeric', year: 'numeric',
   });
