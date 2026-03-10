@@ -8,6 +8,7 @@ import {
   RADIUS_MD,
   RADIUS_PILL,
   SHADOW_MD,
+  SHADOW_LG,
   pageStyles,
   MOBILE_BREAKPOINT,
 } from '../utils/hqConstants';
@@ -90,7 +91,7 @@ export default function HQ() {
           @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
           .hq-card { animation: fadeUp 0.4s ease both; }
           .hq-card-live { transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease; cursor: pointer; }
-          .hq-card-live:hover { border-color: ${t.ACCENT_BORDER} !important; transform: translateY(-2px); box-shadow: 0 8px 32px ${t.ACCENT_MUTED} !important; }
+          .hq-card-live:hover { transform: translateY(-2px); box-shadow: ${SHADOW_LG} !important; }
           .hq-open-btn:hover { background: ${t.ACCENT} !important; color: #fff !important; }
         `}</style>
 

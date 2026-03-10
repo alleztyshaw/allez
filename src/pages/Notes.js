@@ -9,6 +9,7 @@ import {
   RADIUS_MD,
   RADIUS_PILL,
   SHADOW_MD,
+  SHADOW_LG,
   STATUS_COLORS,
   WRITE_ROLES,
   pageStyles,
@@ -89,6 +90,7 @@ export default function Notes() {
   const [aiError, setAiError] = useState('');
   const [aiTitleOverride, setAiTitleOverride] = useState('');
   const [showTranscript, setShowTranscript] = useState(false);
+  const [pushedTasks, setPushedTasks] = useState(new Set()); // indices of action items pushed to tasks
 
   // Note list
   const [editingNote, setEditingNote] = useState(null);
@@ -154,6 +156,7 @@ export default function Notes() {
     setAiTitleOverride('');
     setShowTranscript(false);
     setError('');
+    setPushedTasks(new Set());
     navigate('/hq/notes', { replace: true });
   }
 
@@ -246,6 +249,34 @@ export default function Notes() {
       fetchData();
     }
     setSaving(false);
+  }
+
+  // Pushes a single action item from the AI result card into client_tasks
+  // index can be a number (live result card) or string like "noteId-j" (saved notes)
+  async function pushToTask(item, index, clientIdOverride) {
+    const clientId = clientIdOverride || formData.client_id;
+    if (!clientId || pushedTasks.has(index)) return;
+
+    // Best-effort due date parsing — only use if the string looks like a real date
+    let dueDate = null;
+    if (item.due) {
+      const parsed = new Date(item.due);
+      if (!isNaN(parsed.getTime())) {
+        dueDate = parsed.toISOString().split('T')[0];
+      }
+    }
+
+    const { error } = await supabase.from('client_tasks').insert([{
+      org_id: orgId,
+      client_id: clientId,
+      title: item.task,
+      due_date: dueDate,
+      completed: false,
+    }]);
+
+    if (!error) {
+      setPushedTasks(prev => new Set([...prev, index]));
+    }
   }
 
   // ── Edit / delete ───────────────────────────────────────────────────────────
@@ -370,8 +401,9 @@ export default function Notes() {
           @keyframes fadeUp { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
           @keyframes aiPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
           .note-card { animation: fadeUp 0.4s ease both; }
-          .note-card:hover { transform: translateY(-2px) !important; border-color: ${t.ACCENT_BORDER} !important; box-shadow: 0 8px 32px ${t.ACCENT_MUTED} !important; }
+          .note-card:hover { transform: translateY(-2px) !important; box-shadow: ${SHADOW_LG} !important; }
           .client-name-badge:hover { background: rgba(96,165,250,0.25) !important; box-shadow: 0 0 0 2px rgba(96,165,250,0.3); }
+          .push-task-btn:hover { border-color: ${t.ACCENT_BORDER} !important; color: ${t.ACCENT} !important; }
           .expand-triangle { display: inline-block; width: 0; height: 0; border-top: 4px solid transparent; border-bottom: 4px solid transparent; border-left: 5px solid currentColor; transition: transform 0.2s ease; margin-left: 4px; vertical-align: middle; }
           .expand-triangle.open { transform: rotate(90deg); }
           .ai-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #a78bfa; animation: aiPulse 1.2s ease-in-out infinite; margin: 0 2px; }
@@ -675,16 +707,43 @@ export default function Notes() {
                               {aiSummary.action_items?.length > 0 && (
                                 <div style={s.aiSection}>
                                   <p style={s.aiSectionLabel}>Action Items</p>
-                                  {aiSummary.action_items.map((item, j) => (
-                                    <div key={j} style={s.aiListItem}>
-                                      <span style={{ color: '#a78bfa', flexShrink: 0 }}>·</span>
-                                      <span style={s.aiSectionText}>
-                                        {item.task}
-                                        {item.owner && <span style={{ opacity: 0.7 }}> · {item.owner}</span>}
-                                        {item.due && <span style={{ opacity: 0.7 }}> · {item.due}</span>}
-                                      </span>
-                                    </div>
-                                  ))}
+                                  {aiSummary.action_items.map((item, j) => {
+                                    const key = `${note.id}-${j}`;
+                                    const pushed = pushedTasks.has(key);
+                                    return (
+                                      <div key={j} style={{ ...s.aiListItem, justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                        <div style={{ display: 'flex', gap: '8px', flex: 1 }}>
+                                          <span style={{ color: '#a78bfa', flexShrink: 0 }}>·</span>
+                                          <span style={s.aiSectionText}>
+                                            {item.task}
+                                            {item.owner && <span style={{ opacity: 0.7 }}> · {item.owner}</span>}
+                                            {item.due && <span style={{ opacity: 0.7 }}> · {item.due}</span>}
+                                          </span>
+                                        </div>
+                                        <button
+                                          className={pushed ? '' : 'push-task-btn'}
+                                          onClick={() => pushToTask(item, key, note.client_id)}
+                                          disabled={pushed}
+                                          style={{
+                                            flexShrink: 0,
+                                            marginLeft: '12px',
+                                            background: 'none',
+                                            border: `1px solid ${pushed ? t.ACCENT_BORDER : t.BORDER}`,
+                                            borderRadius: '6px',
+                                            padding: '3px 10px',
+                                            fontSize: '11px',
+                                            fontWeight: '600',
+                                            color: pushed ? t.ACCENT : t.TEXT_MUTED,
+                                            cursor: pushed ? 'default' : 'pointer',
+                                            fontFamily: FONT_BODY,
+                                            letterSpacing: '0.03em',
+                                          }}
+                                        >
+                                          {pushed ? '✓ Added' : '+ Task'}
+                                        </button>
+                                      </div>
+                                    );
+                                  })}
                                 </div>
                               )}
                               {aiSummary.follow_ups?.length > 0 && (
