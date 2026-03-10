@@ -279,6 +279,7 @@ export default function Clients() {
       padding: '16px 24px',
       cursor: 'pointer',
       transition: 'background 0.15s ease',
+      position: 'relative',
       display: 'flex',
       alignItems: isMobile ? 'flex-start' : 'center',
       flexDirection: isMobile ? 'column' : 'row',
@@ -291,6 +292,7 @@ export default function Clients() {
       gap: '14px',
       width: isMobile ? '100%' : '260px',
       flexShrink: 0,
+      paddingRight: isMobile ? '80px' : 0,
     },
     avatarLink: { textDecoration: 'none', flexShrink: 0 },
     nameLink: { textDecoration: 'none' },
@@ -615,8 +617,20 @@ export default function Clients() {
                   </>
                 )}
 
-                {/* Status + advisor pill — stacked right aligned */}
-                <div style={{ marginLeft: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px', justifyContent: 'center', alignSelf: 'center' }}>
+                {/* Status + advisor pill — absolutely positioned right-center so it
+                    never gets pushed around by the column flow on mobile */}
+                <div style={{
+                  position: isMobile ? 'absolute' : 'relative',
+                  right: isMobile ? '16px' : 'auto',
+                  top: isMobile ? '50%' : 'auto',
+                  transform: isMobile ? 'translateY(-50%)' : 'none',
+                  marginLeft: isMobile ? 0 : 'auto',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'flex-end',
+                  gap: '6px',
+                  justifyContent: 'center',
+                }}>
                   {canSeeAdvisorPill && advisorMapLoaded && (
                     primaryAdvisorMap[client.id] ? (
                       <span style={{ ...s.badge, backgroundColor: 'rgba(102,126,234,0.12)', color: '#667eea', border: '1px solid rgba(102,126,234,0.3)' }}>
