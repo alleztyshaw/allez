@@ -14,38 +14,26 @@ export function OrgProvider({ children }) {
   const load = useCallback(async () => {
     setOrgLoading(true);
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { setOrgLoading(false); return; }
+    // getSession reads from local storage — no network round trip
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) { setOrgLoading(false); return; }
 
-    // SECURITY DEFINER RPCs — bypass RLS to avoid circular reference 500s
-    const [{ data: resolvedOrgId }, { data: platAdmin }] = await Promise.all([
-      supabase.rpc('get_user_org_id'),
-      supabase.rpc('is_platform_admin'),
-    ]);
+    // Single RPC returns org_id, role, and is_platform_admin in one call
+    const { data, error } = await supabase.rpc('get_my_org_context');
 
-    // If org membership is gone (e.g. removed while app was open), sign out immediately
-    if (!resolvedOrgId) {
+    if (error || !data?.length) {
+      // Org membership gone — sign out
       await supabase.auth.signOut();
       setOrgLoading(false);
       return;
     }
 
-    setOrgId(resolvedOrgId);
-    setIsPlatformAdmin(!!platAdmin);
+    const { org_id, role, is_platform_admin } = data[0];
 
-    // Fetch role directly — safe now that org_id is resolved
-    const { data: memberRow } = await supabase
-      .from('org_members')
-      .select('role')
-      .eq('user_id', user.id)
-      .eq('org_id', resolvedOrgId)
-      .single();
-
-    if (memberRow?.role) {
-      setUserRole(memberRow.role);
-      setIsAdmin(memberRow.role === 'admin');
-    }
-
+    setOrgId(org_id);
+    setUserRole(role);
+    setIsAdmin(role === 'admin');
+    setIsPlatformAdmin(!!is_platform_admin);
     setOrgLoading(false);
   }, []);
 
