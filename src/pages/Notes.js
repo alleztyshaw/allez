@@ -92,6 +92,18 @@ export default function Notes() {
   const [showTranscript, setShowTranscript] = useState(false);
   const [pushedTasks, setPushedTasks] = useState(new Set()); // indices of action items pushed to tasks
 
+  // Email draft modal
+  const [emailNote, setEmailNote]           = useState(null);   // note being drafted for
+  const [emailSalutation, setEmailSalutation] = useState('');
+  const [emailSignOff, setEmailSignOff]     = useState('Best,');
+  const [emailTone, setEmailTone]           = useState('professional');
+  const [emailInclude, setEmailInclude]     = useState(['summary', 'decisions', 'action_items', 'follow_ups']);
+  const [emailGenerating, setEmailGenerating] = useState(false);
+  const [emailSubject, setEmailSubject]     = useState('');
+  const [emailBody, setEmailBody]           = useState('');
+  const [emailError, setEmailError]         = useState('');
+  const [emailCopied, setEmailCopied]       = useState(false);
+
   // Note list
   const [editingNote, setEditingNote] = useState(null);
   const [editForm, setEditForm] = useState({});
@@ -120,7 +132,7 @@ export default function Notes() {
   async function fetchData() {
     const [{ data: notesData }, { data: clientsData }, { data: membersData }] = await Promise.all([
       supabase.from('notes').select('*').eq('org_id', orgId).is('deleted_at', null).order('created_at', { ascending: false }),
-      supabase.from('clients').select('id, first_name, last_name, status').eq('org_id', orgId).is('deleted_at', null).order('last_name'),
+      supabase.from('clients').select('id, first_name, last_name, status, email').eq('org_id', orgId).is('deleted_at', null).order('last_name'),
       supabase.rpc('get_org_members', { target_org_id: orgId }),
     ]);
     setNotes(notesData || []);
@@ -279,7 +291,77 @@ export default function Notes() {
     }
   }
 
-  // ── Edit / delete ───────────────────────────────────────────────────────────
+  // ── Email draft ─────────────────────────────────────────────────────────────
+
+  function openEmailDraft(note) {
+    const client = clients.find(c => c.id === note.client_id);
+    setEmailNote(note);
+    setEmailSalutation(client?.first_name ? `Hi ${client.first_name},` : '');
+    setEmailSubject('');
+    setEmailBody('');
+    setEmailError('');
+    setEmailCopied(false);
+    setEmailInclude(['summary', 'decisions', 'action_items', 'follow_ups']);
+    setEmailTone('professional');
+    setEmailSignOff('Best,');
+  }
+
+  async function handleDraftEmail() {
+    if (!emailNote) return;
+    setEmailGenerating(true);
+    setEmailError('');
+    setEmailSubject('');
+    setEmailBody('');
+
+    const aiSummary = parseAiSummary(emailNote);
+    const client = clients.find(c => c.id === emailNote.client_id);
+    const clientFullName = client ? `${client.first_name} ${client.last_name}` : '';
+    const advisor = orgMembers.find(m => m.user_id === emailNote.created_by);
+    const advisorFullName = advisor ? `${advisor.first_name} ${advisor.last_name}` : '';
+
+    try {
+      const res = await fetch('/api/draft-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ai_summary: aiSummary,
+          client_name: clientFullName,
+          advisor_name: advisorFullName,
+          salutation: emailSalutation,
+          sign_off: emailSignOff,
+          tone: emailTone,
+          include: emailInclude,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setEmailError(data.error || 'Draft generation failed. Please try again.');
+      } else {
+        setEmailSubject(data.subject);
+        setEmailBody(data.body);
+      }
+    } catch {
+      setEmailError('Could not reach the processing service. Please try again.');
+    }
+    setEmailGenerating(false);
+  }
+
+  function handleCopyEmail() {
+    const full = `Subject: ${emailSubject}\n\n${emailBody}`;
+    navigator.clipboard.writeText(full).then(() => {
+      setEmailCopied(true);
+      setTimeout(() => setEmailCopied(false), 2500);
+    });
+  }
+
+  function handleMailto() {
+    const client = clients.find(c => c.id === emailNote?.client_id);
+    const email = client?.email || '';
+    const params = new URLSearchParams();
+    params.set('subject', emailSubject);
+    params.set('body', emailBody);
+    window.open(`mailto:${email}?${params.toString()}`);
+  }
 
   function openEdit(note) {
     setEditingNote(note);
@@ -776,6 +858,9 @@ export default function Notes() {
 
                     {canWrite && (
                       <div style={s.noteActions}>
+                        {isAi && (
+                          <button style={{ ...s.noteAction, color: t.ACCENT }} onClick={() => openEmailDraft(note)}>Draft Email</button>
+                        )}
                         <button style={s.noteAction} onClick={() => openEdit(note)}>Edit</button>
                         <button style={{ ...s.noteAction, color: '#f87171' }} onClick={() => handleDelete(note.id)}>Delete</button>
                       </div>
@@ -841,6 +926,147 @@ export default function Notes() {
               <div style={s.modalFooter}>
                 <button style={s.cancelButton} onClick={() => setEditingNote(null)}>Cancel</button>
                 <button style={s.saveButton} onClick={handleEditSave}>Save Changes</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── Email draft modal ────────────────────────────────────────────── */}
+        {emailNote && (
+          <div style={s.overlay} onClick={e => { if (e.target === e.currentTarget) setEmailNote(null); }}>
+            <div style={{ ...s.modal, maxWidth: '620px', maxHeight: '90vh', overflowY: 'auto' }}>
+              <div style={s.modalHeader}>
+                <h2 style={s.modalTitle}>Draft Follow-up Email</h2>
+                <button style={s.closeButton} onClick={() => setEmailNote(null)}>✕</button>
+              </div>
+
+              <div style={s.modalBody}>
+
+                {/* For advisor review notice */}
+                <p style={{ fontSize: '11px', color: t.TEXT_MUTED, fontStyle: 'italic', margin: '0 0 28px', fontWeight: '300', paddingLeft: '2px' }}>
+                  For advisor review — please check before sending to client.
+                </p>
+
+                {/* Salutation + sign-off row */}
+                <div style={{ display: 'flex', gap: '16px', marginBottom: '24px', paddingLeft: '2px' }}>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ ...s.label, display: 'block', marginBottom: '6px' }}>Salutation</label>
+                    <input
+                      style={s.input}
+                      value={emailSalutation}
+                      onChange={e => setEmailSalutation(e.target.value)}
+                      placeholder="Hi [Name],"
+                    />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ ...s.label, display: 'block', marginBottom: '6px' }}>Sign-off</label>
+                    <input
+                      style={s.input}
+                      value={emailSignOff}
+                      onChange={e => setEmailSignOff(e.target.value)}
+                      placeholder="Best,"
+                    />
+                  </div>
+                </div>
+
+                {/* Tone selector */}
+                <div style={{ marginBottom: '24px', paddingLeft: '2px' }}>
+                  <label style={{ ...s.label, display: 'block', marginBottom: '8px' }}>Tone</label>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    {[
+                      { value: 'formal', label: 'Formal' },
+                      { value: 'professional', label: 'Professional' },
+                      { value: 'conversational', label: 'Conversational' },
+                    ].map(opt => (
+                      <button
+                        key={opt.value}
+                        onClick={() => setEmailTone(opt.value)}
+                        style={{
+                          padding: '7px 16px', borderRadius: '6px', fontSize: '12px',
+                          fontFamily: FONT_BODY, cursor: 'pointer', fontWeight: '500',
+                          border: `1px solid ${emailTone === opt.value ? t.ACCENT_BORDER : t.BORDER}`,
+                          background: emailTone === opt.value ? t.ACCENT_MUTED : 'transparent',
+                          color: emailTone === opt.value ? t.ACCENT : t.TEXT_MUTED,
+                        }}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Content checkboxes */}
+                <div style={{ marginBottom: '28px', paddingLeft: '2px' }}>
+                  <label style={{ ...s.label, display: 'block', marginBottom: '10px' }}>Include</label>
+                  <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
+                    {[
+                      { value: 'summary', label: 'Summary' },
+                      { value: 'decisions', label: 'Decisions' },
+                      { value: 'action_items', label: 'Action Items' },
+                      { value: 'follow_ups', label: 'Follow-ups' },
+                    ].map(opt => (
+                      <label key={opt.value} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px', color: t.TEXT, fontWeight: '300' }}>
+                        <input
+                          type="checkbox"
+                          checked={emailInclude.includes(opt.value)}
+                          onChange={e => setEmailInclude(prev =>
+                            e.target.checked ? [...prev, opt.value] : prev.filter(v => v !== opt.value)
+                          )}
+                        />
+                        {opt.label}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Generate button */}
+                {!emailBody && (
+                  <button
+                    style={{ ...s.saveButton, width: '100%', padding: '13px', fontSize: '14px', marginBottom: emailError ? '12px' : 0 }}
+                    onClick={handleDraftEmail}
+                    disabled={emailGenerating || emailInclude.length === 0}
+                  >
+                    {emailGenerating ? 'Generating…' : 'Generate Draft'}
+                  </button>
+                )}
+
+                {emailError && (
+                  <p style={{ color: '#f87171', fontSize: '13px', margin: '10px 0 0' }}>{emailError}</p>
+                )}
+
+                {/* Draft output */}
+                {emailBody && (
+                  <div style={{ marginTop: '4px' }}>
+                    <div style={{ marginBottom: '16px' }}>
+                      <label style={{ ...s.label, display: 'block', marginBottom: '6px' }}>Subject</label>
+                      <input
+                        style={s.input}
+                        value={emailSubject}
+                        onChange={e => setEmailSubject(e.target.value)}
+                      />
+                    </div>
+                    <div style={{ marginBottom: '20px' }}>
+                      <label style={{ ...s.label, display: 'block', marginBottom: '6px' }}>Body</label>
+                      <textarea
+                        style={{ ...s.textarea, minHeight: '220px' }}
+                        value={emailBody}
+                        onChange={e => setEmailBody(e.target.value)}
+                      />
+                    </div>
+                    <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                      <button style={s.saveButton} onClick={handleCopyEmail}>
+                        {emailCopied ? '✓ Copied' : 'Copy to clipboard'}
+                      </button>
+                      <button style={s.saveButton} onClick={handleMailto}>
+                        Open in mail client
+                      </button>
+                      <button style={s.cancelButton} onClick={handleDraftEmail} disabled={emailGenerating}>
+                        {emailGenerating ? 'Regenerating…' : 'Regenerate'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
               </div>
             </div>
           </div>
