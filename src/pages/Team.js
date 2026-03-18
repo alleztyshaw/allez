@@ -464,20 +464,20 @@ export default function Team() {
                   style={{ ...s.tableRow, borderBottom: isLast ? 'none' : `1px solid ${t.BORDER}` }}
                 >
                   {/* Name */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <span style={{ fontSize: '13px', color: name ? t.TEXT : t.TEXT_MUTED, fontStyle: name ? 'normal' : 'italic', fontWeight: '400' }}>
                       {name || 'No name set'}
                     </span>
                     {isMobile && (
-                      <span style={{ fontSize: '11px', color: t.TEXT_MUTED, fontWeight: '300' }}>
-                        {m.email}
+                      <span style={{ fontSize: '12px', color: t.TEXT_MUTED, fontWeight: '300' }}>
+                        {m.role.charAt(0).toUpperCase() + m.role.slice(1)}
                       </span>
                     )}
                     {isMobile && (
-                      <span style={{ fontSize: '11px', color: t.TEXT_MUTED, marginTop: '2px' }}>
-                        {m.role.charAt(0).toUpperCase() + m.role.slice(1)}
-                        {isPending && ' · Pending setup'}
-                      </span>
+                      <span style={{
+                        width: '7px', height: '7px', borderRadius: '50%', flexShrink: 0,
+                        background: isPending ? '#fbbf24' : t.ACCENT,
+                      }} />
                     )}
                   </div>
 
