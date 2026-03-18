@@ -40,6 +40,23 @@ export default function Welcome() {
     const code = searchParams.get('code');
     const hasHashToken = hash.includes('access_token');
 
+    // Prefill name fields from org_members if the admin added them at invite time
+    async function prefillFromOrgMembers(userId) {
+      const { data } = await supabase
+        .from('org_members')
+        .select('first_name, last_name')
+        .eq('user_id', userId)
+        .single();
+      if (data?.first_name || data?.last_name) {
+        setForm(prev => ({
+          ...prev,
+          first_name: data.first_name || prev.first_name,
+          last_name: data.last_name || prev.last_name,
+          display_name: prev.display_name || data.first_name || '',
+        }));
+      }
+    }
+
     if (!code && !hasHashToken) {
       supabase.auth.getSession().then(({ data: { session } }) => {
         if (session && !session.user?.user_metadata?.onboarding_complete) {
@@ -63,6 +80,7 @@ export default function Welcome() {
         if (error || !data?.session) { setLinkError(true); setLoading(false); return; }
         if (data.session.user?.user_metadata?.onboarding_complete) { navigate('/hq/brief'); return; }
         setSession(data.session);
+        await prefillFromOrgMembers(data.session.user.id);
         setLoading(false);
         return;
       }
@@ -72,6 +90,7 @@ export default function Welcome() {
           if (event === 'SIGNED_IN' && session) {
             if (session.user?.user_metadata?.onboarding_complete) { navigate('/hq/brief'); return; }
             setSession(session);
+            await prefillFromOrgMembers(session.user.id);
             setLoading(false);
           }
         });
@@ -139,6 +158,7 @@ export default function Welcome() {
       const { error: memberError } = await supabase.from('org_members').update({
         first_name: form.first_name.trim(),
         last_name: form.last_name.trim(),
+        onboarding_complete: true,
         display_name: displayName,
       }).eq('user_id', session.user.id);
 

@@ -62,11 +62,14 @@ export default function Team() {
   const [saving, setSaving]           = useState(null);
   const [editingRole, setEditingRole] = useState(null);
   const [pendingRole, setPendingRole] = useState('');
-  const [inviteEmail, setInviteEmail] = useState('');
-  const [inviteRole, setInviteRole]   = useState('advisor');
-  const [showInvite, setShowInvite]   = useState(false);
-  const [inviteError, setInviteError] = useState('');
-  const [toast, setToast]             = useState(null);
+  const [inviteEmail, setInviteEmail]         = useState('');
+  const [inviteRole, setInviteRole]           = useState('advisor');
+  const [inviteFirstName, setInviteFirstName] = useState('');
+  const [inviteLastName, setInviteLastName]   = useState('');
+  const [showInvite, setShowInvite]           = useState(false);
+  const [inviteError, setInviteError]         = useState('');
+  const [resending, setResending]             = useState(null); // user_id being resent
+  const [toast, setToast]                     = useState(null);
 
   function showToast(message, type = 'success') {
     setToast({ message, type });
@@ -120,6 +123,26 @@ export default function Team() {
     setPendingRole('');
     setSaving(null);
     fetchMembers(selectedOrg);
+  }
+
+  async function handleResendInvite(m) {
+    setResending(m.user_id);
+    try {
+      const res = await fetch('/api/resend-invite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: m.email, org_id: selectedOrg, role: m.role }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        showToast(data.error || 'Resend failed', 'error');
+      } else {
+        showToast(`Invite resent to ${m.email}`);
+      }
+    } catch {
+      showToast('Network error — please try again', 'error');
+    }
+    setResending(null);
   }
 
   function memberName(m) {
@@ -228,7 +251,7 @@ export default function Team() {
           @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=DM+Sans:wght@300;400;500;600&display=swap');
           @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
           .member-card { transition: border-color 0.2s ease, box-shadow 0.2s ease; }
-          .member-card:hover { border-color: ${t.ACCENT_BORDER} !important; box-shadow: 0 4px 20px ${t.ACCENT_MUTED} !important; }
+          .member-card:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(0,0,0,0.15) !important; }
         `}</style>
       <div style={s.page}>
 
@@ -285,6 +308,20 @@ export default function Team() {
           <div style={s.inviteSection}>
             <p style={s.inviteTitle}>Invite New Member</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <input
+                  style={s.input}
+                  placeholder="First name (optional)"
+                  value={inviteFirstName}
+                  onChange={e => setInviteFirstName(e.target.value)}
+                />
+                <input
+                  style={s.input}
+                  placeholder="Last name (optional)"
+                  value={inviteLastName}
+                  onChange={e => setInviteLastName(e.target.value)}
+                />
+              </div>
               <input
                 style={s.input}
                 placeholder="Email address"
@@ -309,7 +346,13 @@ export default function Team() {
                       const res = await fetch('/api/invite', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ email: inviteEmail.trim(), role: inviteRole, org_id: selectedOrg }),
+                        body: JSON.stringify({
+                          email: inviteEmail.trim(),
+                          role: inviteRole,
+                          org_id: selectedOrg,
+                          first_name: inviteFirstName.trim(),
+                          last_name: inviteLastName.trim(),
+                        }),
                       });
                       const data = await res.json();
                       if (!res.ok) {
@@ -317,6 +360,8 @@ export default function Team() {
                       } else {
                         showToast(`Invite sent to ${inviteEmail}`);
                         setInviteEmail('');
+                        setInviteFirstName('');
+                        setInviteLastName('');
                         setShowInvite(false);
                       }
                     } catch {
@@ -354,15 +399,26 @@ export default function Team() {
                     {m.first_name?.[0] || m.display_name?.[0] || '·'}
                   </div>
 
-                  {/* Name */}
+                  {/* Name + email */}
                   <div style={s.memberInfo}>
-                    {memberName(m) ? (
-                      <p style={s.memberName}>{memberName(m)}</p>
-                    ) : (
-                      <p style={{ ...s.memberName, color: t.TEXT_MUTED, fontStyle: 'italic', fontWeight: 300 }}>
-                        Pending setup
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                      <p style={s.memberName}>
+                        {memberName(m) || <span style={{ color: t.TEXT_MUTED, fontStyle: 'italic', fontWeight: 300 }}>No name set</span>}
                       </p>
-                    )}
+                      {!m.onboarding_complete && (
+                        <span style={{
+                          fontSize: '10px', fontWeight: '600', padding: '2px 8px',
+                          borderRadius: RADIUS_PILL, letterSpacing: '0.08em',
+                          textTransform: 'uppercase',
+                          background: 'rgba(251,191,36,0.12)',
+                          color: '#fbbf24',
+                          border: '1px solid rgba(251,191,36,0.25)',
+                        }}>
+                          Pending Setup
+                        </span>
+                      )}
+                    </div>
+                    <p style={s.memberId}>{m.email}</p>
                   </div>
 
                   {/* Role display or edit */}
@@ -402,6 +458,15 @@ export default function Team() {
                       }}>
                         {m.role.charAt(0).toUpperCase() + m.role.slice(1)}
                       </span>
+                      {isAdmin && !m.onboarding_complete && (
+                        <button
+                          style={s.editButton}
+                          disabled={resending === m.user_id}
+                          onClick={() => handleResendInvite(m)}
+                        >
+                          {resending === m.user_id ? 'Sending…' : 'Resend invite'}
+                        </button>
+                      )}
                       {isAdmin && (
                         <button
                           style={s.editButton}

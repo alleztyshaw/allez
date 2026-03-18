@@ -1,77 +1,76 @@
 // api/invite.js
-// Sends a Supabase magic link invite to a new team member and pre-creates
-// their org_members row so they land in the right org with the right role.
+// Vercel serverless function — sends a Supabase magic-link invite
+// Accepts optional first_name + last_name to pre-populate the invitee's org_members row
+
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
 
 export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-  const { email, role, org_id } = req.body;
+  if (req.method === 'OPTIONS') return res.status(200).end();
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  if (!email || !role || !org_id) {
-    return res.status(400).json({ error: 'email, role, and org_id are required' });
-  }
+  const {
+    email,
+    role = 'advisor',
+    org_id,
+    first_name = '',
+    last_name = '',
+  } = req.body;
 
-  const VALID_ROLES = ['admin', 'manager', 'advisor', 'associate', 'compliance'];
-  if (!VALID_ROLES.includes(role)) {
-    return res.status(400).json({ error: 'Invalid role' });
-  }
-
-  const supabaseUrl  = process.env.REACT_APP_SUPABASE_URL;
-  const serviceKey   = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!supabaseUrl || !serviceKey) {
-    return res.status(500).json({ error: 'Server misconfigured — missing env vars' });
+  if (!email || !org_id) {
+    return res.status(400).json({ error: 'email and org_id are required.' });
   }
 
   try {
-    const redirectTo = `${process.env.REACT_APP_SITE_URL || 'https://allezcapital.com'}/welcome`;
-
-    // Send magic link invite via Supabase Admin API
-    const inviteRes = await fetch(`${supabaseUrl}/auth/v1/invite?redirect_to=${encodeURIComponent(redirectTo)}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': serviceKey,
-        'Authorization': `Bearer ${serviceKey}`,
-      },
-      body: JSON.stringify({
-        email,
-        data: { org_id, role, onboarding_complete: false },
-      }),
-    });
-
-    const inviteData = await inviteRes.json();
-
-    if (!inviteRes.ok) {
-      return res.status(400).json({ error: inviteData.msg || inviteData.message || 'Invite failed' });
-    }
-
-    const newUserId = inviteData.id;
-
-    // 2. Pre-create org_members row so RLS works on first login
-    if (newUserId) {
-      const memberRes = await fetch(`${supabaseUrl}/rest/v1/org_members`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': serviceKey,
-          'Authorization': `Bearer ${serviceKey}`,
-          'Prefer': 'resolution=ignore-duplicates',
-        },
-        body: JSON.stringify({ org_id, user_id: newUserId, role }),
-      });
-
-      if (!memberRes.ok) {
-        console.error('Failed to pre-create org_members row');
+    // Send Supabase magic-link invite — stores org_id + role in user metadata
+    const { data: inviteData, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(
+      email.trim().toLowerCase(),
+      {
+        data: { org_id, role },
+        redirectTo: `${process.env.APP_URL}/welcome`,
       }
+    );
+
+    if (inviteError) {
+      console.error('Supabase invite error:', inviteError);
+      return res.status(400).json({ error: inviteError.message });
     }
 
-    return res.status(200).json({ success: true, email });
+    const userId = inviteData?.user?.id;
+    if (!userId) {
+      return res.status(500).json({ error: 'Invite sent but user ID not returned.' });
+    }
+
+    // Upsert org_members row — creates it with optional name fields pre-populated
+    // onboarding_complete stays false until the user completes the Welcome page
+    const { error: memberError } = await supabaseAdmin
+      .from('org_members')
+      .upsert({
+        user_id: userId,
+        org_id,
+        role,
+        first_name: first_name.trim() || null,
+        last_name: last_name.trim() || null,
+        onboarding_complete: false,
+      }, { onConflict: 'user_id,org_id' });
+
+    if (memberError) {
+      console.error('org_members upsert error:', memberError);
+      // Non-fatal — invite was sent, member row failed. Log but don't block.
+    }
+
+    return res.status(200).json({ success: true });
 
   } catch (err) {
-    console.error('Invite error:', err);
-    return res.status(500).json({ error: 'Invite failed', detail: err.message });
+    console.error('invite handler error:', err);
+    return res.status(500).json({ error: 'An unexpected error occurred.' });
   }
 }
