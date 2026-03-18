@@ -32,7 +32,7 @@ function deidentify(text, entities) {
     const escaped = original.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     result = result.replace(new RegExp(`\\b${escaped}\\b`, 'gi'), token);
   }
-  result = result.replace(/\$[\d,]+(\.\d{2})?/g, '[AMOUNT]');
+  // Only strip contact info — amounts are kept since this is a client-facing email
   result = result.replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, '[EMAIL]');
   result = result.replace(/\b\d{3}[-.\\s]?\d{3}[-.\\s]?\d{4}\b/g, '[PHONE]');
   return result;

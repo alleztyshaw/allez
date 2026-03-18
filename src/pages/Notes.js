@@ -103,6 +103,7 @@ export default function Notes() {
   const [emailBody, setEmailBody]           = useState('');
   const [emailError, setEmailError]         = useState('');
   const [emailCopied, setEmailCopied]       = useState(false);
+  const [emailDrafts, setEmailDrafts]       = useState({}); // keyed by note.id
 
   // Note list
   const [editingNote, setEditingNote] = useState(null);
@@ -295,15 +296,16 @@ export default function Notes() {
 
   function openEmailDraft(note) {
     const client = clients.find(c => c.id === note.client_id);
+    const saved = emailDrafts[note.id];
     setEmailNote(note);
-    setEmailSalutation(client?.first_name ? `Hi ${client.first_name},` : '');
-    setEmailSubject('');
-    setEmailBody('');
+    setEmailSalutation(saved?.salutation ?? (client?.first_name ? `Hi ${client.first_name},` : ''));
+    setEmailSignOff(saved?.signOff ?? 'Best,');
+    setEmailTone(saved?.tone ?? 'professional');
+    setEmailInclude(saved?.include ?? ['summary', 'decisions', 'action_items', 'follow_ups']);
+    setEmailSubject(saved?.subject ?? '');
+    setEmailBody(saved?.body ?? '');
     setEmailError('');
     setEmailCopied(false);
-    setEmailInclude(['summary', 'decisions', 'action_items', 'follow_ups']);
-    setEmailTone('professional');
-    setEmailSignOff('Best,');
   }
 
   async function handleDraftEmail() {
@@ -339,6 +341,18 @@ export default function Notes() {
       } else {
         setEmailSubject(data.subject);
         setEmailBody(data.body);
+        // Persist so draft survives modal close
+        setEmailDrafts(prev => ({
+          ...prev,
+          [emailNote.id]: {
+            subject: data.subject,
+            body: data.body,
+            salutation: emailSalutation,
+            signOff: emailSignOff,
+            tone: emailTone,
+            include: emailInclude,
+          },
+        }));
       }
     } catch {
       setEmailError('Could not reach the processing service. Please try again.');
@@ -357,10 +371,7 @@ export default function Notes() {
   function handleMailto() {
     const client = clients.find(c => c.id === emailNote?.client_id);
     const email = client?.email || '';
-    const params = new URLSearchParams();
-    params.set('subject', emailSubject);
-    params.set('body', emailBody);
-    window.open(`mailto:${email}?${params.toString()}`);
+    window.open(`mailto:${email}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`);
   }
 
   function openEdit(note) {
@@ -859,7 +870,9 @@ export default function Notes() {
                     {canWrite && (
                       <div style={s.noteActions}>
                         {isAi && (
-                          <button style={{ ...s.noteAction, color: t.ACCENT }} onClick={() => openEmailDraft(note)}>Draft Email</button>
+                          <button style={{ ...s.noteAction, color: t.ACCENT }} onClick={() => openEmailDraft(note)}>
+                            {emailDrafts[note.id] ? 'Draft Email ·' : 'Draft Email'}
+                          </button>
                         )}
                         <button style={s.noteAction} onClick={() => openEdit(note)}>Edit</button>
                         <button style={{ ...s.noteAction, color: '#f87171' }} onClick={() => handleDelete(note.id)}>Delete</button>
@@ -1042,7 +1055,10 @@ export default function Notes() {
                       <input
                         style={s.input}
                         value={emailSubject}
-                        onChange={e => setEmailSubject(e.target.value)}
+                        onChange={e => {
+                          setEmailSubject(e.target.value);
+                          setEmailDrafts(prev => ({ ...prev, [emailNote.id]: { ...prev[emailNote.id], subject: e.target.value } }));
+                        }}
                       />
                     </div>
                     <div style={{ marginBottom: '20px' }}>
@@ -1050,7 +1066,10 @@ export default function Notes() {
                       <textarea
                         style={{ ...s.textarea, minHeight: '220px' }}
                         value={emailBody}
-                        onChange={e => setEmailBody(e.target.value)}
+                        onChange={e => {
+                          setEmailBody(e.target.value);
+                          setEmailDrafts(prev => ({ ...prev, [emailNote.id]: { ...prev[emailNote.id], body: e.target.value } }));
+                        }}
                       />
                     </div>
                     <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
