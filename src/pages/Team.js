@@ -157,7 +157,7 @@ export default function Team() {
     o.name.toLowerCase().includes(orgSearch.toLowerCase())
   );
 
-  const cols = isMobile ? '1fr' : '1fr 1fr 120px 130px 180px';
+  const cols = isMobile ? '1fr 100px 32px' : '1fr 1fr 120px 130px 180px';
 
   const s = {
     ...pageStyles(t, isMobile),
@@ -464,22 +464,30 @@ export default function Team() {
                   style={{ ...s.tableRow, borderBottom: isLast ? 'none' : `1px solid ${t.BORDER}` }}
                 >
                   {/* Name */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center' }}>
                     <span style={{ fontSize: '13px', color: name ? t.TEXT : t.TEXT_MUTED, fontStyle: name ? 'normal' : 'italic', fontWeight: '400' }}>
                       {name || 'No name set'}
                     </span>
-                    {isMobile && (
+                  </div>
+
+                  {/* Role — mobile only */}
+                  {isMobile && (
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
                       <span style={{ fontSize: '12px', color: t.TEXT_MUTED, fontWeight: '300' }}>
                         {m.role.charAt(0).toUpperCase() + m.role.slice(1)}
                       </span>
-                    )}
-                    {isMobile && (
+                    </div>
+                  )}
+
+                  {/* Status dot — mobile only */}
+                  {isMobile && (
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <span style={{
                         width: '7px', height: '7px', borderRadius: '50%', flexShrink: 0,
                         background: isPending ? '#fbbf24' : t.ACCENT,
                       }} />
-                    )}
-                  </div>
+                    </div>
+                  )}
 
                   {/* Email */}
                   {!isMobile && (
