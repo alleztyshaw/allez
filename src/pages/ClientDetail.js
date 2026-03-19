@@ -959,8 +959,8 @@ export default function ClientDetail() {
                 : null;
               return (
                 <div>
-                  {/* Brief header */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                  {/* Brief header row */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                     {generatedDate && (
                       <span style={{ fontSize: '11px', color: t.TEXT_MUTED, fontWeight: '300' }}>
                         Last updated {generatedDate}
@@ -977,52 +977,56 @@ export default function ClientDetail() {
                     )}
                   </div>
 
-                  {/* Snapshot */}
-                  {b.snapshot && (
-                    <div style={{ ...s.notesCard, marginBottom: '16px' }}>
-                      <p style={s.sectionLabel}>Snapshot</p>
-                      <p style={{ ...s.notesText, lineHeight: '1.7' }}>{b.snapshot}</p>
-                    </div>
-                  )}
+                  {/* Single card containing all sections */}
+                  <div style={s.notesCard}>
 
-                  {/* Recent meetings */}
-                  {b.recent_meetings?.length > 0 && (
-                    <div style={{ ...s.notesCard, marginBottom: '16px' }}>
-                      <p style={s.sectionLabel}>Recent Meetings</p>
-                      {b.recent_meetings.map((m, i) => (
-                        <div key={i} style={{ display: 'flex', gap: '10px', padding: '6px 0', borderBottom: i < b.recent_meetings.length - 1 ? `1px solid ${t.BORDER}` : 'none' }}>
-                          <span style={{ color: t.ACCENT, flexShrink: 0, marginTop: '2px' }}>·</span>
-                          <span style={{ fontSize: '13px', color: t.TEXT, fontWeight: '300', lineHeight: '1.6' }}>{m}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                    {b.snapshot && (
+                      <div style={{ marginBottom: (b.recent_meetings?.length || b.open_commitments?.length || b.relationship_notes?.length) ? '20px' : 0 }}>
+                        <p style={{ ...s.sectionLabel, marginBottom: '8px' }}>Snapshot</p>
+                        <p style={{ fontSize: '13px', color: t.TEXT, fontWeight: '300', lineHeight: '1.7', margin: 0 }}>{b.snapshot}</p>
+                      </div>
+                    )}
 
-                  {/* Open commitments */}
-                  {b.open_commitments?.length > 0 && (
-                    <div style={{ ...s.notesCard, marginBottom: '16px' }}>
-                      <p style={s.sectionLabel}>Open Commitments</p>
-                      {b.open_commitments.map((c, i) => (
-                        <div key={i} style={{ display: 'flex', gap: '10px', padding: '6px 0', borderBottom: i < b.open_commitments.length - 1 ? `1px solid ${t.BORDER}` : 'none' }}>
-                          <span style={{ color: '#fbbf24', flexShrink: 0, marginTop: '2px' }}>·</span>
-                          <span style={{ fontSize: '13px', color: t.TEXT, fontWeight: '300', lineHeight: '1.6' }}>{c}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                    {b.recent_meetings?.length > 0 && (
+                      <div style={{ marginBottom: (b.open_commitments?.length || b.relationship_notes?.length) ? '20px' : 0 }}>
+                        {b.snapshot && <div style={{ borderTop: `1px solid ${t.BORDER}`, marginBottom: '20px' }} />}
+                        <p style={{ ...s.sectionLabel, marginBottom: '10px' }}>Recent Meetings</p>
+                        {b.recent_meetings.map((m, i) => (
+                          <div key={i} style={{ display: 'flex', gap: '10px', marginBottom: i < b.recent_meetings.length - 1 ? '8px' : 0 }}>
+                            <span style={{ color: t.TEXT, flexShrink: 0, fontSize: '13px' }}>·</span>
+                            <span style={{ fontSize: '13px', color: t.TEXT, fontWeight: '300', lineHeight: '1.6' }}>{m}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
 
-                  {/* Relationship notes */}
-                  {b.relationship_notes?.length > 0 && (
-                    <div style={{ ...s.notesCard, marginBottom: '16px' }}>
-                      <p style={s.sectionLabel}>Relationship Notes</p>
-                      {b.relationship_notes.map((r, i) => (
-                        <div key={i} style={{ display: 'flex', gap: '10px', padding: '6px 0', borderBottom: i < b.relationship_notes.length - 1 ? `1px solid ${t.BORDER}` : 'none' }}>
-                          <span style={{ color: t.TEXT_MUTED, flexShrink: 0, marginTop: '2px' }}>·</span>
-                          <span style={{ fontSize: '13px', color: t.TEXT, fontWeight: '300', lineHeight: '1.6' }}>{r}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                    {b.open_commitments?.length > 0 && (
+                      <div style={{ marginBottom: b.relationship_notes?.length ? '20px' : 0 }}>
+                        {(b.snapshot || b.recent_meetings?.length) && <div style={{ borderTop: `1px solid ${t.BORDER}`, marginBottom: '20px' }} />}
+                        <p style={{ ...s.sectionLabel, marginBottom: '10px' }}>Open Commitments</p>
+                        {b.open_commitments.map((c, i) => (
+                          <div key={i} style={{ display: 'flex', gap: '10px', marginBottom: i < b.open_commitments.length - 1 ? '8px' : 0 }}>
+                            <span style={{ color: t.TEXT, flexShrink: 0, fontSize: '13px' }}>·</span>
+                            <span style={{ fontSize: '13px', color: t.TEXT, fontWeight: '300', lineHeight: '1.6' }}>{c}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {b.relationship_notes?.length > 0 && (
+                      <div>
+                        {(b.snapshot || b.recent_meetings?.length || b.open_commitments?.length) && <div style={{ borderTop: `1px solid ${t.BORDER}`, marginBottom: '20px' }} />}
+                        <p style={{ ...s.sectionLabel, marginBottom: '10px' }}>Relationship Notes</p>
+                        {b.relationship_notes.map((r, i) => (
+                          <div key={i} style={{ display: 'flex', gap: '10px', marginBottom: i < b.relationship_notes.length - 1 ? '8px' : 0 }}>
+                            <span style={{ color: t.TEXT, flexShrink: 0, fontSize: '13px' }}>·</span>
+                            <span style={{ fontSize: '13px', color: t.TEXT, fontWeight: '300', lineHeight: '1.6' }}>{r}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                  </div>
                 </div>
               );
             })()}

@@ -13,7 +13,7 @@ Required format:
 {
   "snapshot": "2-3 sentence paragraph covering who this client is today — AUM, fee rate, risk profile, how long they have been a client, custodian. Facts only.",
   "recent_meetings": ["One sentence per meeting, most recent first. Maximum 3 entries. Each sentence captures the point of the conversation, not a transcript."],
-  "open_commitments": ["Each incomplete task or follow-up as a single line. Include who owns it. Maximum 5 entries."],
+  "open_commitments": ["Each item written action-first with the owner named at the start. Format: '[Name] to [action]' or '[Name] will [action]'. Example: 'Tom to send estate planning referral to client by end of month.' Maximum 5 entries."],
   "relationship_notes": ["Confirmed material changes to the relationship only — e.g. risk tolerance formally updated, major life event that was actioned, fee restructuring completed. 1-3 lines maximum. Omit this array entirely if nothing confirmed and material exists."]
 }
 
@@ -24,8 +24,9 @@ Critical rules:
 - Empty sections should be empty arrays [], not omitted keys
 - relationship_notes should only contain things that materially changed how the advisor manages this client
 - recent_meetings must be one sentence each — no bullet points within a sentence
+- open_commitments must start with the person's name followed by "to" or "will" — never use an em dash or append names at the end
 - The entire brief must not exceed 400 words
-- All tokens like [CLIENT], [ADVISOR_1] must be preserved exactly as written`;
+- All tokens like [CLIENT], [ADVISOR_1] must be preserved exactly as written — do not replace them`;
 
 function buildEntities(clientName, orgMemberNames) {
   const entities = [];
@@ -64,13 +65,19 @@ function deidentify(text, entities) {
 
 function reidentify(obj, entities) {
   let str = JSON.stringify(obj);
-  const reversed = [...entities].sort((a, b) => a.original.length - b.original.length);
-  for (const { original, token } of reversed) {
+  // Sort longest tokens first to avoid partial replacements
+  const sorted = [...entities].sort((a, b) => b.token.length - a.token.length);
+  for (const { original, token } of sorted) {
     const escapedToken = token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    str = str.replace(new RegExp(escapedToken, 'g'),
-      original.split(/\s+/).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
-    );
+    const properCased = original
+      .split(/\s+/)
+      .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(' ');
+    str = str.replace(new RegExp(escapedToken, 'g'), properCased);
   }
+  // Clean up any unreplaced tokens — e.g. [ADVISOR_2] if not enough members
+  str = str.replace(/\[ADVISOR_\d+\]/g, 'Advisor');
+  str = str.replace(/\[CLIENT\]/g, 'Client');
   try { return JSON.parse(str); } catch { return obj; }
 }
 
