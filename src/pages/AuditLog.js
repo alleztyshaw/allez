@@ -7,7 +7,7 @@ import {
   SHADOW_MD,
   FULL_ACCESS_ROLES,
   pageStyles,
-  FW_LIGHT, FW_REGULAR, FW_SEMIBOLD,
+  FW_LIGHT, FW_REGULAR, FW_MEDIUM, FW_SEMIBOLD,
   MOBILE_BREAKPOINT,
 } from '../utils/hqConstants';
 import { useTokens } from '../context/ThemeContext';
@@ -116,6 +116,10 @@ export default function AuditLog() {
   const [members, setMembers]     = useState([]);
   const [loading, setLoading]     = useState(true);
   const [expanded, setExpanded]   = useState({});
+  const [activeTab, setActiveTab] = useState('audit'); // 'audit' | 'flagged'
+  const [flaggedNotes, setFlaggedNotes]     = useState([]);
+  const [flaggedLoading, setFlaggedLoading] = useState(false);
+  const [flaggedClients, setFlaggedClients] = useState({});
 
   // Filters
   const [filterTable,  setFilterTable]  = useState('all');
@@ -160,6 +164,34 @@ export default function AuditLog() {
 
   useEffect(() => { if (contextRole) fetchLogs(); }, [fetchLogs, contextRole]);
 
+  useEffect(() => {
+    if (!orgId || activeTab !== 'flagged') return;
+    async function fetchFlagged() {
+      setFlaggedLoading(true);
+      const { data: notes } = await supabase
+        .from('notes')
+        .select('id, title, body, note_type, client_id, created_at, compliance_severity, compliance_reasons, compliance_flagged_at')
+        .eq('org_id', orgId)
+        .eq('compliance_flagged', true)
+        .is('deleted_at', null)
+        .order('compliance_flagged_at', { ascending: false });
+      setFlaggedNotes(notes || []);
+      // Fetch client names
+      const clientIds = [...new Set((notes || []).map(n => n.client_id).filter(Boolean))];
+      if (clientIds.length) {
+        const { data: clients } = await supabase
+          .from('clients')
+          .select('id, first_name, last_name')
+          .in('id', clientIds);
+        const map = {};
+        (clients || []).forEach(c => { map[c.id] = `${c.first_name} ${c.last_name}`; });
+        setFlaggedClients(map);
+      }
+      setFlaggedLoading(false);
+    }
+    fetchFlagged();
+  }, [orgId, activeTab]);
+
   function memberName(userId) {
     const m = members.find(m => m.user_id === userId);
     if (!m || !m.first_name) return 'Unknown user';
@@ -188,6 +220,9 @@ export default function AuditLog() {
     filterRow:    { display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '32px', alignItems: 'flex-end' },
     filterGroup:  { display: 'flex', flexDirection: 'column', gap: '4px' },
     filterLabel:  { fontSize: '10px', fontWeight: FW_SEMIBOLD, textTransform: 'uppercase', letterSpacing: '0.08em', color: t.TEXT_MUTED, fontFamily: FONT_BODY },
+    tabRow: { display: 'flex', gap: '4px', marginBottom: '28px', borderBottom: `1px solid ${t.BORDER}` },
+    tab: { padding: '8px 20px', fontSize: '13px', fontWeight: FW_MEDIUM, fontFamily: FONT_BODY, cursor: 'pointer', background: 'none', border: 'none', borderBottom: '2px solid transparent', color: t.TEXT_MUTED, marginBottom: '-1px' },
+    tabActive: { color: t.TEXT, borderBottom: `2px solid ${t.ACCENT}` },
     filterSelect: { fontFamily: FONT_BODY, fontSize: '13px', background: t.SURFACE, color: t.TEXT, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_MD, padding: '7px 10px', cursor: 'pointer' },
     filterInput:  { fontFamily: FONT_BODY, fontSize: '13px', background: t.SURFACE, color: t.TEXT, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_MD, padding: '7px 10px' },
     dateLabel:    { fontSize: '11px', fontWeight: FW_SEMIBOLD, textTransform: 'uppercase', letterSpacing: '0.08em', color: t.TEXT_MUTED, margin: '0 0 10px', fontFamily: FONT_BODY },
@@ -232,6 +267,63 @@ export default function AuditLog() {
             </p>
           </div>
         </div>
+
+        {/* Tab bar */}
+        <div style={s.tabRow}>
+          {[['audit', 'Audit Log'], ['flagged', 'Flagged Notes']].map(([key, label]) => (
+            <button
+              key={key}
+              style={{ ...s.tab, ...(activeTab === key ? s.tabActive : {}) }}
+              onClick={() => setActiveTab(key)}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+      {/* ── Flagged Notes tab ─────────────────────────────────────────── */}
+      {activeTab === 'flagged' && (
+        <div>
+          {flaggedLoading ? (
+            <p style={{ color: t.TEXT_MUTED, fontWeight: FW_LIGHT }}>Loading flagged notes…</p>
+          ) : flaggedNotes.length === 0 ? (
+            <div style={{ color: t.TEXT_MUTED, fontSize: '14px', fontWeight: FW_LIGHT, padding: '32px 0', textAlign: 'center' }}>
+              No flagged notes. Run a compliance scan on any AI note from the Notes page.
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {flaggedNotes.map(note => {
+                const severityColor = note.compliance_severity === 'high' ? '#f87171' : note.compliance_severity === 'medium' ? '#fbbf24' : t.TEXT_MUTED;
+                const flaggedDate = note.compliance_flagged_at
+                  ? new Date(note.compliance_flagged_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                  : null;
+                return (
+                  <div key={note.id} style={{ background: t.SURFACE, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_LG, padding: '18px 20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px', flexWrap: 'wrap', gap: '8px' }}>
+                      <div>
+                        <p style={{ fontSize: '14px', color: t.TEXT, fontWeight: FW_REGULAR, margin: '0 0 2px' }}>{note.title}</p>
+                        <p style={{ fontSize: '11px', color: t.TEXT_MUTED, fontWeight: FW_LIGHT, margin: 0 }}>
+                          {flaggedClients[note.client_id] || '—'}{flaggedDate ? ` · Flagged ${flaggedDate}` : ''}
+                        </p>
+                      </div>
+                      <span style={{ fontSize: '11px', fontWeight: FW_SEMIBOLD, padding: '3px 10px', borderRadius: RADIUS_PILL, textTransform: 'uppercase', letterSpacing: '0.06em', background: `${severityColor}22`, color: severityColor, border: `1px solid ${severityColor}44` }}>
+                        {note.compliance_severity || 'flagged'}
+                      </span>
+                    </div>
+                    {(note.compliance_reasons || []).map((r, i) => (
+                      <p key={i} style={{ fontSize: '12px', color: t.TEXT_MUTED, fontWeight: FW_LIGHT, margin: '4px 0', lineHeight: '1.5' }}>· {r}</p>
+                    ))}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Audit Log tab ─────────────────────────────────────────────── */}
+      {activeTab === 'audit' && (
+        <div>
 
       {/* Filters */}
       <div style={s.filterRow}>
@@ -356,6 +448,8 @@ export default function AuditLog() {
           </div>
         ))
       )}
+      </div>
+      )} {/* end activeTab === 'audit' */}
       </div>
     </div>
   );

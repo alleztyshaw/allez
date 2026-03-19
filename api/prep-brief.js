@@ -172,7 +172,7 @@ export default async function handler(req, res) {
     const openTasks = (tasks || [])
       .filter(t => !t.completed)
       .map(t => {
-        const owner = advisorMap[t.assigned_to] || 'Advisor';
+        const owner = advisorMap[t.created_by] || advisorMap[t.assigned_to] || 'Advisor';
         const due = t.due_date ? ` (due ${t.due_date})` : '';
         return `${t.title}${due} — ${owner}`;
       });

@@ -12,6 +12,7 @@ import {
   SHADOW_LG,
   STATUS_COLORS,
   WRITE_ROLES,
+  FULL_ACCESS_ROLES,
   pageStyles,
   MOBILE_BREAKPOINT,
   AI_COLOR,
@@ -110,6 +111,12 @@ export default function Notes() {
   const [emailError, setEmailError]         = useState('');
   const [emailCopied, setEmailCopied]       = useState(false);
   const [emailDrafts, setEmailDrafts]       = useState({}); // persisted drafts keyed by note id
+
+  // Compliance flagging
+  const [flagging, setFlagging]             = useState(null);  // note id being flagged
+  const [flagResults, setFlagResults]       = useState({});    // keyed by note id
+  const canFlag = WRITE_ROLES.includes(userRole) && userRole !== 'associate';
+  const canViewFlags = FULL_ACCESS_ROLES.includes(userRole);
 
   // Note list
   const [editingNote, setEditingNote] = useState(null);
@@ -504,6 +511,47 @@ export default function Notes() {
     const client = clients.find(c => c.id === emailNote?.client_id);
     const email = client?.email || '';
     window.open(`mailto:${email}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`);
+  }
+
+  async function handleComplianceFlag(note) {
+    setFlagging(note.id);
+    const aiSummary = parseAiSummary(note);
+    const client = clients.find(c => c.id === note.client_id);
+    const clientFullName = client ? `${client.first_name} ${client.last_name}` : '';
+    const advisorNames = orgMembers
+      .map(m => m.first_name && m.last_name ? `${m.first_name} ${m.last_name}` : null)
+      .filter(Boolean);
+
+    try {
+      const res = await fetch('/api/compliance-flag', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          note_body: note.body || note.transcript || '',
+          ai_summary: aiSummary,
+          client_name: clientFullName,
+          advisor_names: advisorNames,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setFlagResults(prev => ({ ...prev, [note.id]: { error: data.error } }));
+      } else {
+        // Persist flag to DB
+        await supabase.from('notes').update({
+          compliance_flagged:    data.flagged,
+          compliance_reasons:    data.reasons,
+          compliance_severity:   data.severity,
+          compliance_flagged_at: data.flagged ? new Date().toISOString() : null,
+          compliance_flagged_by: (await supabase.auth.getSession()).data.session?.user?.id,
+        }).eq('id', note.id);
+        setFlagResults(prev => ({ ...prev, [note.id]: data }));
+        fetchData();
+      }
+    } catch {
+      setFlagResults(prev => ({ ...prev, [note.id]: { error: 'Could not reach compliance service.' } }));
+    }
+    setFlagging(null);
   }
 
   function openEdit(note) {
@@ -1142,10 +1190,43 @@ export default function Notes() {
                             {emailDrafts[note.id] ? 'Draft Email ·' : 'Draft Email'}
                           </button>
                         )}
+                        {canFlag && (
+                          <button
+                            style={{ ...s.noteAction, color: note.compliance_flagged ? '#fbbf24' : t.TEXT_MUTED }}
+                            onClick={() => handleComplianceFlag(note)}
+                            disabled={flagging === note.id}
+                          >
+                            {flagging === note.id ? 'Scanning…' : note.compliance_flagged ? '⚑ Flagged' : 'Flag'}
+                          </button>
+                        )}
                         <button style={s.noteAction} onClick={() => openEdit(note)}>Edit</button>
                         <button style={{ ...s.noteAction, color: '#f87171' }} onClick={() => handleDelete(note.id)}>Delete</button>
                       </div>
                     )}
+
+                    {/* Compliance flag result — shown after scan */}
+                    {(flagResults[note.id] || note.compliance_flagged) && canViewFlags && (() => {
+                      const result = flagResults[note.id];
+                      const flagged = result?.flagged ?? note.compliance_flagged;
+                      const severity = result?.severity ?? note.compliance_severity;
+                      const reasons = result?.reasons ?? note.compliance_reasons;
+                      if (!flagged) return (
+                        <p style={{ fontSize: '11px', color: t.ACCENT, margin: '6px 0 0', fontWeight: FW_LIGHT }}>
+                          ✓ No compliance concerns identified
+                        </p>
+                      );
+                      const severityColor = severity === 'high' ? '#f87171' : severity === 'medium' ? '#fbbf24' : t.TEXT_MUTED;
+                      return (
+                        <div style={{ marginTop: '10px', padding: '10px 12px', background: `rgba(251,191,36,0.06)`, border: `1px solid rgba(251,191,36,0.2)`, borderRadius: RADIUS_MD }}>
+                          <p style={{ fontSize: '11px', fontWeight: FW_SEMIBOLD, color: severityColor, margin: '0 0 6px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                            ⚑ Compliance review — {severity || 'flagged'}
+                          </p>
+                          {(reasons || []).map((r, i) => (
+                            <p key={i} style={{ fontSize: '12px', color: t.TEXT_MUTED, margin: '2px 0', fontWeight: FW_LIGHT, lineHeight: '1.5' }}>· {r}</p>
+                          ))}
+                        </div>
+                      );
+                    })()}
                   </div>
                 );
               })}
