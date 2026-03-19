@@ -1,4 +1,6 @@
 // api/process-note.js
+const CLAUDE_MODEL = 'claude-haiku-4-5-20251001'; // Update in hqConstants and here together
+
 // Vercel serverless function — AI note processing pipeline
 // De-identifies transcript → calls Anthropic → re-identifies response
 // PII never leaves this function in identifiable form
@@ -148,7 +150,7 @@ export default async function handler(req, res) {
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
+        model: CLAUDE_MODEL,
         max_tokens: 1000,
         system: SYSTEM_PROMPT,
         messages: [

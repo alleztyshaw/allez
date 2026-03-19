@@ -7,6 +7,7 @@ import {
   D_TEXT, D_TEXT_MUTED,
   FONT_DISPLAY, FONT_BODY,
   RADIUS_MD, RADIUS_LG,
+  FW_LIGHT, FW_REGULAR, FW_MEDIUM, FW_SEMIBOLD,
 } from '../utils/hqConstants';
 
 export default function Welcome() {
@@ -271,13 +272,13 @@ const s = {
     borderRadius: RADIUS_LG, padding: '48px', width: '100%', maxWidth: '440px',
     boxShadow: '0 24px 64px rgba(0,0,0,0.4)',
   },
-  logo: { fontFamily: FONT_DISPLAY, fontSize: '20px', fontWeight: '300', color: ACCENT, margin: '0 0 32px', letterSpacing: '0.06em' },
-  title: { fontFamily: FONT_DISPLAY, fontSize: '32px', fontWeight: '300', color: D_TEXT, margin: '0 0 8px', letterSpacing: '0.01em', lineHeight: 1.2 },
-  subtitle: { fontSize: '14px', fontWeight: '300', color: D_TEXT_MUTED, margin: '0 0 32px', lineHeight: '1.6' },
+  logo: { fontFamily: FONT_DISPLAY, fontSize: '20px', fontWeight: FW_LIGHT, color: ACCENT, margin: '0 0 32px', letterSpacing: '0.06em' },
+  title: { fontFamily: FONT_DISPLAY, fontSize: '32px', fontWeight: FW_LIGHT, color: D_TEXT, margin: '0 0 8px', letterSpacing: '0.01em', lineHeight: 1.2 },
+  subtitle: { fontSize: '14px', fontWeight: FW_LIGHT, color: D_TEXT_MUTED, margin: '0 0 32px', lineHeight: '1.6' },
   fieldGroup: { display: 'flex', flexDirection: 'column', gap: '5px', marginBottom: '16px' },
-  label: { fontSize: '10px', fontWeight: '600', color: D_TEXT_MUTED, letterSpacing: '0.12em', textTransform: 'uppercase' },
+  label: { fontSize: '10px', fontWeight: FW_SEMIBOLD, color: D_TEXT_MUTED, letterSpacing: '0.12em', textTransform: 'uppercase' },
   input: { background: D_SURFACE_ALT, border: `1px solid ${D_BORDER}`, borderRadius: RADIUS_MD, padding: '11px 14px', fontSize: '14px', color: D_TEXT, fontFamily: FONT_BODY, outline: 'none', width: '100%', boxSizing: 'border-box' },
-  hint: { fontSize: '11px', color: D_TEXT_MUTED, margin: '4px 0 0', fontStyle: 'italic', fontWeight: '300' },
+  hint: { fontSize: '11px', color: D_TEXT_MUTED, margin: '4px 0 0', fontStyle: 'italic', fontWeight: FW_LIGHT },
   divider: { height: '1px', background: D_BORDER, margin: '24px 0' },
   consentRow: {
     display: 'flex', alignItems: 'flex-start', gap: '12px',
@@ -294,12 +295,12 @@ const s = {
     borderColor: ACCENT, background: ACCENT_MUTED,
   },
   consentText: {
-    fontSize: '12px', fontWeight: '300', color: D_TEXT_MUTED,
+    fontSize: '12px', fontWeight: FW_LIGHT, color: D_TEXT_MUTED,
     lineHeight: '1.6', margin: 0,
   },
   submitBtn: {
     width: '100%', background: ACCENT_MUTED, border: `1px solid ${ACCENT_BORDER}`,
-    borderRadius: RADIUS_MD, padding: '13px', fontSize: '14px', fontWeight: '600',
+    borderRadius: RADIUS_MD, padding: '13px', fontSize: '14px', fontWeight: FW_SEMIBOLD,
     color: ACCENT, cursor: 'pointer', fontFamily: FONT_BODY,
     letterSpacing: '0.03em', marginTop: '8px',
   },
@@ -307,5 +308,5 @@ const s = {
     opacity: 0.4, cursor: 'not-allowed',
   },
   error: { fontSize: '13px', color: '#f87171', margin: '12px 0 0' },
-  loadingText: { color: D_TEXT_MUTED, fontSize: '14px', textAlign: 'center', fontWeight: '300', margin: 0 },
+  loadingText: { color: D_TEXT_MUTED, fontSize: '14px', textAlign: 'center', fontWeight: FW_LIGHT, margin: 0 },
 };

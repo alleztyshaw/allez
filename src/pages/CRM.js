@@ -9,8 +9,9 @@ import {
   SHADOW_MD,
   pageStyles,
   MOBILE_BREAKPOINT,
-} from '../utils/hqConstants';
+  FW_LIGHT, FW_REGULAR, FW_MEDIUM, FW_SEMIBOLD} from '../utils/hqConstants';
 import { useTokens } from '../context/ThemeContext';
+import useWindowWidth from '../hooks/useWindowWidth';
 
 const TABS = ['Tasks', 'Activity', 'Pipeline'];
 
@@ -61,16 +62,6 @@ function isOverdue(dateStr) {
   if (!dateStr) return false;
   if (isToday(dateStr)) return false;
   return new Date(dateStr + 'T12:00:00') < new Date(localToday() + 'T00:00:00');
-}
-
-function useWindowWidth() {
-  const [width, setWidth] = useState(window.innerWidth);
-  useEffect(() => {
-    const handler = () => setWidth(window.innerWidth);
-    window.addEventListener('resize', handler);
-    return () => window.removeEventListener('resize', handler);
-  }, []);
-  return width;
 }
 
 export default function CRM() {
@@ -187,19 +178,19 @@ export default function CRM() {
   const s = {
     ...pageStyles(t, isMobile),
     pageHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? '12px' : '0', marginBottom: '32px' },
-    addButton: { background: 'transparent', color: t.ACCENT, border: `1px solid ${t.ACCENT_BORDER}`, borderRadius: RADIUS_MD, padding: '10px 20px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: FONT_BODY },
+    addButton: { background: 'transparent', color: t.ACCENT, border: `1px solid ${t.ACCENT_BORDER}`, borderRadius: RADIUS_MD, padding: '10px 20px', fontSize: '14px', fontWeight: FW_SEMIBOLD, cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: FONT_BODY },
 
     // BI bar
     biBar: { display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : isTablet ? 'repeat(3, 1fr)' : 'repeat(5, 1fr)', gap: '12px', marginBottom: '32px' },
     biCard: { background: t.SURFACE, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_LG, padding: '18px 20px', boxShadow: SHADOW_MD },
-    biLabel: { fontSize: '10px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.1em', color: t.TEXT_MUTED, margin: '0 0 6px' },
-    biValue: { fontSize: '18px', fontWeight: '300', fontFamily: FONT_BODY, color: t.TEXT, margin: 0, letterSpacing: '0.01em' },
-    biSub: { fontSize: '11px', color: t.TEXT_SUBTLE, margin: '4px 0 0', fontWeight: '300' },
+    biLabel: { fontSize: '10px', fontWeight: FW_SEMIBOLD, textTransform: 'uppercase', letterSpacing: '0.1em', color: t.TEXT_MUTED, margin: '0 0 6px' },
+    biValue: { fontSize: '18px', fontWeight: FW_LIGHT, fontFamily: FONT_BODY, color: t.TEXT, margin: 0, letterSpacing: '0.01em' },
+    biSub: { fontSize: '11px', color: t.TEXT_SUBTLE, margin: '4px 0 0', fontWeight: FW_LIGHT },
 
     // Tabs
     tabRow: { display: 'flex', gap: '4px', marginBottom: '28px', borderBottom: `1px solid ${t.BORDER}`, paddingBottom: '0' },
     tab: (active) => ({
-      padding: '10px 20px', fontSize: '13px', fontWeight: '500',
+      padding: '10px 20px', fontSize: '13px', fontWeight: FW_MEDIUM,
       color: active ? t.ACCENT : t.TEXT_MUTED,
       background: 'none', border: 'none', cursor: 'pointer',
       borderBottom: active ? `2px solid ${t.ACCENT}` : '2px solid transparent',
@@ -210,18 +201,18 @@ export default function CRM() {
     // Pipeline table
     tableWrap: { border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_LG, overflow: 'hidden', boxShadow: SHADOW_MD, overflowX: 'auto' },
     tableHead: { display: 'grid', gridTemplateColumns: isMobile ? '1fr 100px' : '1fr 110px 110px 120px 110px', padding: '10px 20px', background: t.SURFACE_ALT, borderBottom: `1px solid ${t.BORDER}`, minWidth: isMobile ? 'unset' : '600px' },
-    tableHeadCell: { fontSize: '10px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.1em', color: t.TEXT_MUTED },
+    tableHeadCell: { fontSize: '10px', fontWeight: FW_SEMIBOLD, textTransform: 'uppercase', letterSpacing: '0.1em', color: t.TEXT_MUTED },
     tableRow: { display: 'grid', gridTemplateColumns: isMobile ? '1fr 100px' : '1fr 110px 110px 120px 110px', padding: '14px 20px', borderBottom: `1px solid ${t.BORDER}`, background: t.SURFACE, cursor: 'pointer', transition: 'background 0.15s', minWidth: isMobile ? 'unset' : '600px' },
     tableCell: { fontSize: '13px', color: t.TEXT, display: 'flex', alignItems: 'center' },
-    tableCellMuted: { fontSize: '12px', color: t.TEXT_MUTED, display: 'flex', alignItems: 'center', fontWeight: '300' },
+    tableCellMuted: { fontSize: '12px', color: t.TEXT_MUTED, display: 'flex', alignItems: 'center', fontWeight: FW_LIGHT },
 
     // Tasks
     taskCard: { background: t.SURFACE, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_LG, padding: '16px 20px', marginBottom: '10px', boxShadow: SHADOW_MD, display: 'flex', alignItems: 'center', gap: '14px' },
     taskCheck: { width: '18px', height: '18px', borderRadius: '50%', border: `2px solid ${t.BORDER}`, cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'border-color 0.15s' },
-    taskTitle: { flex: 1, fontSize: '14px', color: t.TEXT, margin: 0, fontWeight: '400' },
-    taskMeta: { fontSize: '11px', color: t.TEXT_MUTED, margin: '3px 0 0', fontWeight: '300' },
+    taskTitle: { flex: 1, fontSize: '14px', color: t.TEXT, margin: 0, fontWeight: FW_REGULAR },
+    taskMeta: { fontSize: '11px', color: t.TEXT_MUTED, margin: '3px 0 0', fontWeight: FW_LIGHT },
     dueBadge: (today, soon, overdue) => ({
-      fontSize: '10px', fontWeight: '600', padding: '2px 10px',
+      fontSize: '10px', fontWeight: FW_SEMIBOLD, padding: '2px 10px',
       borderRadius: RADIUS_PILL,
       background: overdue ? 'rgba(248,113,113,0.12)' : today ? t.ACCENT_MUTED : soon ? 'rgba(251,191,36,0.12)' : 'rgba(96,165,250,0.12)',
       color: overdue ? '#f87171' : today ? t.ACCENT : soon ? '#fbbf24' : '#60a5fa',
@@ -234,29 +225,29 @@ export default function CRM() {
     formCard: { background: t.SURFACE, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_LG, padding: '20px 24px', marginBottom: '20px', boxShadow: SHADOW_MD },
     formRow: { display: 'flex', gap: '12px', marginBottom: '12px', flexWrap: 'wrap' },
     formField: { display: 'flex', flexDirection: 'column', gap: '4px', flex: 1, minWidth: '160px' },
-    label: { fontSize: '12px', fontWeight: '500', color: t.TEXT_MUTED },
+    label: { fontSize: '12px', fontWeight: FW_MEDIUM, color: t.TEXT_MUTED },
     input: { border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_MD, padding: '8px 12px', fontSize: '14px', outline: 'none', color: t.TEXT, background: t.SURFACE_ALT, fontFamily: FONT_BODY },
     formFooter: { display: 'flex', justifyContent: 'flex-end', gap: '10px' },
     cancelButton: { padding: '8px 18px', borderRadius: RADIUS_MD, border: `1px solid ${t.BORDER}`, background: 'transparent', fontSize: '13px', cursor: 'pointer', color: t.TEXT_MUTED, fontFamily: FONT_BODY },
-    saveButton: { padding: '8px 18px', borderRadius: RADIUS_MD, border: `1px solid ${t.ACCENT_BORDER}`, background: t.ACCENT_MUTED, color: t.ACCENT, fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: FONT_BODY },
+    saveButton: { padding: '8px 18px', borderRadius: RADIUS_MD, border: `1px solid ${t.ACCENT_BORDER}`, background: t.ACCENT_MUTED, color: t.ACCENT, fontSize: '13px', fontWeight: FW_SEMIBOLD, cursor: 'pointer', fontFamily: FONT_BODY },
 
     // Activity
     activityCard: { background: t.SURFACE, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_LG, padding: '14px 20px', marginBottom: '8px', boxShadow: SHADOW_MD, display: 'flex', alignItems: 'center', gap: '14px' },
     activityDot: (type) => ({ width: '8px', height: '8px', borderRadius: '50%', flexShrink: 0, background: type === 'note' ? t.ACCENT : '#60a5fa' }),
     activityLabel: { flex: 1, fontSize: '14px', color: t.TEXT, margin: 0 },
-    activitySub: { fontSize: '11px', color: t.TEXT_MUTED, margin: '2px 0 0', fontWeight: '300' },
-    activityTime: { fontSize: '11px', color: t.TEXT_SUBTLE, flexShrink: 0, fontWeight: '300' },
+    activitySub: { fontSize: '11px', color: t.TEXT_MUTED, margin: '2px 0 0', fontWeight: FW_LIGHT },
+    activityTime: { fontSize: '11px', color: t.TEXT_SUBTLE, flexShrink: 0, fontWeight: FW_LIGHT },
 
     overlay: { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.65)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' },
     modal: { background: t.SURFACE, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_LG, width: '100%', maxWidth: '580px', boxShadow: '0 24px 64px rgba(0,0,0,0.5)' },
     modalHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '18px 22px', borderBottom: `1px solid ${t.BORDER}` },
-    modalTitle: { margin: 0, fontFamily: FONT_DISPLAY, fontSize: '22px', fontWeight: '400', color: t.TEXT, letterSpacing: '0.01em' },
+    modalTitle: { margin: 0, fontFamily: FONT_DISPLAY, fontSize: '22px', fontWeight: FW_REGULAR, color: t.TEXT, letterSpacing: '0.01em' },
     closeButton: { background: 'none', border: 'none', fontSize: '16px', cursor: 'pointer', color: t.TEXT_MUTED, padding: '2px 6px' },
     modalBody: { padding: '20px 22px' },
     modalFooter: { padding: '14px 22px', borderTop: `1px solid ${t.BORDER}`, display: 'flex', justifyContent: 'flex-end', gap: '10px' },
-    emptyState: { background: t.SURFACE, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_LG, padding: '48px', textAlign: 'center', color: t.TEXT_MUTED, fontSize: '14px', fontWeight: '300' },
+    emptyState: { background: t.SURFACE, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_LG, padding: '48px', textAlign: 'center', color: t.TEXT_MUTED, fontSize: '14px', fontWeight: FW_LIGHT },
     errorText: { color: '#f87171', fontSize: '12px', marginBottom: '8px' },
-    sectionLabel: { fontSize: '11px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.1em', color: t.TEXT_MUTED, margin: '0 0 12px' },
+    sectionLabel: { fontSize: '11px', fontWeight: FW_SEMIBOLD, textTransform: 'uppercase', letterSpacing: '0.1em', color: t.TEXT_MUTED, margin: '0 0 12px' },
   };
 
   return (
@@ -332,7 +323,7 @@ export default function CRM() {
                 {/* New task form */}
                 {showTaskForm && (
                   <div style={s.formCard}>
-                    <p style={{ fontSize: '10px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.12em', color: t.ACCENT, margin: '0 0 14px' }}>New Task</p>
+                    <p style={{ fontSize: '10px', fontWeight: FW_SEMIBOLD, textTransform: 'uppercase', letterSpacing: '0.12em', color: t.ACCENT, margin: '0 0 14px' }}>New Task</p>
                     <div style={s.formRow}>
                       <div style={{ ...s.formField, flex: 3, minWidth: '220px' }}>
                         <label style={s.label}>Task *</label>
@@ -542,7 +533,7 @@ function TaskRow({ task, clientName, onComplete, onDelete, onEdit, s, t, navigat
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '2px 20px 12px 52px' }}>
         {task.client_id ? (
           <span
-            style={{ fontSize: '12px', color: t.TEXT, fontWeight: '400', cursor: 'pointer', flex: 1 }}
+            style={{ fontSize: '12px', color: t.TEXT, fontWeight: FW_REGULAR, cursor: 'pointer', flex: 1 }}
             onClick={e => { e.stopPropagation(); navigate(`/hq/clients/${task.client_id}`, { state: { from: '/hq/crm' } }); }}
           >
             {clientName(task.client_id)}
@@ -579,7 +570,7 @@ function TaskRow({ task, clientName, onComplete, onDelete, onEdit, s, t, navigat
       {/* Expandable note */}
       {hasNotes && expanded && (
         <div style={{ borderTop: `1px solid ${t.BORDER}`, padding: '12px 20px 14px 52px', animation: 'fadeUp 0.25s ease both' }}>
-          <p style={{ fontSize: '13px', color: t.TEXT_MUTED, fontWeight: '300', lineHeight: '1.65', margin: 0, whiteSpace: 'pre-wrap' }}>
+          <p style={{ fontSize: '13px', color: t.TEXT_MUTED, fontWeight: FW_LIGHT, lineHeight: '1.65', margin: 0, whiteSpace: 'pre-wrap' }}>
             {task.notes}
           </p>
         </div>
@@ -655,7 +646,7 @@ function PipelineTable({ clients, navigate, s, t, isMobile, orgId, onStageChange
         <button
           onClick={() => setStageFilter('All')}
           style={{
-            padding: '5px 14px', borderRadius: RADIUS_PILL, fontSize: '12px', fontWeight: '600',
+            padding: '5px 14px', borderRadius: RADIUS_PILL, fontSize: '12px', fontWeight: FW_SEMIBOLD,
             cursor: 'pointer', fontFamily: FONT_BODY, border: `1px solid ${stageFilter === 'All' ? t.ACCENT : 'transparent'}`,
             background: stageFilter === 'All' ? t.ACCENT_MUTED : t.SURFACE_ALT,
             color: stageFilter === 'All' ? t.ACCENT : t.TEXT_MUTED, transition: 'all 0.15s',
@@ -671,7 +662,7 @@ function PipelineTable({ clients, navigate, s, t, isMobile, orgId, onStageChange
               key={st.key}
               onClick={() => setStageFilter(st.key)}
               style={{
-                padding: '5px 14px', borderRadius: RADIUS_PILL, fontSize: '12px', fontWeight: '600',
+                padding: '5px 14px', borderRadius: RADIUS_PILL, fontSize: '12px', fontWeight: FW_SEMIBOLD,
                 cursor: 'pointer', fontFamily: FONT_BODY,
                 border: `1px solid ${active ? sc.color : 'transparent'}`,
                 background: active ? sc.bg : t.SURFACE_ALT,
@@ -703,7 +694,7 @@ function PipelineTable({ clients, navigate, s, t, isMobile, orgId, onStageChange
               <div
                 key={col.label}
                 onClick={() => col.key && toggleSort(col.key)}
-                style={{ fontSize: '10px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.1em', color: t.TEXT_MUTED, cursor: col.key ? 'pointer' : 'default', display: 'flex', alignItems: 'center' }}
+                style={{ fontSize: '10px', fontWeight: FW_SEMIBOLD, textTransform: 'uppercase', letterSpacing: '0.1em', color: t.TEXT_MUTED, cursor: col.key ? 'pointer' : 'default', display: 'flex', alignItems: 'center' }}
               >
                 {col.label}{col.key && arrow(col.key)}
               </div>
@@ -740,7 +731,7 @@ function PipelineTable({ clients, navigate, s, t, isMobile, orgId, onStageChange
               >
                 {/* Name — clickable */}
                 <div
-                  style={{ fontSize: '13px', color: t.TEXT, fontWeight: '500', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+                  style={{ fontSize: '13px', color: t.TEXT, fontWeight: FW_MEDIUM, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
                   onClick={() => navigate(`/hq/clients/${client.id}`, { state: { from: '/hq/crm' } })}
                 >
                   {client.last_name}, {client.first_name}
@@ -748,7 +739,7 @@ function PipelineTable({ clients, navigate, s, t, isMobile, orgId, onStageChange
 
                 {/* Stage — plain text */}
                 <div>
-                  <span style={{ fontSize: '13px', fontWeight: '400', color: t.TEXT_MUTED }}>
+                  <span style={{ fontSize: '13px', fontWeight: FW_REGULAR, color: t.TEXT_MUTED }}>
                     {client.pipeline_stage}
                   </span>
                 </div>
@@ -758,7 +749,7 @@ function PipelineTable({ clients, navigate, s, t, isMobile, orgId, onStageChange
                   <div style={{ position: 'relative' }}>
                     {client.is_reactivation ? (
                       <span
-                        style={{ fontSize: '11px', color: '#fbbf24', fontWeight: '500', cursor: 'default' }}
+                        style={{ fontSize: '11px', color: '#fbbf24', fontWeight: FW_MEDIUM, cursor: 'default' }}
                         onMouseEnter={() => setTooltip(client.id)}
                         onMouseLeave={() => setTooltip(null)}
                       >
@@ -768,7 +759,7 @@ function PipelineTable({ clients, navigate, s, t, isMobile, orgId, onStageChange
                             position: 'absolute', left: 0, top: '22px', zIndex: 10,
                             background: t.SURFACE, border: `1px solid ${t.BORDER}`,
                             borderRadius: RADIUS_MD, padding: '6px 10px',
-                            fontSize: '11px', color: t.TEXT_MUTED, fontWeight: '300',
+                            fontSize: '11px', color: t.TEXT_MUTED, fontWeight: FW_LIGHT,
                             whiteSpace: 'nowrap', boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
                           }}>
                             * Former client — reactivation prospect
@@ -776,7 +767,7 @@ function PipelineTable({ clients, navigate, s, t, isMobile, orgId, onStageChange
                         )}
                       </span>
                     ) : (
-                      <span style={{ fontSize: '11px', color: t.TEXT_MUTED, fontWeight: '300' }}>New</span>
+                      <span style={{ fontSize: '11px', color: t.TEXT_MUTED, fontWeight: FW_LIGHT }}>New</span>
                     )}
                   </div>
                 )}
@@ -814,7 +805,7 @@ function PipelineTable({ clients, navigate, s, t, isMobile, orgId, onStageChange
                       style={{
                         background: 'none', border: `1px solid ${t.BORDER}`,
                         borderRadius: RADIUS_MD, padding: '3px 8px',
-                        fontSize: '11px', color: t.TEXT_MUTED, fontWeight: '500',
+                        fontSize: '11px', color: t.TEXT_MUTED, fontWeight: FW_MEDIUM,
                         cursor: 'pointer', fontFamily: FONT_BODY,
                         display: 'flex', alignItems: 'center', gap: '3px',
                       }}

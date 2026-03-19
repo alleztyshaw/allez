@@ -1,4 +1,6 @@
 // api/draft-email.js
+const CLAUDE_MODEL = 'claude-haiku-4-5-20251001'; // Update in hqConstants and here together
+
 // Vercel serverless function — generates a client-facing follow-up email draft
 // from an AI note summary. De-identifies before Anthropic call, re-identifies on return.
 
@@ -143,7 +145,7 @@ Write a follow-up email draft. Do not include salutation or sign-off — body co
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
+        model: CLAUDE_MODEL,
         max_tokens: 1000,
         system: SYSTEM_PROMPT,
         messages: [{ role: 'user', content: userPrompt }],

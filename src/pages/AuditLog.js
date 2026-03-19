@@ -11,16 +11,7 @@ import {
   MOBILE_BREAKPOINT,
 } from '../utils/hqConstants';
 import { useTokens } from '../context/ThemeContext';
-
-function useWindowWidth() {
-  const [width, setWidth] = useState(window.innerWidth);
-  useEffect(() => {
-    const handler = () => setWidth(window.innerWidth);
-    window.addEventListener('resize', handler);
-    return () => window.removeEventListener('resize', handler);
-  }, []);
-  return width;
-}
+import useWindowWidth from '../hooks/useWindowWidth';
 
 const ACTION_COLORS = {
   INSERT: { color: '#34d399', bg: 'rgba(52,211,153,0.10)', label: 'Created'  },

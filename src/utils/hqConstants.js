@@ -207,8 +207,18 @@ export const FULL_ACCESS_ROLES = ['admin', 'manager', 'compliance'];
 // compliance is excluded (read-only)
 export const WRITE_ROLES = ['admin', 'manager', 'advisor', 'associate'];
 
+// Roles that can generate and update AI briefs
+export const BRIEF_ROLES = ['admin', 'manager', 'advisor'];
+
 // Roles that can manage the org — invite members, assign/remove advisors, set primary
 export const ORG_ADMIN_ROLES = ['admin'];
+
+// ============================================================
+// AI MODEL
+// Single source of truth for the Claude model used across all
+// serverless functions. Update here to upgrade everywhere.
+// ============================================================
+export const CLAUDE_MODEL = 'claude-haiku-4-5-20251001';
 
 // ============================================================
 // BACKWARD-COMPATIBLE ALIASES

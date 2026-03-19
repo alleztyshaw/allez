@@ -82,7 +82,7 @@ export default function Sidebar() {
     },
     topbarLogo: {
       fontFamily:     FONT_DISPLAY,
-      fontSize:       '20px', fontWeight: '300',
+      fontSize:       '20px', fontWeight: FW_LIGHT,
       color:          t.TEXT, letterSpacing: '0.04em',
       textDecoration: 'none',
     },

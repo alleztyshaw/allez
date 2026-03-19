@@ -8,18 +8,9 @@ import {
   SHADOW_MD,
   pageStyles,
   MOBILE_BREAKPOINT,
-} from '../utils/hqConstants';
+  FW_LIGHT, FW_REGULAR, FW_MEDIUM, FW_SEMIBOLD} from '../utils/hqConstants';
 import { useTokens } from '../context/ThemeContext';
-
-function useWindowWidth() {
-  const [width, setWidth] = useState(window.innerWidth);
-  useEffect(() => {
-    const handler = () => setWidth(window.innerWidth);
-    window.addEventListener('resize', handler);
-    return () => window.removeEventListener('resize', handler);
-  }, []);
-  return width;
-}
+import useWindowWidth from '../hooks/useWindowWidth';
 
 export default function Orgs() {
   const { isPlatformAdmin, orgLoading } = useOrg();
@@ -125,7 +116,7 @@ export default function Orgs() {
     addButton: {
       background: 'transparent', border: `1px solid ${t.ACCENT_BORDER}`,
       borderRadius: RADIUS_MD, padding: '10px 20px',
-      fontSize: '14px', color: t.ACCENT, fontWeight: '600',
+      fontSize: '14px', color: t.ACCENT, fontWeight: FW_SEMIBOLD,
       cursor: 'pointer', fontFamily: FONT_BODY,
     },
     formCard: {
@@ -134,7 +125,7 @@ export default function Orgs() {
       marginBottom: '28px', boxShadow: SHADOW_MD,
     },
     formLabel: {
-      fontSize: '10px', fontWeight: '600', textTransform: 'uppercase',
+      fontSize: '10px', fontWeight: FW_SEMIBOLD, textTransform: 'uppercase',
       letterSpacing: '0.12em', color: t.ACCENT, margin: '0 0 16px',
     },
     input: {
@@ -144,12 +135,12 @@ export default function Orgs() {
       width: '100%', boxSizing: 'border-box', outline: 'none',
     },
     checkRow: { display: 'flex', alignItems: 'center', gap: '10px', margin: '16px 0' },
-    checkLabel: { fontSize: '13px', color: t.TEXT_MUTED, fontWeight: '300' },
+    checkLabel: { fontSize: '13px', color: t.TEXT_MUTED, fontWeight: FW_LIGHT },
     formActions: { display: 'flex', gap: '10px', marginTop: '20px' },
     saveButton: {
       background: t.ACCENT_MUTED, border: `1px solid ${t.ACCENT_BORDER}`,
       borderRadius: RADIUS_MD, padding: '8px 20px',
-      fontSize: '13px', color: t.ACCENT, fontWeight: '600',
+      fontSize: '13px', color: t.ACCENT, fontWeight: FW_SEMIBOLD,
       cursor: 'pointer', fontFamily: FONT_BODY,
     },
     cancelButton: {
@@ -178,18 +169,18 @@ export default function Orgs() {
       background: t.ACCENT_MUTED, border: `1px solid ${t.ACCENT_BORDER}`,
       color: t.ACCENT, display: 'flex', alignItems: 'center',
       justifyContent: 'center', fontFamily: FONT_DISPLAY,
-      fontSize: '16px', fontWeight: '400', flexShrink: 0,
+      fontSize: '16px', fontWeight: FW_REGULAR, flexShrink: 0,
     },
     orgInfo: { flex: 1 },
-    orgName: { fontSize: '14px', color: t.TEXT, margin: 0, fontWeight: '400' },
+    orgName: { fontSize: '14px', color: t.TEXT, margin: 0, fontWeight: FW_REGULAR },
     rowRight: { display: 'flex', alignItems: 'center', gap: '12px' },
     platformBadge: {
-      fontSize: '10px', fontWeight: '600', textTransform: 'uppercase',
+      fontSize: '10px', fontWeight: FW_SEMIBOLD, textTransform: 'uppercase',
       letterSpacing: '0.08em', padding: '3px 10px', borderRadius: RADIUS_PILL,
       background: t.ACCENT_MUTED, color: t.ACCENT, border: `1px solid ${t.ACCENT_BORDER}`,
     },
     regularBadge: {
-      fontSize: '10px', fontWeight: '500', textTransform: 'uppercase',
+      fontSize: '10px', fontWeight: FW_MEDIUM, textTransform: 'uppercase',
       letterSpacing: '0.08em', padding: '3px 10px', borderRadius: RADIUS_PILL,
       background: t.SURFACE_ALT, color: t.TEXT_MUTED,
     },
@@ -201,7 +192,7 @@ export default function Orgs() {
       };
       const c = map[status] || map.active;
       return {
-        fontSize: '10px', fontWeight: '600', textTransform: 'uppercase',
+        fontSize: '10px', fontWeight: FW_SEMIBOLD, textTransform: 'uppercase',
         letterSpacing: '0.08em', padding: '3px 10px', borderRadius: RADIUS_PILL,
         background: c.bg, color: c.color,
       };
@@ -224,14 +215,14 @@ export default function Orgs() {
     statBlock: { display: 'flex', flexDirection: 'column', gap: '4px' },
     statNumber: {
       fontFamily: FONT_BODY, fontSize: '24px',
-      fontWeight: '300', color: t.ACCENT, lineHeight: 1,
+      fontWeight: FW_LIGHT, color: t.ACCENT, lineHeight: 1,
     },
     statLabel: {
-      fontSize: '10px', color: t.TEXT_MUTED, fontWeight: '500',
+      fontSize: '10px', color: t.TEXT_MUTED, fontWeight: FW_MEDIUM,
       textTransform: 'uppercase', letterSpacing: '0.08em',
     },
     createdDate: {
-      fontSize: '11px', color: t.TEXT_MUTED, fontWeight: '300',
+      fontSize: '11px', color: t.TEXT_MUTED, fontWeight: FW_LIGHT,
       marginTop: '4px',
     },
   };
@@ -305,7 +296,7 @@ export default function Orgs() {
         )}
 
         {loading ? (
-          <p style={{ color: t.TEXT_MUTED, fontWeight: '300' }}>Loading organisations…</p>
+          <p style={{ color: t.TEXT_MUTED, fontWeight: FW_LIGHT }}>Loading organisations…</p>
         ) : (
           <div>
             {orgs.map(org => {
@@ -344,7 +335,7 @@ export default function Orgs() {
                   {isExpanded && (
                     <div style={{ ...s.expandedPanel, animation: 'fadeIn 0.18s ease' }}>
                       {isStatsLoading ? (
-                        <p style={{ color: t.TEXT_MUTED, fontSize: '13px', fontWeight: '300', margin: 0 }}>
+                        <p style={{ color: t.TEXT_MUTED, fontSize: '13px', fontWeight: FW_LIGHT, margin: 0 }}>
                           Loading stats…
                         </p>
                       ) : stats ? (

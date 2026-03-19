@@ -12,16 +12,7 @@ import {
 } from '../utils/hqConstants';
 import { useTokens } from '../context/ThemeContext';
 import { useOrg } from '../context/OrgContext';
-
-function useWindowWidth() {
-  const [width, setWidth] = useState(window.innerWidth);
-  useEffect(() => {
-    const handler = () => setWidth(window.innerWidth);
-    window.addEventListener('resize', handler, { passive: true });
-    return () => window.removeEventListener('resize', handler);
-  }, []);
-  return width;
-}
+import useWindowWidth from '../hooks/useWindowWidth';
 
 // Build YYYY-MM-DD from LOCAL time — never use toISOString() for dates,
 // as it returns UTC which can be a different calendar day than the user's timezone

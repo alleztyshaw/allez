@@ -17,18 +17,9 @@ import {
   AI_COLOR,
   AI_COLOR_MUTED,
   AI_COLOR_BORDER,
-} from '../utils/hqConstants';
+  FW_LIGHT, FW_REGULAR, FW_MEDIUM, FW_SEMIBOLD} from '../utils/hqConstants';
 import { useTokens } from '../context/ThemeContext';
-
-function useWindowWidth() {
-  const [width, setWidth] = useState(window.innerWidth);
-  useEffect(() => {
-    const handler = () => setWidth(window.innerWidth);
-    window.addEventListener('resize', handler);
-    return () => window.removeEventListener('resize', handler);
-  }, []);
-  return width;
-}
+import useWindowWidth from '../hooks/useWindowWidth';
 
 const NOTE_TYPES = ['Meeting', 'Call', 'Email', 'General'];
 
@@ -574,51 +565,51 @@ export default function Notes() {
 
   const s = {
     ...pageStyles(t, isMobile),
-    addButton: { background: 'transparent', color: t.ACCENT, border: `1px solid ${t.ACCENT_BORDER}`, borderRadius: RADIUS_MD, padding: '10px 20px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: FONT_BODY },
+    addButton: { background: 'transparent', color: t.ACCENT, border: `1px solid ${t.ACCENT_BORDER}`, borderRadius: RADIUS_MD, padding: '10px 20px', fontSize: '14px', fontWeight: FW_SEMIBOLD, cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: FONT_BODY },
     composeCard: { background: t.SURFACE, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_LG, padding: '24px', marginBottom: '32px', boxShadow: SHADOW_MD },
     composeHeader: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' },
     modeToggle: { display: 'flex', gap: '2px', background: t.SURFACE_ALT, borderRadius: RADIUS_MD, padding: '3px', border: `1px solid ${t.BORDER}` },
-    modeTabActive: { padding: '5px 14px', fontSize: '12px', fontWeight: '600', letterSpacing: '0.04em', borderRadius: '4px', border: 'none', cursor: 'pointer', fontFamily: FONT_BODY, background: t.ACCENT_MUTED, color: t.ACCENT },
-    modeTabInactive: { padding: '5px 14px', fontSize: '12px', fontWeight: '600', letterSpacing: '0.04em', borderRadius: '4px', border: 'none', cursor: 'pointer', fontFamily: FONT_BODY, background: 'transparent', color: t.TEXT_MUTED },
-    aiBadge: { fontSize: '10px', fontWeight: '600', letterSpacing: '0.08em', padding: '2px 8px', borderRadius: RADIUS_PILL, background: AI_COLOR_MUTED, color: AI_COLOR, border: `1px solid ${AI_COLOR_BORDER}`, textTransform: 'uppercase' },
-    manualBadge: { fontSize: '10px', fontWeight: '600', letterSpacing: '0.08em', padding: '2px 8px', borderRadius: RADIUS_PILL, background: t.SURFACE_ALT, color: t.TEXT_MUTED, border: `1px solid ${t.BORDER}`, textTransform: 'uppercase' },
+    modeTabActive: { padding: '5px 14px', fontSize: '12px', fontWeight: FW_SEMIBOLD, letterSpacing: '0.04em', borderRadius: '4px', border: 'none', cursor: 'pointer', fontFamily: FONT_BODY, background: t.ACCENT_MUTED, color: t.ACCENT },
+    modeTabInactive: { padding: '5px 14px', fontSize: '12px', fontWeight: FW_SEMIBOLD, letterSpacing: '0.04em', borderRadius: '4px', border: 'none', cursor: 'pointer', fontFamily: FONT_BODY, background: 'transparent', color: t.TEXT_MUTED },
+    aiBadge: { fontSize: '10px', fontWeight: FW_SEMIBOLD, letterSpacing: '0.08em', padding: '2px 8px', borderRadius: RADIUS_PILL, background: AI_COLOR_MUTED, color: AI_COLOR, border: `1px solid ${AI_COLOR_BORDER}`, textTransform: 'uppercase' },
+    manualBadge: { fontSize: '10px', fontWeight: FW_SEMIBOLD, letterSpacing: '0.08em', padding: '2px 8px', borderRadius: RADIUS_PILL, background: t.SURFACE_ALT, color: t.TEXT_MUTED, border: `1px solid ${t.BORDER}`, textTransform: 'uppercase' },
     formRow: { display: 'flex', gap: '12px', marginBottom: '12px', flexWrap: 'wrap' },
     formField: { display: 'flex', flexDirection: 'column', gap: '4px', flex: 1, minWidth: '180px' },
-    label: { fontSize: '12px', fontWeight: '500', color: t.TEXT_MUTED, letterSpacing: '0.02em' },
+    label: { fontSize: '12px', fontWeight: FW_MEDIUM, color: t.TEXT_MUTED, letterSpacing: '0.02em' },
     input: { border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_MD, padding: '8px 12px', fontSize: '14px', outline: 'none', color: t.TEXT, background: t.SURFACE_ALT, fontFamily: FONT_BODY },
     textarea: { width: '100%', border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_MD, padding: '10px 12px', fontSize: '14px', minHeight: '100px', resize: 'vertical', outline: 'none', color: t.TEXT, background: t.SURFACE_ALT, fontFamily: FONT_BODY, boxSizing: 'border-box', marginBottom: '12px' },
     transcriptArea: { width: '100%', border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_MD, padding: '12px', fontSize: '13px', minHeight: '180px', resize: 'vertical', outline: 'none', color: t.TEXT, background: t.SURFACE_ALT, fontFamily: FONT_BODY, boxSizing: 'border-box', marginBottom: '12px', lineHeight: '1.6' },
     composeFooter: { display: 'flex', justifyContent: 'flex-end', gap: '10px', alignItems: 'center', marginTop: '20px' },
     cancelButton: { padding: '10px 22px', borderRadius: RADIUS_MD, border: `1px solid ${t.BORDER}`, background: 'transparent', fontSize: '13px', cursor: 'pointer', color: t.TEXT_MUTED, fontFamily: FONT_BODY },
-    saveButton: { padding: '10px 22px', borderRadius: RADIUS_MD, border: `1px solid ${t.ACCENT_BORDER}`, background: t.ACCENT_MUTED, color: t.ACCENT, fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: FONT_BODY },
-    processButton: { padding: '10px 22px', borderRadius: RADIUS_MD, border: `1px solid ${AI_COLOR_BORDER}`, background: AI_COLOR_MUTED, color: AI_COLOR, fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: FONT_BODY },
+    saveButton: { padding: '10px 22px', borderRadius: RADIUS_MD, border: `1px solid ${t.ACCENT_BORDER}`, background: t.ACCENT_MUTED, color: t.ACCENT, fontSize: '13px', fontWeight: FW_SEMIBOLD, cursor: 'pointer', fontFamily: FONT_BODY },
+    processButton: { padding: '10px 22px', borderRadius: RADIUS_MD, border: `1px solid ${AI_COLOR_BORDER}`, background: AI_COLOR_MUTED, color: AI_COLOR, fontSize: '13px', fontWeight: FW_SEMIBOLD, cursor: 'pointer', fontFamily: FONT_BODY },
     errorText: { color: '#f87171', fontSize: '13px', marginBottom: '10px' },
     resultCard: { background: t.SURFACE_ALT, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_MD, padding: '20px', marginBottom: '16px' },
     resultSection: { marginBottom: '16px' },
-    resultLabel: { fontSize: '10px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.1em', color: AI_COLOR, marginBottom: '8px' },
-    resultText: { fontSize: '14px', color: t.TEXT, lineHeight: '1.65', fontWeight: '300', margin: 0 },
-    resultListItem: { fontSize: '13px', color: t.TEXT, lineHeight: '1.6', fontWeight: '300', padding: '5px 0', borderBottom: `1px solid ${t.BORDER}`, display: 'flex', gap: '8px' },
+    resultLabel: { fontSize: '10px', fontWeight: FW_SEMIBOLD, textTransform: 'uppercase', letterSpacing: '0.1em', color: AI_COLOR, marginBottom: '8px' },
+    resultText: { fontSize: '14px', color: t.TEXT, lineHeight: '1.65', fontWeight: FW_LIGHT, margin: 0 },
+    resultListItem: { fontSize: '13px', color: t.TEXT, lineHeight: '1.6', fontWeight: FW_LIGHT, padding: '5px 0', borderBottom: `1px solid ${t.BORDER}`, display: 'flex', gap: '8px' },
     resultBullet: { color: AI_COLOR, flexShrink: 0, fontSize: '12px', marginTop: '2px' },
     dateGroup: { marginBottom: '28px' },
-    dateLabel: { fontSize: '11px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.08em', color: t.TEXT_MUTED, marginBottom: '10px' },
+    dateLabel: { fontSize: '11px', fontWeight: FW_SEMIBOLD, textTransform: 'uppercase', letterSpacing: '0.08em', color: t.TEXT_MUTED, marginBottom: '10px' },
     noteCard: { background: t.SURFACE, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_LG, padding: '18px 20px', marginBottom: '10px', boxShadow: SHADOW_MD },
     noteHeader: { display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px', flexWrap: 'wrap' },
-    noteTitle: { fontFamily: FONT_DISPLAY, fontSize: '17px', fontWeight: '400', color: t.TEXT, flex: 1, letterSpacing: '0.01em' },
-    noteTypeBadge: { fontSize: '11px', fontWeight: '400', color: t.TEXT_MUTED, letterSpacing: '0.03em' },
-    noteAiBadge: { fontSize: '10px', fontWeight: '600', padding: '2px 10px', borderRadius: RADIUS_PILL, background: AI_COLOR_MUTED, color: AI_COLOR, border: `1px solid ${AI_COLOR_BORDER}`, letterSpacing: '0.06em', textTransform: 'uppercase' },
-    clientBadge: { fontSize: '11px', fontWeight: '600', padding: '2px 10px', borderRadius: RADIUS_PILL, background: 'rgba(96,165,250,0.12)', color: '#60a5fa', border: 'rgba(96,165,250,0.2)', textDecoration: 'none', transition: 'background 0.15s, box-shadow 0.15s' },
-    noteBody: { fontSize: '14px', color: t.TEXT_MUTED, lineHeight: '1.65', margin: '0 0 10px', whiteSpace: 'pre-wrap', fontWeight: '300' },
+    noteTitle: { fontFamily: FONT_DISPLAY, fontSize: '17px', fontWeight: FW_REGULAR, color: t.TEXT, flex: 1, letterSpacing: '0.01em' },
+    noteTypeBadge: { fontSize: '11px', fontWeight: FW_REGULAR, color: t.TEXT_MUTED, letterSpacing: '0.03em' },
+    noteAiBadge: { fontSize: '10px', fontWeight: FW_SEMIBOLD, padding: '2px 10px', borderRadius: RADIUS_PILL, background: AI_COLOR_MUTED, color: AI_COLOR, border: `1px solid ${AI_COLOR_BORDER}`, letterSpacing: '0.06em', textTransform: 'uppercase' },
+    clientBadge: { fontSize: '11px', fontWeight: FW_SEMIBOLD, padding: '2px 10px', borderRadius: RADIUS_PILL, background: 'rgba(96,165,250,0.12)', color: '#60a5fa', border: 'rgba(96,165,250,0.2)', textDecoration: 'none', transition: 'background 0.15s, box-shadow 0.15s' },
+    noteBody: { fontSize: '14px', color: t.TEXT_MUTED, lineHeight: '1.65', margin: '0 0 10px', whiteSpace: 'pre-wrap', fontWeight: FW_LIGHT },
     noteActions: { display: 'flex', gap: '12px' },
     noteAction: { background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px', color: t.TEXT_MUTED, padding: 0, fontFamily: FONT_BODY },
     aiSection: { marginBottom: '12px' },
-    aiSectionLabel: { fontSize: '10px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.08em', color: AI_COLOR, marginBottom: '6px' },
-    aiSectionText: { fontSize: '13px', color: t.TEXT_MUTED, lineHeight: '1.6', fontWeight: '300', margin: 0 },
-    aiListItem: { display: 'flex', gap: '8px', fontSize: '13px', color: t.TEXT_MUTED, lineHeight: '1.6', fontWeight: '300', marginBottom: '4px' },
-    emptyState: { background: t.SURFACE, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_LG, padding: '48px', textAlign: 'center', color: t.TEXT_MUTED, fontSize: '14px', fontWeight: '300' },
+    aiSectionLabel: { fontSize: '10px', fontWeight: FW_SEMIBOLD, textTransform: 'uppercase', letterSpacing: '0.08em', color: AI_COLOR, marginBottom: '6px' },
+    aiSectionText: { fontSize: '13px', color: t.TEXT_MUTED, lineHeight: '1.6', fontWeight: FW_LIGHT, margin: 0 },
+    aiListItem: { display: 'flex', gap: '8px', fontSize: '13px', color: t.TEXT_MUTED, lineHeight: '1.6', fontWeight: FW_LIGHT, marginBottom: '4px' },
+    emptyState: { background: t.SURFACE, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_LG, padding: '48px', textAlign: 'center', color: t.TEXT_MUTED, fontSize: '14px', fontWeight: FW_LIGHT },
     overlay: { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.65)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' },
     modal: { background: t.SURFACE, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_LG, width: '100%', maxWidth: '580px', boxShadow: '0 24px 64px rgba(0,0,0,0.5)' },
     modalHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '18px 22px', borderBottom: `1px solid ${t.BORDER}` },
-    modalTitle: { margin: 0, fontFamily: FONT_DISPLAY, fontSize: '22px', fontWeight: '400', color: t.TEXT, letterSpacing: '0.01em' },
+    modalTitle: { margin: 0, fontFamily: FONT_DISPLAY, fontSize: '22px', fontWeight: FW_REGULAR, color: t.TEXT, letterSpacing: '0.01em' },
     closeButton: { background: 'none', border: 'none', fontSize: '16px', cursor: 'pointer', color: t.TEXT_MUTED, padding: '2px 6px' },
     modalBody: { padding: '20px 22px' },
     modalFooter: { padding: '14px 22px', borderTop: `1px solid ${t.BORDER}`, display: 'flex', justifyContent: 'flex-end', gap: '10px' },
@@ -647,7 +638,7 @@ export default function Notes() {
         `}</style>
 
         {backTo && (
-          <Link to={backTo} style={{ color: t.TEXT_MUTED, textDecoration: 'none', fontSize: '14px', fontWeight: '300', display: 'inline-block', marginBottom: '20px' }}>
+          <Link to={backTo} style={{ color: t.TEXT_MUTED, textDecoration: 'none', fontSize: '14px', fontWeight: FW_LIGHT, display: 'inline-block', marginBottom: '20px' }}>
             {backLabel}
           </Link>
         )}
@@ -762,7 +753,7 @@ export default function Notes() {
                           onClick={() => { setInputMode(tab.key); setAudioError(''); }}
                           style={{
                             padding: '5px 14px', borderRadius: '6px', fontSize: '12px',
-                            fontFamily: FONT_BODY, cursor: 'pointer', fontWeight: '500',
+                            fontFamily: FONT_BODY, cursor: 'pointer', fontWeight: FW_MEDIUM,
                             border: `1px solid ${inputMode === tab.key ? t.ACCENT_BORDER : t.BORDER}`,
                             background: inputMode === tab.key ? t.ACCENT_MUTED : 'transparent',
                             color: inputMode === tab.key ? t.ACCENT : t.TEXT_MUTED,
@@ -778,7 +769,7 @@ export default function Notes() {
                       <>
                         <div style={{ marginBottom: '6px' }}>
                           <label style={s.label}>Transcript *</label>
-                          <p style={{ fontSize: '11px', color: t.TEXT_MUTED, margin: '4px 0 8px', fontWeight: '300', lineHeight: '1.5' }}>
+                          <p style={{ fontSize: '11px', color: t.TEXT_MUTED, margin: '4px 0 8px', fontWeight: FW_LIGHT, lineHeight: '1.5' }}>
                             Paste your meeting transcript below. Client and advisor names are de-identified before processing — they never leave your infrastructure in identifiable form.
                           </p>
                         </div>
@@ -789,7 +780,7 @@ export default function Notes() {
                     {/* Upload mode */}
                     {inputMode === 'upload' && (
                       <div style={{ padding: '28px 24px', minHeight: '140px', border: `1px dashed ${t.BORDER}`, borderRadius: RADIUS_MD, textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                        <p style={{ fontSize: '13px', color: t.TEXT_MUTED, margin: '0 0 16px', fontWeight: '300' }}>
+                        <p style={{ fontSize: '13px', color: t.TEXT_MUTED, margin: '0 0 16px', fontWeight: FW_LIGHT }}>
                           Supported formats: MP3, MP4, M4A, WAV, WEBM, OGG
                         </p>
                         <input
@@ -805,7 +796,7 @@ export default function Notes() {
                             display: 'inline-block', padding: '9px 20px',
                             border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_MD,
                             fontSize: '13px', color: t.TEXT_MUTED, cursor: 'pointer',
-                            fontFamily: FONT_BODY, fontWeight: '500',
+                            fontFamily: FONT_BODY, fontWeight: FW_MEDIUM,
                             marginBottom: audioFile ? '12px' : 0,
                           }}
                         >
@@ -813,7 +804,7 @@ export default function Notes() {
                         </label>
                         {audioFile && (
                           <div style={{ marginTop: '12px' }}>
-                            <p style={{ fontSize: '13px', color: t.TEXT, margin: '0 0 12px', fontWeight: '300' }}>
+                            <p style={{ fontSize: '13px', color: t.TEXT, margin: '0 0 12px', fontWeight: FW_LIGHT }}>
                               {audioFile.name} ({(audioFile.size / 1024 / 1024).toFixed(1)} MB)
                             </p>
                             <button
@@ -826,7 +817,7 @@ export default function Notes() {
                           </div>
                         )}
                         {audioTranscribing && (
-                          <p style={{ fontSize: '12px', color: t.TEXT_MUTED, margin: '12px 0 0', fontWeight: '300' }}>
+                          <p style={{ fontSize: '12px', color: t.TEXT_MUTED, margin: '12px 0 0', fontWeight: FW_LIGHT }}>
                             This may take 30–90 seconds depending on file length…
                           </p>
                         )}
@@ -839,7 +830,7 @@ export default function Notes() {
                       <div style={{ padding: '28px 24px', minHeight: '140px', border: `1px dashed ${t.BORDER}`, borderRadius: RADIUS_MD, textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
                         {!recording && !audioTranscribing && (
                           <>
-                            <p style={{ fontSize: '13px', color: t.TEXT_MUTED, margin: '0 0 18px', fontWeight: '300', lineHeight: '1.5' }}>
+                            <p style={{ fontSize: '13px', color: t.TEXT_MUTED, margin: '0 0 18px', fontWeight: FW_LIGHT, lineHeight: '1.5' }}>
                               Hit stop when you're done — we'll process automatically.
                             </p>
                             <button
@@ -847,7 +838,7 @@ export default function Notes() {
                                 padding: '9px 20px', borderRadius: RADIUS_MD,
                                 border: `1px solid ${AI_COLOR_BORDER}`,
                                 background: AI_COLOR_MUTED, color: AI_COLOR,
-                                fontSize: '13px', fontWeight: '600',
+                                fontSize: '13px', fontWeight: FW_SEMIBOLD,
                                 cursor: 'pointer', fontFamily: FONT_BODY,
                               }}
                               onClick={startRecording}
@@ -860,7 +851,7 @@ export default function Notes() {
                           <>
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', marginBottom: '18px' }}>
                               <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#f87171', animation: 'pulse 1.2s infinite' }} />
-                              <span style={{ fontSize: '13px', color: t.TEXT, fontWeight: '400' }}>
+                              <span style={{ fontSize: '13px', color: t.TEXT, fontWeight: FW_REGULAR }}>
                                 Recording — {Math.floor(recordingSeconds / 60)}:{String(recordingSeconds % 60).padStart(2, '0')}
                               </span>
                             </div>
@@ -869,7 +860,7 @@ export default function Notes() {
                                 padding: '9px 20px', borderRadius: RADIUS_MD,
                                 border: `1px solid rgba(248,113,113,0.4)`,
                                 background: 'rgba(248,113,113,0.12)', color: '#f87171',
-                                fontSize: '13px', fontWeight: '600',
+                                fontSize: '13px', fontWeight: FW_SEMIBOLD,
                                 cursor: 'pointer', fontFamily: FONT_BODY,
                               }}
                               onClick={stopRecording}
@@ -885,8 +876,8 @@ export default function Notes() {
                               <span className="ai-dot" />
                               <span className="ai-dot" />
                             </div>
-                            <p style={{ color: AI_COLOR, fontSize: '13px', fontWeight: '500', margin: '0 0 4px' }}>Transcribing & processing</p>
-                            <p style={{ color: t.TEXT_MUTED, fontSize: '11px', fontWeight: '300', margin: 0 }}>This may take 30–90 seconds…</p>
+                            <p style={{ color: AI_COLOR, fontSize: '13px', fontWeight: FW_MEDIUM, margin: '0 0 4px' }}>Transcribing & processing</p>
+                            <p style={{ color: t.TEXT_MUTED, fontSize: '11px', fontWeight: FW_LIGHT, margin: 0 }}>This may take 30–90 seconds…</p>
                           </div>
                         )}
                         {audioError && <p style={{ color: '#f87171', fontSize: '12px', margin: '10px 0 0' }}>{audioError}</p>}
@@ -903,8 +894,8 @@ export default function Notes() {
                       <span className="ai-dot" />
                       <span className="ai-dot" />
                     </div>
-                    <p style={{ color: AI_COLOR, fontSize: '13px', fontWeight: '500', margin: '0 0 4px' }}>Analysing transcript</p>
-                    <p style={{ color: t.TEXT_MUTED, fontSize: '11px', fontWeight: '300', margin: 0 }}>De-identifying · Processing · Re-identifying</p>
+                    <p style={{ color: AI_COLOR, fontSize: '13px', fontWeight: FW_MEDIUM, margin: '0 0 4px' }}>Analysing transcript</p>
+                    <p style={{ color: t.TEXT_MUTED, fontSize: '11px', fontWeight: FW_LIGHT, margin: 0 }}>De-identifying · Processing · Re-identifying</p>
                   </div>
                 )}
 
@@ -977,7 +968,7 @@ export default function Notes() {
                       <span className={`expand-triangle${showTranscript ? ' open' : ''}`} />
                     </button>
                     {showTranscript && (
-                      <div style={{ background: t.SURFACE_ALT, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_MD, padding: '12px', marginBottom: '12px', fontSize: '12px', color: t.TEXT_MUTED, lineHeight: '1.65', whiteSpace: 'pre-wrap', fontWeight: '300', maxHeight: '200px', overflowY: 'auto' }}>
+                      <div style={{ background: t.SURFACE_ALT, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_MD, padding: '12px', marginBottom: '12px', fontSize: '12px', color: t.TEXT_MUTED, lineHeight: '1.65', whiteSpace: 'pre-wrap', fontWeight: FW_LIGHT, maxHeight: '200px', overflowY: 'auto' }}>
                         {aiTranscript}
                       </div>
                     )}
@@ -1102,7 +1093,7 @@ export default function Notes() {
                                             borderRadius: '6px',
                                             padding: '3px 10px',
                                             fontSize: '11px',
-                                            fontWeight: '600',
+                                            fontWeight: FW_SEMIBOLD,
                                             color: pushed ? t.ACCENT : t.TEXT_MUTED,
                                             cursor: pushed ? 'default' : 'pointer',
                                             fontFamily: FONT_BODY,
@@ -1193,20 +1184,20 @@ export default function Notes() {
                       <textarea value={editForm.ai_summary_text} onChange={e => setEditForm({ ...editForm, ai_summary_text: e.target.value })} style={{ ...s.textarea, minHeight: '70px', marginBottom: 0 }} />
                     </div>
                     <div style={{ ...s.formField, marginBottom: '12px' }}>
-                      <label style={s.label}>Decisions <span style={{ fontWeight: '300', opacity: 0.7 }}>— one per line</span></label>
+                      <label style={s.label}>Decisions <span style={{ fontWeight: FW_LIGHT, opacity: 0.7 }}>— one per line</span></label>
                       <textarea value={editForm.ai_decisions} onChange={e => setEditForm({ ...editForm, ai_decisions: e.target.value })} style={{ ...s.textarea, minHeight: '70px', marginBottom: 0 }} />
                     </div>
                     <div style={{ ...s.formField, marginBottom: '12px' }}>
-                      <label style={s.label}>Action Items <span style={{ fontWeight: '300', opacity: 0.7 }}>— one per line, format: task · owner · due</span></label>
+                      <label style={s.label}>Action Items <span style={{ fontWeight: FW_LIGHT, opacity: 0.7 }}>— one per line, format: task · owner · due</span></label>
                       <textarea value={editForm.ai_action_items} onChange={e => setEditForm({ ...editForm, ai_action_items: e.target.value })} style={{ ...s.textarea, minHeight: '70px', marginBottom: 0 }} />
                     </div>
                     <div style={{ ...s.formField, marginBottom: '16px' }}>
-                      <label style={s.label}>Follow-ups <span style={{ fontWeight: '300', opacity: 0.7 }}>— one per line</span></label>
+                      <label style={s.label}>Follow-ups <span style={{ fontWeight: FW_LIGHT, opacity: 0.7 }}>— one per line</span></label>
                       <textarea value={editForm.ai_follow_ups} onChange={e => setEditForm({ ...editForm, ai_follow_ups: e.target.value })} style={{ ...s.textarea, minHeight: '60px', marginBottom: 0 }} />
                     </div>
                     <div style={{ background: t.SURFACE_ALT, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_MD, padding: '10px 12px' }}>
-                      <p style={{ fontSize: '10px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.08em', color: t.TEXT_MUTED, margin: '0 0 6px' }}>Original Transcript — read only</p>
-                      <p style={{ fontSize: '12px', color: t.TEXT_MUTED, fontWeight: '300', lineHeight: '1.6', margin: 0, whiteSpace: 'pre-wrap', maxHeight: '120px', overflowY: 'auto' }}>
+                      <p style={{ fontSize: '10px', fontWeight: FW_SEMIBOLD, textTransform: 'uppercase', letterSpacing: '0.08em', color: t.TEXT_MUTED, margin: '0 0 6px' }}>Original Transcript — read only</p>
+                      <p style={{ fontSize: '12px', color: t.TEXT_MUTED, fontWeight: FW_LIGHT, lineHeight: '1.6', margin: 0, whiteSpace: 'pre-wrap', maxHeight: '120px', overflowY: 'auto' }}>
                         {editingNote.body || editingNote.transcript || '—'}
                       </p>
                     </div>
@@ -1233,7 +1224,7 @@ export default function Notes() {
               <div style={s.modalBody}>
 
                 {/* For advisor review notice */}
-                <p style={{ fontSize: '11px', color: t.TEXT_MUTED, fontStyle: 'italic', margin: '0 0 28px', fontWeight: '300', paddingLeft: '2px' }}>
+                <p style={{ fontSize: '11px', color: t.TEXT_MUTED, fontStyle: 'italic', margin: '0 0 28px', fontWeight: FW_LIGHT, paddingLeft: '2px' }}>
                   For advisor review — please check before sending to client.
                 </p>
 
@@ -1273,7 +1264,7 @@ export default function Notes() {
                         onClick={() => setEmailTone(opt.value)}
                         style={{
                           padding: '7px 16px', borderRadius: '6px', fontSize: '12px',
-                          fontFamily: FONT_BODY, cursor: 'pointer', fontWeight: '500',
+                          fontFamily: FONT_BODY, cursor: 'pointer', fontWeight: FW_MEDIUM,
                           border: `1px solid ${emailTone === opt.value ? t.ACCENT_BORDER : t.BORDER}`,
                           background: emailTone === opt.value ? t.ACCENT_MUTED : 'transparent',
                           color: emailTone === opt.value ? t.ACCENT : t.TEXT_MUTED,
@@ -1295,7 +1286,7 @@ export default function Notes() {
                       { value: 'action_items', label: 'Action Items' },
                       { value: 'follow_ups', label: 'Follow-ups' },
                     ].map(opt => (
-                      <label key={opt.value} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px', color: t.TEXT, fontWeight: '300' }}>
+                      <label key={opt.value} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px', color: t.TEXT, fontWeight: FW_LIGHT }}>
                         <input
                           type="checkbox"
                           checked={emailInclude.includes(opt.value)}

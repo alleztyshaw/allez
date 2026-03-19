@@ -14,6 +14,7 @@ import {
 } from '../utils/hqConstants';
 import { useTokens } from '../context/ThemeContext';
 import { useOrg } from '../context/OrgContext';
+import useWindowWidth from '../hooks/useWindowWidth';
 
 const features = [
   { id: 'brief',      title: 'Daily Brief', description: 'Your day at a glance — upcoming client reviews, open tasks, and everything you need to stay on top of your practice.', status: 'live', route: '/hq/brief' },
@@ -22,17 +23,6 @@ const features = [
   { id: 'crm',        title: 'CRM',         description: 'Track client interactions, touchpoints, and communication history across your entire practice.', status: 'live', route: '/hq/crm' },
   { id: 'onboarding', title: 'Onboarding',  description: 'Monitor new client onboarding progress, step completion, and outstanding tasks.', status: 'soon', route: null },
 ];
-
-
-function useWindowWidth() {
-  const [width, setWidth] = useState(window.innerWidth);
-  useEffect(() => {
-    const handler = () => setWidth(window.innerWidth);
-    window.addEventListener('resize', handler);
-    return () => window.removeEventListener('resize', handler);
-  }, []);
-  return width;
-}
 
 function formatDate(d) {
   return d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });

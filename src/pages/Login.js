@@ -1,5 +1,12 @@
 import { useState } from 'react';
-import { ACCENT, ACCENT_MUTED } from '../utils/hqConstants';
+import {
+  ACCENT, ACCENT_MUTED, ACCENT_BORDER,
+  SITE_ACCENT, SITE_ACCENT_MUTED, SITE_ACCENT_BORDER,
+  L_BG, L_SURFACE, L_TEXT, L_TEXT_MUTED, L_TEXT_SUBTLE, L_BORDER,
+  FONT_BODY, FONT_DISPLAY,
+  FW_LIGHT, FW_REGULAR, FW_MEDIUM, FW_SEMIBOLD,
+  RADIUS_MD, RADIUS_LG,
+} from '../utils/hqConstants';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 
@@ -223,7 +230,7 @@ export default function Login() {
                   <span style={{
                     ...s.featureBadge,
                     background: f.status === 'Live' ? ACCENT_MUTED : 'rgba(0,0,0,0.06)',
-                    color: f.status === 'Live' ? ACCENT : '#999',
+                    color: f.status === 'Live' ? ACCENT : L_TEXT_SUBTLE,
                   }}>
                     {f.status}
                   </span>
@@ -252,7 +259,7 @@ const s = {
   root: {
     fontFamily: "'DM Sans', sans-serif",
     position: 'relative',
-    background: '#f8f8f5',
+    background: L_BG,
     overflowX: 'hidden',
   },
 
@@ -290,12 +297,12 @@ const s = {
   },
   logo: {
     fontFamily: "'Cormorant Garamond', serif", fontSize: '28px',
-    fontWeight: '300', color: '#1a1a1a', letterSpacing: '0.06em',
+    fontWeight: FW_LIGHT, color: L_TEXT, letterSpacing: '0.06em',
   },
   signInBtn: {
     background: 'none', border: 'none', padding: 0,
     fontFamily: "'DM Sans', sans-serif",
-    fontSize: '14px', fontWeight: '400', color: '#1a1a1a',
+    fontSize: '14px', fontWeight: FW_REGULAR, color: L_TEXT,
     cursor: 'pointer', letterSpacing: '0.04em', opacity: 0.6,
     transition: 'opacity 0.2s',
   },
@@ -313,32 +320,32 @@ const s = {
   },
   closeBtn: {
     position: 'absolute', top: '16px', right: '18px', background: 'none',
-    border: 'none', fontSize: '13px', color: '#555', cursor: 'pointer', transition: 'opacity 0.15s',
+    border: 'none', fontSize: '13px', color: L_TEXT_MUTED, cursor: 'pointer', transition: 'opacity 0.15s',
   },
   cardEyebrow: {
-    fontSize: '11px', fontWeight: '500', textTransform: 'uppercase',
-    letterSpacing: '0.12em', color: '#6366f1', margin: '0 0 6px',
+    fontSize: '11px', fontWeight: FW_MEDIUM, textTransform: 'uppercase',
+    letterSpacing: '0.12em', color: SITE_ACCENT, margin: '0 0 6px',
   },
   cardTitle: {
     fontFamily: "'Cormorant Garamond', serif", fontSize: '26px',
-    fontWeight: '600', color: '#1a1a1a', margin: '0 0 28px',
+    fontWeight: FW_SEMIBOLD, color: L_TEXT, margin: '0 0 28px',
   },
   form: { display: 'flex', flexDirection: 'column', gap: '14px' },
   fieldGroup: { display: 'flex', flexDirection: 'column', gap: '5px' },
   fieldLabel: {
-    fontSize: '11px', fontWeight: '500', color: '#666',
+    fontSize: '11px', fontWeight: FW_MEDIUM, color: L_TEXT_MUTED,
     letterSpacing: '0.05em', textTransform: 'uppercase',
   },
   input: {
     border: '1px solid rgba(0,0,0,0.12)', borderRadius: '10px', padding: '10px 14px',
-    fontSize: '14px', color: '#1a1a1a', background: 'rgba(255,255,255,0.6)',
+    fontSize: '14px', color: L_TEXT, background: `rgba(255,255,255,0.6)`,
     fontFamily: "'DM Sans', sans-serif", transition: 'border-color 0.2s, box-shadow 0.2s',
   },
   errorText: { fontSize: '12px', color: '#e53e3e', margin: 0 },
   submitBtn: {
     background: 'linear-gradient(135deg, #6366f1 0%, #ec4899 100%)',
     color: 'white', border: 'none', borderRadius: '10px', padding: '12px',
-    fontSize: '14px', fontWeight: '600', cursor: 'pointer',
+    fontSize: '14px', fontWeight: FW_SEMIBOLD, cursor: 'pointer',
     fontFamily: "'DM Sans', sans-serif", letterSpacing: '0.03em',
     transition: 'filter 0.2s', marginTop: '4px',
   },
@@ -351,13 +358,13 @@ const s = {
     padding: '0 40px 80px', position: 'relative', zIndex: 1,
   },
   eyebrow: {
-    fontSize: '11px', fontWeight: '500', textTransform: 'uppercase',
+    fontSize: '11px', fontWeight: FW_MEDIUM, textTransform: 'uppercase',
     letterSpacing: '0.22em', color: 'rgba(26,26,26,0.45)', margin: '0 0 20px',
   },
   tagline: {
     fontFamily: "'Cormorant Garamond', serif",
     fontSize: 'clamp(48px, 6.5vw, 88px)', fontStyle: 'italic',
-    fontWeight: '300', color: '#1a1a1a', margin: 0,
+    fontWeight: FW_LIGHT, color: L_TEXT, margin: 0,
     letterSpacing: '0.01em', lineHeight: 1.1,
   },
   scrollCue: {
@@ -386,26 +393,26 @@ const s = {
   },
   word: {
     fontFamily: "'Cormorant Garamond', serif",
-    fontSize: '52px', fontWeight: '300',
-    color: '#1a1a1a', letterSpacing: '0.02em',
+    fontSize: '52px', fontWeight: FW_LIGHT,
+    color: L_TEXT, letterSpacing: '0.02em',
   },
   pronunciation: {
     fontFamily: "'DM Sans', sans-serif",
-    fontSize: '16px', fontWeight: '300',
+    fontSize: '16px', fontWeight: FW_LIGHT,
     color: 'rgba(26,26,26,0.45)', letterSpacing: '0.04em',
   },
   partOfSpeech: {
-    fontSize: '11px', fontWeight: '500', textTransform: 'uppercase',
-    letterSpacing: '0.14em', color: '#6366f1',
+    fontSize: '11px', fontWeight: FW_MEDIUM, textTransform: 'uppercase',
+    letterSpacing: '0.14em', color: SITE_ACCENT,
     margin: '0 0 28px',
   },
   definition: {
     fontFamily: "'Cormorant Garamond', serif",
-    fontSize: '26px', fontWeight: '300', lineHeight: 1.6,
-    color: '#1a1a1a', margin: '0 0 20px',
+    fontSize: '26px', fontWeight: FW_LIGHT, lineHeight: 1.6,
+    color: L_TEXT, margin: '0 0 20px',
   },
   definitionSub: {
-    fontSize: '15px', fontWeight: '300', lineHeight: 1.75,
+    fontSize: '15px', fontWeight: FW_LIGHT, lineHeight: 1.75,
     color: 'rgba(26,26,26,0.55)', margin: 0,
   },
 
@@ -421,18 +428,18 @@ const s = {
     padding: '80px 40px 100px',
   },
   featuresEyebrow: {
-    fontSize: '11px', fontWeight: '500', textTransform: 'uppercase',
-    letterSpacing: '0.18em', color: '#6366f1',
+    fontSize: '11px', fontWeight: FW_MEDIUM, textTransform: 'uppercase',
+    letterSpacing: '0.18em', color: SITE_ACCENT,
     margin: '0 0 16px',
   },
   featuresTitle: {
     fontFamily: "'Cormorant Garamond', serif",
-    fontSize: 'clamp(28px, 3.5vw, 44px)', fontWeight: '300',
-    color: '#1a1a1a', margin: '0 0 20px', lineHeight: 1.2,
+    fontSize: 'clamp(28px, 3.5vw, 44px)', fontWeight: FW_LIGHT,
+    color: L_TEXT, margin: '0 0 20px', lineHeight: 1.2,
     letterSpacing: '0.01em',
   },
   featuresSubtitle: {
-    fontSize: '15px', fontWeight: '300', lineHeight: 1.75,
+    fontSize: '15px', fontWeight: FW_LIGHT, lineHeight: 1.75,
     color: 'rgba(26,26,26,0.55)',
     maxWidth: '560px', margin: '0 0 56px',
   },
@@ -451,18 +458,18 @@ const s = {
   },
   featureCardTop: { marginBottom: '16px' },
   featureBadge: {
-    fontSize: '10px', fontWeight: '600', textTransform: 'uppercase',
+    fontSize: '10px', fontWeight: FW_SEMIBOLD, textTransform: 'uppercase',
     letterSpacing: '0.1em', padding: '3px 10px',
     borderRadius: '999px',
   },
   featureLabel: {
     fontFamily: "'Cormorant Garamond', serif",
-    fontSize: '22px', fontWeight: '400',
-    color: '#1a1a1a', margin: '0 0 10px',
+    fontSize: '22px', fontWeight: FW_REGULAR,
+    color: L_TEXT, margin: '0 0 10px',
     letterSpacing: '0.01em',
   },
   featureDesc: {
-    fontSize: '13px', fontWeight: '300', lineHeight: 1.7,
+    fontSize: '13px', fontWeight: FW_LIGHT, lineHeight: 1.7,
     color: 'rgba(26,26,26,0.6)', margin: 0,
   },
 
@@ -474,11 +481,11 @@ const s = {
   },
   footerLogo: {
     fontFamily: "'Cormorant Garamond', serif",
-    fontSize: '20px', fontWeight: '600',
+    fontSize: '20px', fontWeight: FW_SEMIBOLD,
     color: 'rgba(26,26,26,0.35)', letterSpacing: '0.06em',
   },
   footerNote: {
-    fontSize: '13px', fontWeight: '300',
+    fontSize: '13px', fontWeight: FW_LIGHT,
     color: 'rgba(26,26,26,0.35)', margin: 0,
   },
 };

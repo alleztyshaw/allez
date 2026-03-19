@@ -9,18 +9,9 @@ import {
   SHADOW_MD,
   pageStyles,
   MOBILE_BREAKPOINT,
-} from '../utils/hqConstants';
+  FW_LIGHT, FW_REGULAR, FW_MEDIUM, FW_SEMIBOLD} from '../utils/hqConstants';
 import { useTokens } from '../context/ThemeContext';
-
-function useWindowWidth() {
-  const [width, setWidth] = useState(window.innerWidth);
-  useEffect(() => {
-    const handler = () => setWidth(window.innerWidth);
-    window.addEventListener('resize', handler);
-    return () => window.removeEventListener('resize', handler);
-  }, []);
-  return width;
-}
+import useWindowWidth from '../hooks/useWindowWidth';
 
 const ROLES = ['admin', 'manager', 'advisor', 'associate', 'compliance'];
 
@@ -196,7 +187,7 @@ export default function Team() {
       borderBottom: `1px solid ${t.BORDER}`, gap: '8px',
     },
     tableHeadCell: {
-      fontSize: '10px', fontWeight: '600',
+      fontSize: '10px', fontWeight: FW_SEMIBOLD,
       textTransform: 'uppercase', letterSpacing: '0.1em', color: t.TEXT_MUTED,
       textAlign: 'left',
     },
@@ -206,14 +197,14 @@ export default function Team() {
       background: t.SURFACE, alignItems: 'center', gap: '8px',
     },
     tableCell: { fontSize: '13px', color: t.TEXT, display: 'flex', alignItems: 'center', justifyContent: 'flex-start' },
-    tableCellMuted: { fontSize: '12px', color: t.TEXT_MUTED, display: 'flex', alignItems: 'center', justifyContent: 'flex-start', fontWeight: '300' },
+    tableCellMuted: { fontSize: '12px', color: t.TEXT_MUTED, display: 'flex', alignItems: 'center', justifyContent: 'flex-start', fontWeight: FW_LIGHT },
     inviteSection: {
       background: t.SURFACE, border: `1px solid ${t.BORDER}`,
       borderRadius: RADIUS_LG, padding: '24px',
       marginBottom: '28px', boxShadow: SHADOW_MD,
     },
     inviteTitle: {
-      fontSize: '10px', fontWeight: '600',
+      fontSize: '10px', fontWeight: FW_SEMIBOLD,
       textTransform: 'uppercase', letterSpacing: '0.12em',
       color: t.ACCENT, margin: '0 0 16px',
     },
@@ -233,7 +224,7 @@ export default function Team() {
     saveButton: {
       background: t.ACCENT_MUTED, border: `1px solid ${t.ACCENT_BORDER}`,
       borderRadius: RADIUS_MD, padding: '8px 16px',
-      fontSize: '13px', color: t.ACCENT, fontWeight: '600',
+      fontSize: '13px', color: t.ACCENT, fontWeight: FW_SEMIBOLD,
       cursor: 'pointer', fontFamily: FONT_BODY,
     },
     cancelButton: {
@@ -256,12 +247,12 @@ export default function Team() {
     },
     roleDesc: {
       fontSize: '11px', color: t.TEXT_MUTED,
-      margin: '4px 0 0', fontStyle: 'italic', fontWeight: '300',
+      margin: '4px 0 0', fontStyle: 'italic', fontWeight: FW_LIGHT,
     },
     addButton: {
       background: 'transparent', border: `1px solid ${t.ACCENT_BORDER}`,
       borderRadius: RADIUS_MD, padding: '10px 20px',
-      fontSize: '14px', color: t.ACCENT, fontWeight: '600',
+      fontSize: '14px', color: t.ACCENT, fontWeight: FW_SEMIBOLD,
       cursor: 'pointer', fontFamily: FONT_BODY,
     },
   };
@@ -437,9 +428,9 @@ export default function Team() {
 
         {/* Member table */}
         {loading ? (
-          <p style={{ color: t.TEXT_MUTED, fontWeight: '300' }}>Loading team...</p>
+          <p style={{ color: t.TEXT_MUTED, fontWeight: FW_LIGHT }}>Loading team...</p>
         ) : members.length === 0 ? (
-          <div style={{ color: t.TEXT_MUTED, fontSize: '14px', fontWeight: '300', padding: '32px 0' }}>
+          <div style={{ color: t.TEXT_MUTED, fontSize: '14px', fontWeight: FW_LIGHT, padding: '32px 0' }}>
             No members found.
           </div>
         ) : (
@@ -465,7 +456,7 @@ export default function Team() {
                 >
                   {/* Name */}
                   <div style={{ display: 'flex', alignItems: 'center' }}>
-                    <span style={{ fontSize: '13px', color: name ? t.TEXT : t.TEXT_MUTED, fontStyle: name ? 'normal' : 'italic', fontWeight: '400' }}>
+                    <span style={{ fontSize: '13px', color: name ? t.TEXT : t.TEXT_MUTED, fontStyle: name ? 'normal' : 'italic', fontWeight: FW_REGULAR }}>
                       {name || 'No name set'}
                     </span>
                   </div>
@@ -473,7 +464,7 @@ export default function Team() {
                   {/* Role — mobile only */}
                   {isMobile && (
                     <div style={{ display: 'flex', alignItems: 'center' }}>
-                      <span style={{ fontSize: '12px', color: t.TEXT_MUTED, fontWeight: '300' }}>
+                      <span style={{ fontSize: '12px', color: t.TEXT_MUTED, fontWeight: FW_LIGHT }}>
                         {m.role.charAt(0).toUpperCase() + m.role.slice(1)}
                       </span>
                     </div>
@@ -513,7 +504,7 @@ export default function Team() {
                           <span style={s.roleDesc}>{ROLE_DESCRIPTIONS[pendingRole]}</span>
                         </div>
                       ) : (
-                        <span style={{ fontSize: '13px', color: t.TEXT, fontWeight: '300' }}>
+                        <span style={{ fontSize: '13px', color: t.TEXT, fontWeight: FW_LIGHT }}>
                           {m.role.charAt(0).toUpperCase() + m.role.slice(1)}
                         </span>
                       )}
@@ -524,9 +515,9 @@ export default function Team() {
                   {!isMobile && (
                     <div style={s.tableCellMuted}>
                       {isPending ? (
-                        <span style={{ color: '#fbbf24', fontSize: '12px', fontWeight: '300' }}>Pending setup</span>
+                        <span style={{ color: '#fbbf24', fontSize: '12px', fontWeight: FW_LIGHT }}>Pending setup</span>
                       ) : (
-                        <span style={{ color: t.ACCENT, fontSize: '12px', fontWeight: '300' }}>Active</span>
+                        <span style={{ color: t.ACCENT, fontSize: '12px', fontWeight: FW_LIGHT }}>Active</span>
                       )}
                     </div>
                   )}

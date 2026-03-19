@@ -4,37 +4,29 @@ import {
   FONT_DISPLAY,
   RADIUS_LG, SHADOW_MD,
   pageStyles,
-} from '../utils/hqConstants';
+  MOBILE_BREAKPOINT,
+  FW_LIGHT, FW_REGULAR, FW_MEDIUM, FW_SEMIBOLD} from '../utils/hqConstants';
 import { useTokens } from '../context/ThemeContext';
-
-function useWindowWidth() {
-  const [width, setWidth] = useState(window.innerWidth);
-  useEffect(() => {
-    const handler = () => setWidth(window.innerWidth);
-    window.addEventListener('resize', handler);
-    return () => window.removeEventListener('resize', handler);
-  }, []);
-  return width;
-}
+import useWindowWidth from '../hooks/useWindowWidth';
 
 function Contact() {
   const t = useTokens();
   const windowWidth = useWindowWidth();
-  const isMobile = windowWidth < 600;
+  const isMobile = windowWidth < MOBILE_BREAKPOINT;
 
   const s = {
     ...pageStyles(t, isMobile),
     headlineBlock: { marginBottom: '56px' },
-    eyebrow: { fontSize: '11px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.12em', color: ACCENT, margin: '0 0 16px' },
+    eyebrow: { fontSize: '11px', fontWeight: FW_SEMIBOLD, textTransform: 'uppercase', letterSpacing: '0.12em', color: ACCENT, margin: '0 0 16px' },
     optionsGrid: { display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '16px', marginBottom: '48px', maxWidth: '720px' },
     optionCard: { border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_LG, padding: '28px', background: t.SURFACE, boxShadow: SHADOW_MD },
-    optionLabel: { fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.12em', color: ACCENT, margin: '0 0 10px' },
-    optionValue: { fontSize: '18px', fontWeight: '500', margin: '0 0 10px', letterSpacing: '0.01em', color: t.TEXT },
-    optionNote: { fontSize: '13px', lineHeight: '1.6', fontWeight: '300', margin: 0, color: t.TEXT_MUTED },
+    optionLabel: { fontSize: '10px', fontWeight: FW_SEMIBOLD, textTransform: 'uppercase', letterSpacing: '0.12em', color: ACCENT, margin: '0 0 10px' },
+    optionValue: { fontSize: '18px', fontWeight: FW_MEDIUM, margin: '0 0 10px', letterSpacing: '0.01em', color: t.TEXT },
+    optionNote: { fontSize: '13px', lineHeight: '1.6', fontWeight: FW_LIGHT, margin: 0, color: t.TEXT_MUTED },
   };
   // Override title/subtitle after spread — Contact uses larger hero typography
-  s.title    = { fontFamily: FONT_DISPLAY, fontSize: isMobile ? '36px' : '52px', fontWeight: '300', lineHeight: 1.15, margin: '0 0 20px', letterSpacing: '0.01em', color: t.TEXT };
-  s.subtitle = { fontSize: '16px', lineHeight: '1.7', fontWeight: '300', maxWidth: '520px', margin: 0, color: t.TEXT_MUTED };
+  s.title    = { fontFamily: FONT_DISPLAY, fontSize: isMobile ? '36px' : '52px', fontWeight: FW_LIGHT, lineHeight: 1.15, margin: '0 0 20px', letterSpacing: '0.01em', color: t.TEXT };
+  s.subtitle = { fontSize: '16px', lineHeight: '1.7', fontWeight: FW_LIGHT, maxWidth: '520px', margin: 0, color: t.TEXT_MUTED };
 
   return (
     <div style={s.pageWrapper}>

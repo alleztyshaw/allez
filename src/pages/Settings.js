@@ -7,19 +7,10 @@ import {
   SHADOW_MD,
   pageStyles,
   MOBILE_BREAKPOINT,
-} from '../utils/hqConstants';
+  FW_LIGHT, FW_REGULAR, FW_MEDIUM, FW_SEMIBOLD} from '../utils/hqConstants';
 import { useTokens } from '../context/ThemeContext';
 import { useOrg } from '../context/OrgContext';
-
-function useWindowWidth() {
-  const [width, setWidth] = useState(window.innerWidth);
-  useEffect(() => {
-    const handler = () => setWidth(window.innerWidth);
-    window.addEventListener('resize', handler);
-    return () => window.removeEventListener('resize', handler);
-  }, []);
-  return width;
-}
+import useWindowWidth from '../hooks/useWindowWidth';
 
 export default function Settings() {
   const { theme, toggleTheme } = useTheme();
@@ -96,14 +87,14 @@ export default function Settings() {
 
   const s = {
     ...pageStyles(t, isMobile),
-    subtitle: { fontSize: '13px', color: t.TEXT_MUTED, margin: '0 0 48px', fontWeight: '300' },
+    subtitle: { fontSize: '13px', color: t.TEXT_MUTED, margin: '0 0 48px', fontWeight: FW_LIGHT },
     section: {
       background: t.SURFACE, border: `1px solid ${t.BORDER}`,
       borderRadius: RADIUS_LG, overflow: 'hidden',
       boxShadow: SHADOW_MD, marginBottom: '24px',
     },
     sectionLabel: {
-      fontSize: '10px', fontWeight: '600', textTransform: 'uppercase',
+      fontSize: '10px', fontWeight: FW_SEMIBOLD, textTransform: 'uppercase',
       letterSpacing: '0.12em', color: t.ACCENT,
       padding: '20px 24px 0', margin: '0 0 4px',
     },
@@ -114,8 +105,8 @@ export default function Settings() {
     },
     rowDivider: { height: '1px', background: t.BORDER, margin: '0 24px' },
     rowLeft: { display: 'flex', flexDirection: 'column', gap: '3px', flex: 1 },
-    rowTitle: { fontSize: '14px', fontWeight: '400', color: t.TEXT, margin: 0 },
-    rowDesc: { fontSize: '12px', color: t.TEXT_MUTED, margin: 0, fontWeight: '300' },
+    rowTitle: { fontSize: '14px', fontWeight: FW_REGULAR, color: t.TEXT, margin: 0 },
+    rowDesc: { fontSize: '12px', color: t.TEXT_MUTED, margin: 0, fontWeight: FW_LIGHT },
     editButton: {
       background: 'none', border: `1px solid ${t.BORDER}`,
       borderRadius: RADIUS_MD, padding: '6px 14px',
@@ -131,7 +122,7 @@ export default function Settings() {
     saveButton: {
       background: t.ACCENT_MUTED, border: `1px solid ${t.ACCENT_BORDER}`,
       borderRadius: RADIUS_MD, padding: '7px 16px',
-      fontSize: '12px', color: t.ACCENT, fontWeight: '600',
+      fontSize: '12px', color: t.ACCENT, fontWeight: FW_SEMIBOLD,
       cursor: 'pointer', fontFamily: FONT_BODY, flexShrink: 0,
     },
     cancelButton: {
@@ -140,7 +131,7 @@ export default function Settings() {
       fontSize: '12px', color: t.TEXT_MUTED,
       cursor: 'pointer', fontFamily: FONT_BODY, flexShrink: 0,
     },
-    successText: { fontSize: '12px', color: t.ACCENT, margin: 0, fontWeight: '400' },
+    successText: { fontSize: '12px', color: t.ACCENT, margin: 0, fontWeight: FW_REGULAR },
     errorText: { fontSize: '12px', color: '#f87171', margin: '8px 0 0' },
     track: {
       position: 'relative', width: '51px', height: '31px',

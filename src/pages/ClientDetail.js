@@ -22,9 +22,10 @@ import {
   TIME_HORIZON_OPTIONS,
   FULL_ACCESS_ROLES,
   WRITE_ROLES,
+  BRIEF_ROLES,
   CUSTODIAN_OPTIONS,
   aumToAssetLevel,
-} from '../utils/hqConstants';
+  FW_LIGHT, FW_REGULAR, FW_MEDIUM, FW_SEMIBOLD} from '../utils/hqConstants';
 import { useTokens } from '../context/ThemeContext';
 
 
@@ -131,7 +132,7 @@ export default function ClientDetail() {
       color: t.TEXT_MUTED,
       textDecoration: 'none',
       fontSize: '14px',
-      fontWeight: '300',
+      fontWeight: FW_LIGHT,
       transition: 'color 0.15s',
     },
     actionButtons: {
@@ -145,7 +146,7 @@ export default function ClientDetail() {
       borderRadius: RADIUS_MD,
       padding: '8px 18px',
       fontSize: '13px',
-      fontWeight: '600',
+      fontWeight: FW_SEMIBOLD,
       cursor: 'pointer',
       fontFamily: FONT_BODY,
     },
@@ -156,7 +157,7 @@ export default function ClientDetail() {
       borderRadius: RADIUS_MD,
       padding: '8px 18px',
       fontSize: '13px',
-      fontWeight: '500',
+      fontWeight: FW_MEDIUM,
       cursor: 'pointer',
       fontFamily: FONT_BODY,
     },
@@ -177,7 +178,7 @@ export default function ClientDetail() {
       alignItems: 'center',
       justifyContent: 'center',
       fontSize: '22px',
-      fontWeight: '400',
+      fontWeight: FW_REGULAR,
       fontFamily: FONT_DISPLAY,
       letterSpacing: '0.02em',
       flexShrink: 0,
@@ -186,7 +187,7 @@ export default function ClientDetail() {
     name: {
       fontFamily: FONT_DISPLAY,
       fontSize: '40px',
-      fontWeight: '300',
+      fontWeight: FW_LIGHT,
       margin: '0 0 4px',
       color: t.TEXT,
       letterSpacing: '0.01em',
@@ -196,14 +197,14 @@ export default function ClientDetail() {
       fontSize: '14px',
       color: t.TEXT_MUTED,
       margin: '0 0 2px',
-      fontWeight: '300',
+      fontWeight: FW_LIGHT,
     },
     badge: {
       display: 'inline-block',
       padding: '4px 14px',
       borderRadius: RADIUS_PILL,
       fontSize: '11px',
-      fontWeight: '600',
+      fontWeight: FW_SEMIBOLD,
       letterSpacing: '0.06em',
       textTransform: 'uppercase',
       marginLeft: 'auto',
@@ -224,7 +225,7 @@ export default function ClientDetail() {
       borderBottom: `1px solid ${t.BORDER}`, paddingBottom: '0',
     },
     tab: {
-      padding: '8px 20px', fontSize: '13px', fontWeight: '500',
+      padding: '8px 20px', fontSize: '13px', fontWeight: FW_MEDIUM,
       fontFamily: FONT_BODY, cursor: 'pointer', background: 'none',
       border: 'none', borderBottom: '2px solid transparent',
       color: t.TEXT_MUTED, marginBottom: '-1px', transition: 'color 0.15s',
@@ -241,7 +242,7 @@ export default function ClientDetail() {
     },
     sectionLabel: {
       fontSize: '10px',
-      fontWeight: '600',
+      fontWeight: FW_SEMIBOLD,
       textTransform: 'uppercase',
       letterSpacing: '0.12em',
       color: t.ACCENT,
@@ -261,13 +262,13 @@ export default function ClientDetail() {
     fieldLabel: {
       fontSize: '13px',
       color: t.TEXT_MUTED,
-      fontWeight: '400',
+      fontWeight: FW_REGULAR,
     },
     fieldValue: {
       fontSize: '13px',
       color: t.TEXT,
       textAlign: 'right',
-      fontWeight: '400',
+      fontWeight: FW_REGULAR,
     },
     notesCard: {
       background: t.SURFACE,
@@ -282,7 +283,7 @@ export default function ClientDetail() {
       color: t.TEXT,
       lineHeight: '1.7',
       margin: 0,
-      fontWeight: '300',
+      fontWeight: FW_LIGHT,
     },
     // Modal
     overlay: {
@@ -317,7 +318,7 @@ export default function ClientDetail() {
       margin: 0,
       fontFamily: FONT_DISPLAY,
       fontSize: '24px',
-      fontWeight: '400',
+      fontWeight: FW_REGULAR,
       color: t.TEXT,
       letterSpacing: '0.01em',
     },
@@ -337,7 +338,7 @@ export default function ClientDetail() {
     },
     formSectionLabel: {
       fontSize: '10px',
-      fontWeight: '600',
+      fontWeight: FW_SEMIBOLD,
       textTransform: 'uppercase',
       letterSpacing: '0.12em',
       color: t.ACCENT,
@@ -355,7 +356,7 @@ export default function ClientDetail() {
     },
     label: {
       fontSize: '12px',
-      fontWeight: '500',
+      fontWeight: FW_MEDIUM,
       color: t.TEXT_MUTED,
       letterSpacing: '0.02em',
     },
@@ -413,7 +414,7 @@ export default function ClientDetail() {
       background: t.ACCENT_MUTED,
       color: t.ACCENT,
       fontSize: '14px',
-      fontWeight: '600',
+      fontWeight: FW_SEMIBOLD,
       cursor: 'pointer',
       fontFamily: FONT_BODY,
     },
@@ -429,7 +430,7 @@ export default function ClientDetail() {
     confirmTitle: {
       fontFamily: FONT_DISPLAY,
       fontSize: '24px',
-      fontWeight: '400',
+      fontWeight: FW_REGULAR,
       color: t.TEXT,
       margin: '0 0 10px',
       letterSpacing: '0.01em',
@@ -439,7 +440,7 @@ export default function ClientDetail() {
       color: t.TEXT_MUTED,
       margin: '0 0 24px',
       lineHeight: '1.6',
-      fontWeight: '300',
+      fontWeight: FW_LIGHT,
     },
     confirmButtons: {
       display: 'flex',
@@ -453,7 +454,7 @@ export default function ClientDetail() {
       background: 'transparent',
       color: '#f87171',
       fontSize: '14px',
-      fontWeight: '600',
+      fontWeight: FW_SEMIBOLD,
       cursor: 'pointer',
       fontFamily: FONT_BODY,
     },
@@ -465,7 +466,7 @@ export default function ClientDetail() {
   const { orgId, userId, userRole } = useOrg();
   const canWrite = WRITE_ROLES.includes(userRole);
   const canManageAdvisors = FULL_ACCESS_ROLES.includes(userRole);
-  const canGenerateBrief  = ['admin', 'manager', 'advisor'].includes(userRole);
+  const canGenerateBrief  = BRIEF_ROLES.includes(userRole);
   const backPath = location.state?.from || '/hq/clients';
   const backLabel = backPath === '/hq/notes' ? '← Back to Notes' : backPath === '/hq/crm' ? '← Back to CRM' : '← Back to Clients';
 
@@ -485,6 +486,7 @@ export default function ClientDetail() {
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState('');
   const [clientNotes, setClientNotes] = useState([]);
+  const [clientTasks, setClientTasks] = useState([]);
   const [editingNote, setEditingNote] = useState(null);
 
   const [editNoteForm, setEditNoteForm] = useState({});
@@ -508,6 +510,13 @@ export default function ClientDetail() {
         .order('created_at', { ascending: false });
       setClientNotes(data || []);
     }
+    async function loadTasks() {
+      const { data } = await supabase
+        .from('client_tasks').select('*')
+        .eq('client_id', id).eq('org_id', orgId).is('deleted_at', null)
+        .order('due_date', { ascending: true });
+      setClientTasks(data || []);
+    }
     async function loadAdvisors() {
       const { data } = await supabase
         .from('client_advisors').select('id, user_id, is_primary')
@@ -521,7 +530,7 @@ export default function ClientDetail() {
       const { data } = await supabase.rpc('get_org_members', { target_org_id: orgId });
       setOrgMembers(data || []);
     }
-    if (orgId) { fetchClient(); loadNotes(); loadAdvisors(); loadOrgMembers(); fetchBrief(); }
+    if (orgId) { fetchClient(); loadNotes(); loadTasks(); loadAdvisors(); loadOrgMembers(); fetchBrief(); }
   }, [id, orgId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function fetchBrief() {
@@ -549,7 +558,7 @@ export default function ClientDetail() {
         body: JSON.stringify({
           client,
           notes: clientNotes,
-          tasks: [],
+          tasks: clientTasks,
           org_member_names: memberNames,
         }),
       });
@@ -795,7 +804,7 @@ export default function ClientDetail() {
             )}
           </div>
           {advisors.length === 0 ? (
-            <p style={{ color: t.TEXT_MUTED, fontSize: '13px', fontWeight: '300' }}>No advisors assigned yet.</p>
+            <p style={{ color: t.TEXT_MUTED, fontSize: '13px', fontWeight: FW_LIGHT }}>No advisors assigned yet.</p>
           ) : (
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', transition: 'all 0.3s ease' }}>
               {[...advisors].sort((a, b) => b.is_primary - a.is_primary).map(a => (
@@ -813,7 +822,7 @@ export default function ClientDetail() {
                     {a.first_name && a.last_name ? `${a.first_name} ${a.last_name}` : a.user_id.slice(0, 8) + '…'}
                   </span>
                   {a.is_primary && (
-                    <span style={{ fontSize: '10px', color: t.ACCENT, letterSpacing: '0.06em', fontWeight: '600' }}>Primary</span>
+                    <span style={{ fontSize: '10px', color: t.ACCENT, letterSpacing: '0.06em', fontWeight: FW_SEMIBOLD }}>Primary</span>
                   )}
                   {canManageAdvisors && !a.is_primary && (
                     <button onClick={() => handleSetPrimary(a.id)} style={{ background: 'none', border: 'none', fontSize: '11px', color: t.TEXT_MUTED, cursor: 'pointer', padding: 0 }}>Set primary</button>
@@ -831,7 +840,7 @@ export default function ClientDetail() {
         {showAdvisorModal && (
           <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.65)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }}>
             <div style={{ background: t.SURFACE, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_LG, padding: '32px', width: '340px' }}>
-              <h3 style={{ fontFamily: FONT_DISPLAY, fontWeight: '400', color: t.TEXT, fontSize: '22px', marginBottom: '20px' }}>Assign Advisor</h3>
+              <h3 style={{ fontFamily: FONT_DISPLAY, fontWeight: FW_REGULAR, color: t.TEXT, fontSize: '22px', marginBottom: '20px' }}>Assign Advisor</h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '24px' }}>
                 {orgMembers.map(m => {
                   const assigned = advisors.find(a => a.user_id === m.user_id);
@@ -844,7 +853,7 @@ export default function ClientDetail() {
                       {assigned ? (
                         <span style={{ fontSize: '11px', color: t.TEXT_MUTED }}>Assigned</span>
                       ) : (
-                        <button onClick={() => handleAssignAdvisor(m.user_id)} style={{ background: t.ACCENT_MUTED, border: `1px solid ${t.ACCENT_BORDER}`, borderRadius: RADIUS_MD, padding: '4px 12px', fontSize: '12px', color: t.ACCENT, cursor: 'pointer', fontWeight: '600', fontFamily: FONT_BODY }}>Assign</button>
+                        <button onClick={() => handleAssignAdvisor(m.user_id)} style={{ background: t.ACCENT_MUTED, border: `1px solid ${t.ACCENT_BORDER}`, borderRadius: RADIUS_MD, padding: '4px 12px', fontSize: '12px', color: t.ACCENT, cursor: 'pointer', fontWeight: FW_SEMIBOLD, fontFamily: FONT_BODY }}>Assign</button>
                       )}
                     </div>
                   );
@@ -883,7 +892,7 @@ export default function ClientDetail() {
                 <Field label="Est. Annual Revenue" value={formatEstRevenue(client.aum, client.fee_rate)} s={s} />
                 <Field label="Custodian" value={client.custodian || '—'} s={s} />
                 {client.aum_source === 'api' && client.aum_synced_at && (
-                  <div style={{ fontSize: '11px', color: t.TEXT_SUBTLE, fontWeight: '300', marginTop: '2px' }}>
+                  <div style={{ fontSize: '11px', color: t.TEXT_SUBTLE, fontWeight: FW_LIGHT, marginTop: '2px' }}>
                     Synced {new Date(client.aum_synced_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                   </div>
                 )}
@@ -923,15 +932,15 @@ export default function ClientDetail() {
           <div>
             {!brief && !briefGenerating && (
               <div style={{ ...s.notesCard, textAlign: 'center', padding: '40px 32px' }}>
-                <p style={{ fontSize: '14px', color: t.TEXT, fontWeight: '400', margin: '0 0 8px' }}>
+                <p style={{ fontSize: '14px', color: t.TEXT, fontWeight: FW_REGULAR, margin: '0 0 8px' }}>
                   No brief yet
                 </p>
-                <p style={{ fontSize: '13px', color: t.TEXT_MUTED, fontWeight: '300', margin: '0 0 24px', lineHeight: '1.6', maxWidth: '420px', marginLeft: 'auto', marginRight: 'auto' }}>
+                <p style={{ fontSize: '13px', color: t.TEXT_MUTED, fontWeight: FW_LIGHT, margin: '0 0 24px', lineHeight: '1.6', maxWidth: '420px', marginLeft: 'auto', marginRight: 'auto' }}>
                   Generate an AI-powered summary of this client's relationship — drawing from recent meeting notes, open tasks, and key account details.
                 </p>
                 {canGenerateBrief ? (
                   <button
-                    style={{ padding: '10px 24px', borderRadius: RADIUS_MD, border: `1px solid ${t.ACCENT_BORDER}`, background: t.ACCENT_MUTED, color: t.ACCENT, fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: FONT_BODY }}
+                    style={{ padding: '10px 24px', borderRadius: RADIUS_MD, border: `1px solid ${t.ACCENT_BORDER}`, background: t.ACCENT_MUTED, color: t.ACCENT, fontSize: '13px', fontWeight: FW_SEMIBOLD, cursor: 'pointer', fontFamily: FONT_BODY }}
                     onClick={handleGenerateBrief}
                   >
                     Generate Brief
@@ -944,7 +953,7 @@ export default function ClientDetail() {
 
             {briefGenerating && (
               <div style={{ textAlign: 'center', padding: '48px 0' }}>
-                <p style={{ color: t.TEXT_MUTED, fontSize: '13px', fontWeight: '300' }}>Generating brief…</p>
+                <p style={{ color: t.TEXT_MUTED, fontSize: '13px', fontWeight: FW_LIGHT }}>Generating brief…</p>
               </div>
             )}
 
@@ -962,7 +971,7 @@ export default function ClientDetail() {
                   {/* Brief header row */}
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                     {generatedDate && (
-                      <span style={{ fontSize: '11px', color: t.TEXT_MUTED, fontWeight: '300' }}>
+                      <span style={{ fontSize: '11px', color: t.TEXT_MUTED, fontWeight: FW_LIGHT }}>
                         Last updated {generatedDate}
                       </span>
                     )}
@@ -983,7 +992,7 @@ export default function ClientDetail() {
                     {b.snapshot && (
                       <div style={{ marginBottom: (b.recent_meetings?.length || b.open_commitments?.length || b.relationship_notes?.length) ? '20px' : 0 }}>
                         <p style={{ ...s.sectionLabel, marginBottom: '8px' }}>Snapshot</p>
-                        <p style={{ fontSize: '13px', color: t.TEXT, fontWeight: '300', lineHeight: '1.7', margin: 0 }}>{b.snapshot}</p>
+                        <p style={{ fontSize: '13px', color: t.TEXT, fontWeight: FW_LIGHT, lineHeight: '1.7', margin: 0 }}>{b.snapshot}</p>
                       </div>
                     )}
 
@@ -994,7 +1003,7 @@ export default function ClientDetail() {
                         {b.recent_meetings.map((m, i) => (
                           <div key={i} style={{ display: 'flex', gap: '10px', marginBottom: i < b.recent_meetings.length - 1 ? '8px' : 0 }}>
                             <span style={{ color: t.TEXT, flexShrink: 0, fontSize: '13px' }}>·</span>
-                            <span style={{ fontSize: '13px', color: t.TEXT, fontWeight: '300', lineHeight: '1.6' }}>{m}</span>
+                            <span style={{ fontSize: '13px', color: t.TEXT, fontWeight: FW_LIGHT, lineHeight: '1.6' }}>{m}</span>
                           </div>
                         ))}
                       </div>
@@ -1007,7 +1016,7 @@ export default function ClientDetail() {
                         {b.open_commitments.map((c, i) => (
                           <div key={i} style={{ display: 'flex', gap: '10px', marginBottom: i < b.open_commitments.length - 1 ? '8px' : 0 }}>
                             <span style={{ color: t.TEXT, flexShrink: 0, fontSize: '13px' }}>·</span>
-                            <span style={{ fontSize: '13px', color: t.TEXT, fontWeight: '300', lineHeight: '1.6' }}>{c}</span>
+                            <span style={{ fontSize: '13px', color: t.TEXT, fontWeight: FW_LIGHT, lineHeight: '1.6' }}>{c}</span>
                           </div>
                         ))}
                       </div>
@@ -1020,7 +1029,7 @@ export default function ClientDetail() {
                         {b.relationship_notes.map((r, i) => (
                           <div key={i} style={{ display: 'flex', gap: '10px', marginBottom: i < b.relationship_notes.length - 1 ? '8px' : 0 }}>
                             <span style={{ color: t.TEXT, flexShrink: 0, fontSize: '13px' }}>·</span>
-                            <span style={{ fontSize: '13px', color: t.TEXT, fontWeight: '300', lineHeight: '1.6' }}>{r}</span>
+                            <span style={{ fontSize: '13px', color: t.TEXT, fontWeight: FW_LIGHT, lineHeight: '1.6' }}>{r}</span>
                           </div>
                         ))}
                       </div>
@@ -1056,15 +1065,15 @@ export default function ClientDetail() {
             ) : (
               groupNotesByDate(clientNotes).map(([date, dateNotes]) => (
                 <div key={date} style={{ marginBottom: '20px' }}>
-                  <p style={{ fontSize: '11px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.08em', color: t.TEXT_MUTED, marginBottom: '8px' }}>
+                  <p style={{ fontSize: '11px', fontWeight: FW_SEMIBOLD, textTransform: 'uppercase', letterSpacing: '0.08em', color: t.TEXT_MUTED, marginBottom: '8px' }}>
                     {formatDateLabel(date)}
                   </p>
                   {dateNotes.map((note) => (
                     <div key={note.id} style={{ ...s.notesCard, marginBottom: '10px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: note.body ? '8px' : '0', flexWrap: 'wrap' }}>
-                        <span style={{ fontFamily: FONT_DISPLAY, fontSize: '17px', fontWeight: '400', color: t.TEXT, flex: 1, letterSpacing: '0.01em' }}>{note.title}</span>
+                        <span style={{ fontFamily: FONT_DISPLAY, fontSize: '17px', fontWeight: FW_REGULAR, color: t.TEXT, flex: 1, letterSpacing: '0.01em' }}>{note.title}</span>
                         {note.note_type && (
-                          <span style={{ fontSize: '10px', fontWeight: '600', padding: '2px 10px', borderRadius: RADIUS_PILL, background: t.ACCENT_MUTED, color: t.ACCENT, border: `1px solid ${t.ACCENT_BORDER}`, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                          <span style={{ fontSize: '10px', fontWeight: FW_SEMIBOLD, padding: '2px 10px', borderRadius: RADIUS_PILL, background: t.ACCENT_MUTED, color: t.ACCENT, border: `1px solid ${t.ACCENT_BORDER}`, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
                             {note.note_type}
                           </span>
                         )}
@@ -1147,7 +1156,7 @@ export default function ClientDetail() {
                 <div style={s.formGrid}>
                   {/* AUM — formatted input, auto-derives asset_level */}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    <label style={{ fontSize: '11px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.08em', color: t.TEXT_MUTED }}>AUM</label>
+                    <label style={{ fontSize: '11px', fontWeight: FW_SEMIBOLD, textTransform: 'uppercase', letterSpacing: '0.08em', color: t.TEXT_MUTED }}>AUM</label>
                     <div style={{ position: 'relative' }}>
                       <span style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: t.TEXT_MUTED, fontSize: '13px', pointerEvents: 'none' }}>$</span>
                       <input
@@ -1161,14 +1170,14 @@ export default function ClientDetail() {
                       />
                     </div>
                     {formData.aum && (
-                      <span style={{ fontSize: '11px', color: t.TEXT_SUBTLE, fontWeight: '300' }}>
+                      <span style={{ fontSize: '11px', color: t.TEXT_SUBTLE, fontWeight: FW_LIGHT }}>
                         Asset level: {aumToAssetLevel(formData.aum)}
                       </span>
                     )}
                   </div>
                   {/* Fee rate — user enters percentage, stored as decimal */}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    <label style={{ fontSize: '11px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.08em', color: t.TEXT_MUTED }}>Fee Rate</label>
+                    <label style={{ fontSize: '11px', fontWeight: FW_SEMIBOLD, textTransform: 'uppercase', letterSpacing: '0.08em', color: t.TEXT_MUTED }}>Fee Rate</label>
                     <div style={{ position: 'relative' }}>
                       <input
                         name="fee_rate"

@@ -23,18 +23,10 @@ import {
   TIME_HORIZON_OPTIONS,
   pageStyles,
   MOBILE_BREAKPOINT,
-} from '../utils/hqConstants';
+  FW_LIGHT, FW_REGULAR, FW_MEDIUM, FW_SEMIBOLD} from '../utils/hqConstants';
 import { useTokens } from '../context/ThemeContext';
+import useWindowWidth from '../hooks/useWindowWidth';
 
-function useWindowWidth() {
-  const [width, setWidth] = useState(window.innerWidth);
-  useEffect(() => {
-    const handle = () => setWidth(window.innerWidth);
-    window.addEventListener('resize', handle);
-    return () => window.removeEventListener('resize', handle);
-  }, []);
-  return width;
-}
 
 const emptyForm = {
   first_name: '', last_name: '', email: '', phone: '',
@@ -205,7 +197,6 @@ export default function Clients() {
 
   const tabs = ['all', 'active', 'prospect', 'inactive'];
 
-
   const s = {
     ...pageStyles(t, isMobile),
     header: {
@@ -223,7 +214,7 @@ export default function Clients() {
       borderRadius: RADIUS_MD,
       padding: '10px 20px',
       fontSize: '14px',
-      fontWeight: '600',
+      fontWeight: FW_SEMIBOLD,
       cursor: 'pointer',
       fontFamily: FONT_BODY,
       transition: 'background 0.15s',
@@ -259,7 +250,7 @@ export default function Clients() {
       fontSize: '13px',
       cursor: 'pointer',
       color: t.TEXT_MUTED,
-      fontWeight: '500',
+      fontWeight: FW_MEDIUM,
       fontFamily: FONT_BODY,
     },
     tabActive: {
@@ -307,7 +298,7 @@ export default function Clients() {
       alignItems: 'center',
       justifyContent: 'center',
       fontSize: '13px',
-      fontWeight: '600',
+      fontWeight: FW_SEMIBOLD,
       letterSpacing: '0.03em',
       flexShrink: 0,
       fontFamily: FONT_DISPLAY,
@@ -315,7 +306,7 @@ export default function Clients() {
     cardName: {
       fontFamily: FONT_DISPLAY,
       fontSize: '18px',
-      fontWeight: '400',
+      fontWeight: FW_REGULAR,
       color: t.TEXT,
       margin: '0 0 2px',
       letterSpacing: '0.01em',
@@ -324,7 +315,7 @@ export default function Clients() {
       fontSize: '12px',
       color: t.TEXT_MUTED,
       margin: 0,
-      fontWeight: '300',
+      fontWeight: FW_LIGHT,
     },
     cardDivider: { display: 'none' },
     cardStats: {
@@ -342,7 +333,7 @@ export default function Clients() {
     },
     statLabel: {
       fontSize: '10px',
-      fontWeight: '600',
+      fontWeight: FW_SEMIBOLD,
       textTransform: 'uppercase',
       letterSpacing: '0.08em',
       color: t.TEXT_MUTED,
@@ -350,14 +341,14 @@ export default function Clients() {
     statValue: {
       fontSize: '13px',
       color: t.TEXT,
-      fontWeight: '400',
+      fontWeight: FW_REGULAR,
     },
     badge: {
       display: 'inline-block',
       padding: '3px 10px',
       borderRadius: RADIUS_PILL,
       fontSize: '11px',
-      fontWeight: '600',
+      fontWeight: FW_SEMIBOLD,
       letterSpacing: '0.06em',
       textTransform: 'uppercase',
     },
@@ -366,7 +357,7 @@ export default function Clients() {
       textAlign: 'center',
       color: t.TEXT_MUTED,
       fontSize: '15px',
-      fontWeight: '300',
+      fontWeight: FW_LIGHT,
     },
     emptyLink: {
       color: t.ACCENT,
@@ -407,7 +398,7 @@ export default function Clients() {
       margin: 0,
       fontFamily: FONT_DISPLAY,
       fontSize: '24px',
-      fontWeight: '400',
+      fontWeight: FW_REGULAR,
       color: t.TEXT,
       letterSpacing: '0.01em',
     },
@@ -427,7 +418,7 @@ export default function Clients() {
     },
     sectionLabel: {
       fontSize: '10px',
-      fontWeight: '600',
+      fontWeight: FW_SEMIBOLD,
       textTransform: 'uppercase',
       letterSpacing: '0.12em',
       color: t.ACCENT,
@@ -445,7 +436,7 @@ export default function Clients() {
     },
     label: {
       fontSize: '12px',
-      fontWeight: '500',
+      fontWeight: FW_MEDIUM,
       color: t.TEXT_MUTED,
       letterSpacing: '0.02em',
     },
@@ -503,7 +494,7 @@ export default function Clients() {
       background: t.ACCENT_MUTED,
       color: t.ACCENT,
       fontSize: '14px',
-      fontWeight: '600',
+      fontWeight: FW_SEMIBOLD,
       cursor: 'pointer',
       fontFamily: FONT_BODY,
     },
@@ -697,7 +688,7 @@ export default function Clients() {
                   <FormField label="Date of Birth *" name="date_of_birth" type="date" value={formData.date_of_birth} onChange={handleChange} s={s} />
                   <SelectField label="Status" name="status" value={formData.status} onChange={handleChange} options={STATUS_OPTIONS} s={s} />
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    <label style={{ fontSize: '11px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.08em', color: t.TEXT_MUTED }}>Pipeline Stage</label>
+                    <label style={{ fontSize: '11px', fontWeight: FW_SEMIBOLD, textTransform: 'uppercase', letterSpacing: '0.08em', color: t.TEXT_MUTED }}>Pipeline Stage</label>
                     <select name="pipeline_stage" value={formData.pipeline_stage} onChange={handleChange} style={s.input}>
                       {PIPELINE_STAGES.filter(st => st.key !== 'Active').map(st => (
                         <option key={st.key} value={st.key}>{st.label}</option>
@@ -719,7 +710,7 @@ export default function Clients() {
                 <p style={s.sectionLabel}>Relationship Management</p>
                 <div style={s.formGrid}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    <label style={{ fontSize: '11px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.08em', color: t.TEXT_MUTED }}>Advisor</label>
+                    <label style={{ fontSize: '11px', fontWeight: FW_SEMIBOLD, textTransform: 'uppercase', letterSpacing: '0.08em', color: t.TEXT_MUTED }}>Advisor</label>
                     <select
                       value={selectedAdvisor}
                       onChange={e => setSelectedAdvisor(e.target.value)}

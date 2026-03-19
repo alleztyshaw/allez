@@ -1,4 +1,6 @@
 // api/prep-brief.js
+const CLAUDE_MODEL = 'claude-haiku-4-5-20251001'; // Update in hqConstants and here together
+
 // Generates an AI relationship brief for a client.
 // Mode: 'review' (ClientDetail) — synthesises history, open loops, confirmed changes.
 // De-identifies notes before Anthropic call, re-identifies on return.
@@ -203,7 +205,7 @@ export default async function handler(req, res) {
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
+        model: CLAUDE_MODEL,
         max_tokens: 1500,
         system: REVIEW_SYSTEM_PROMPT,
         messages: [{ role: 'user', content: userPrompt }],
