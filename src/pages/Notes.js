@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { useOrg } from '../context/OrgContext';
@@ -90,6 +90,18 @@ export default function Notes() {
   const [aiError, setAiError] = useState('');
   const [aiTitleOverride, setAiTitleOverride] = useState('');
   const [showTranscript, setShowTranscript] = useState(false);
+
+  // Audio input
+  const [inputMode, setInputMode]           = useState('paste'); // 'paste' | 'upload' | 'record'
+  const [wasRecorded, setWasRecorded]       = useState(false); // true if current session came from record mode
+  const [audioFile, setAudioFile]           = useState(null);
+  const [audioTranscribing, setAudioTranscribing] = useState(false);
+  const [audioError, setAudioError]         = useState('');
+  const [recording, setRecording]           = useState(false);
+  const [recordingSeconds, setRecordingSeconds] = useState(0);
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef   = useRef([]);
+  const recordingTimerRef = useRef(null);
   const [pushedTasks, setPushedTasks] = useState(new Set()); // indices of action items pushed to tasks
 
   // Email draft modal
@@ -103,7 +115,7 @@ export default function Notes() {
   const [emailBody, setEmailBody]           = useState('');
   const [emailError, setEmailError]         = useState('');
   const [emailCopied, setEmailCopied]       = useState(false);
-  const [emailDrafts, setEmailDrafts]       = useState({}); // keyed by note.id
+  const [emailDrafts, setEmailDrafts]       = useState({}); // persisted drafts keyed by note id
 
   // Note list
   const [editingNote, setEditingNote] = useState(null);
@@ -170,10 +182,99 @@ export default function Notes() {
     setShowTranscript(false);
     setError('');
     setPushedTasks(new Set());
+    setInputMode('paste');
+    setWasRecorded(false);
+    setAudioFile(null);
+    setAudioError('');
+    stopRecording();
     navigate('/hq/notes', { replace: true });
   }
 
-  // ── Manual save ─────────────────────────────────────────────────────────────
+  // ── Audio transcription ──────────────────────────────────────────────────────
+
+  async function transcribeAudio(file, autoProcess = false) {
+    setAudioTranscribing(true);
+    setAudioError('');
+    setAiTranscript('');
+    try {
+      const formData = new FormData();
+      formData.append('audio', file);
+      const res = await fetch('/api/transcribe', { method: 'POST', body: formData });
+      const data = await res.json();
+      if (!res.ok) {
+        setAudioError(data.error || 'Transcription failed. Please try again.');
+      } else {
+        setAiTranscript(data.transcript);
+        if (autoProcess) {
+          // Trigger AI processing directly — skip paste review step
+          setAiProcessing(true);
+          setAudioTranscribing(false);
+          await handleAiProcessWithTranscript(data.transcript);
+        } else {
+          setInputMode('paste');
+        }
+      }
+    } catch {
+      setAudioError('Could not reach the transcription service. Please try again.');
+    }
+    setAudioTranscribing(false);
+  }
+
+  function handleFileSelect(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setAudioFile(file);
+    setAudioError('');
+  }
+
+  async function handleFileTranscribe() {
+    if (!audioFile) return;
+    await transcribeAudio(audioFile);
+  }
+
+  async function startRecording() {
+    setAudioError('');
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/mp4';
+      const recorder = new MediaRecorder(stream, { mimeType });
+      audioChunksRef.current = [];
+
+      recorder.ondataavailable = e => {
+        if (e.data.size > 0) audioChunksRef.current.push(e.data);
+      };
+
+      recorder.onstop = async () => {
+        stream.getTracks().forEach(t => t.stop());
+        const blob = new Blob(audioChunksRef.current, { type: mimeType });
+        const file = new File([blob], 'recording.webm', { type: mimeType });
+        await transcribeAudio(file, true); // auto-process after transcription
+      };
+
+      recorder.start(1000); // collect in 1s chunks
+      mediaRecorderRef.current = recorder;
+      setRecording(true);
+      setWasRecorded(true);
+      setRecordingSeconds(0);
+      recordingTimerRef.current = setInterval(() => {
+        setRecordingSeconds(s => s + 1);
+      }, 1000);
+    } catch (err) {
+      setAudioError('Microphone access denied. Please allow microphone access and try again.');
+    }
+  }
+
+  function stopRecording() {
+    if (mediaRecorderRef.current?.state === 'recording') {
+      mediaRecorderRef.current.stop();
+    }
+    if (recordingTimerRef.current) {
+      clearInterval(recordingTimerRef.current);
+      recordingTimerRef.current = null;
+    }
+    setRecording(false);
+    setRecordingSeconds(0);
+  }
 
   async function handleSave() {
     if (!formData.client_id) { setError('Please select a client.'); return; }
@@ -229,6 +330,43 @@ export default function Notes() {
       }
     } catch (err) {
       console.error('AI process error:', err);
+      setAiError('Could not reach the processing service. Please try again.');
+    }
+    setAiProcessing(false);
+  }
+
+  // Used by auto-process path (record mode) — accepts transcript directly
+  // since state may not have updated yet when called
+  async function handleAiProcessWithTranscript(transcript) {
+    if (!formData.client_id) { setAiError('Please select a client before recording.'); setAiProcessing(false); return; }
+    setAiError('');
+    setAiResult(null);
+
+    const selectedClient = clients.find(c => c.id === formData.client_id);
+    const clientFullName = selectedClient ? `${selectedClient.first_name} ${selectedClient.last_name}` : '';
+    const memberNames = orgMembers
+      .map(m => m.first_name && m.last_name ? `${m.first_name} ${m.last_name}` : null)
+      .filter(Boolean);
+
+    try {
+      const response = await fetch('/api/process-note', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          transcript,
+          client_name: clientFullName,
+          org_member_names: memberNames,
+          note_type: formData.note_type,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        setAiError(data.error || 'Processing failed. Please try again.');
+      } else {
+        setAiResult(data);
+        setAiTitleOverride(data.title || '');
+      }
+    } catch {
       setAiError('Could not reach the processing service. Please try again.');
     }
     setAiProcessing(false);
@@ -447,10 +585,10 @@ export default function Notes() {
     input: { border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_MD, padding: '8px 12px', fontSize: '14px', outline: 'none', color: t.TEXT, background: t.SURFACE_ALT, fontFamily: FONT_BODY },
     textarea: { width: '100%', border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_MD, padding: '10px 12px', fontSize: '14px', minHeight: '100px', resize: 'vertical', outline: 'none', color: t.TEXT, background: t.SURFACE_ALT, fontFamily: FONT_BODY, boxSizing: 'border-box', marginBottom: '12px' },
     transcriptArea: { width: '100%', border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_MD, padding: '12px', fontSize: '13px', minHeight: '180px', resize: 'vertical', outline: 'none', color: t.TEXT, background: t.SURFACE_ALT, fontFamily: FONT_BODY, boxSizing: 'border-box', marginBottom: '12px', lineHeight: '1.6' },
-    composeFooter: { display: 'flex', justifyContent: 'flex-end', gap: '10px', alignItems: 'center' },
-    cancelButton: { padding: '8px 18px', borderRadius: RADIUS_MD, border: `1px solid ${t.BORDER}`, background: 'transparent', fontSize: '13px', cursor: 'pointer', color: t.TEXT_MUTED, fontFamily: FONT_BODY },
-    saveButton: { padding: '8px 18px', borderRadius: RADIUS_MD, border: `1px solid ${t.ACCENT_BORDER}`, background: t.ACCENT_MUTED, color: t.ACCENT, fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: FONT_BODY },
-    processButton: { padding: '8px 20px', borderRadius: RADIUS_MD, border: '1px solid rgba(139,92,246,0.4)', background: 'rgba(139,92,246,0.12)', color: '#a78bfa', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: FONT_BODY },
+    composeFooter: { display: 'flex', justifyContent: 'flex-end', gap: '10px', alignItems: 'center', marginTop: '20px' },
+    cancelButton: { padding: '10px 22px', borderRadius: RADIUS_MD, border: `1px solid ${t.BORDER}`, background: 'transparent', fontSize: '13px', cursor: 'pointer', color: t.TEXT_MUTED, fontFamily: FONT_BODY },
+    saveButton: { padding: '10px 22px', borderRadius: RADIUS_MD, border: `1px solid ${t.ACCENT_BORDER}`, background: t.ACCENT_MUTED, color: t.ACCENT, fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: FONT_BODY },
+    processButton: { padding: '10px 22px', borderRadius: RADIUS_MD, border: '1px solid rgba(139,92,246,0.4)', background: 'rgba(139,92,246,0.12)', color: '#a78bfa', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: FONT_BODY },
     errorText: { color: '#f87171', fontSize: '13px', marginBottom: '10px' },
     resultCard: { background: t.SURFACE_ALT, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_MD, padding: '20px', marginBottom: '16px' },
     resultSection: { marginBottom: '16px' },
@@ -497,6 +635,7 @@ export default function Notes() {
           .note-card:hover { transform: translateY(-2px) !important; box-shadow: ${SHADOW_LG} !important; }
           .client-name-badge:hover { background: rgba(96,165,250,0.25) !important; box-shadow: 0 0 0 2px rgba(96,165,250,0.3); }
           .push-task-btn:hover { border-color: ${t.ACCENT_BORDER} !important; color: ${t.ACCENT} !important; }
+          @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
           .expand-triangle { display: inline-block; width: 0; height: 0; border-top: 4px solid transparent; border-bottom: 4px solid transparent; border-left: 5px solid currentColor; transition: transform 0.2s ease; margin-left: 4px; vertical-align: middle; }
           .expand-triangle.open { transform: rotate(90deg); }
           .ai-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #a78bfa; animation: aiPulse 1.2s ease-in-out infinite; margin: 0 2px; }
@@ -608,13 +747,148 @@ export default function Notes() {
                 {/* Transcript input — hidden once result is ready */}
                 {!aiResult && !aiProcessing && (
                   <>
-                    <div style={{ marginBottom: '6px' }}>
-                      <label style={s.label}>Transcript *</label>
-                      <p style={{ fontSize: '11px', color: t.TEXT_MUTED, margin: '4px 0 8px', fontWeight: '300', lineHeight: '1.5' }}>
-                        Paste your meeting transcript below. Client and advisor names are de-identified before processing — they never leave your infrastructure in identifiable form.
-                      </p>
+                    {/* Input mode tabs */}
+                    <div style={{ display: 'flex', gap: '6px', marginBottom: '14px' }}>
+                      {[
+                        { key: 'paste', label: 'Paste text' },
+                        { key: 'upload', label: 'Upload audio' },
+                        { key: 'record', label: 'Record' },
+                      ].map(tab => (
+                        <button
+                          key={tab.key}
+                          onClick={() => { setInputMode(tab.key); setAudioError(''); }}
+                          style={{
+                            padding: '5px 14px', borderRadius: '6px', fontSize: '12px',
+                            fontFamily: FONT_BODY, cursor: 'pointer', fontWeight: '500',
+                            border: `1px solid ${inputMode === tab.key ? t.ACCENT_BORDER : t.BORDER}`,
+                            background: inputMode === tab.key ? t.ACCENT_MUTED : 'transparent',
+                            color: inputMode === tab.key ? t.ACCENT : t.TEXT_MUTED,
+                          }}
+                        >
+                          {tab.label}
+                        </button>
+                      ))}
                     </div>
-                    <textarea value={aiTranscript} onChange={e => setAiTranscript(e.target.value)} placeholder="Paste transcript here..." style={s.transcriptArea} />
+
+                    {/* Paste mode */}
+                    {inputMode === 'paste' && (
+                      <>
+                        <div style={{ marginBottom: '6px' }}>
+                          <label style={s.label}>Transcript *</label>
+                          <p style={{ fontSize: '11px', color: t.TEXT_MUTED, margin: '4px 0 8px', fontWeight: '300', lineHeight: '1.5' }}>
+                            Paste your meeting transcript below. Client and advisor names are de-identified before processing — they never leave your infrastructure in identifiable form.
+                          </p>
+                        </div>
+                        <textarea value={aiTranscript} onChange={e => setAiTranscript(e.target.value)} placeholder="Paste transcript here..." style={s.transcriptArea} />
+                      </>
+                    )}
+
+                    {/* Upload mode */}
+                    {inputMode === 'upload' && (
+                      <div style={{ padding: '28px 24px', minHeight: '140px', border: `1px dashed ${t.BORDER}`, borderRadius: RADIUS_MD, textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                        <p style={{ fontSize: '13px', color: t.TEXT_MUTED, margin: '0 0 16px', fontWeight: '300' }}>
+                          Supported formats: MP3, MP4, M4A, WAV, WEBM, OGG
+                        </p>
+                        <input
+                          type="file"
+                          accept="audio/*"
+                          id="audio-upload"
+                          style={{ display: 'none' }}
+                          onChange={handleFileSelect}
+                        />
+                        <label
+                          htmlFor="audio-upload"
+                          style={{
+                            display: 'inline-block', padding: '9px 20px',
+                            border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_MD,
+                            fontSize: '13px', color: t.TEXT_MUTED, cursor: 'pointer',
+                            fontFamily: FONT_BODY, fontWeight: '500',
+                            marginBottom: audioFile ? '12px' : 0,
+                          }}
+                        >
+                          Choose file
+                        </label>
+                        {audioFile && (
+                          <div style={{ marginTop: '12px' }}>
+                            <p style={{ fontSize: '13px', color: t.TEXT, margin: '0 0 12px', fontWeight: '300' }}>
+                              {audioFile.name} ({(audioFile.size / 1024 / 1024).toFixed(1)} MB)
+                            </p>
+                            <button
+                              style={{ ...s.saveButton, opacity: audioTranscribing ? 0.6 : 1 }}
+                              onClick={handleFileTranscribe}
+                              disabled={audioTranscribing}
+                            >
+                              {audioTranscribing ? 'Transcribing…' : 'Transcribe'}
+                            </button>
+                          </div>
+                        )}
+                        {audioTranscribing && (
+                          <p style={{ fontSize: '12px', color: t.TEXT_MUTED, margin: '12px 0 0', fontWeight: '300' }}>
+                            This may take 30–90 seconds depending on file length…
+                          </p>
+                        )}
+                        {audioError && <p style={{ color: '#f87171', fontSize: '12px', margin: '10px 0 0' }}>{audioError}</p>}
+                      </div>
+                    )}
+
+                    {/* Record mode */}
+                    {inputMode === 'record' && (
+                      <div style={{ padding: '28px 24px', minHeight: '140px', border: `1px dashed ${t.BORDER}`, borderRadius: RADIUS_MD, textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                        {!recording && !audioTranscribing && (
+                          <>
+                            <p style={{ fontSize: '13px', color: t.TEXT_MUTED, margin: '0 0 18px', fontWeight: '300', lineHeight: '1.5' }}>
+                              Hit stop when you're done — we'll process automatically.
+                            </p>
+                            <button
+                              style={{
+                                padding: '9px 20px', borderRadius: RADIUS_MD,
+                                border: `1px solid ${t.ACCENT_BORDER}`,
+                                background: t.ACCENT_MUTED, color: t.ACCENT,
+                                fontSize: '13px', fontWeight: '600',
+                                cursor: 'pointer', fontFamily: FONT_BODY,
+                              }}
+                              onClick={startRecording}
+                            >
+                              Start recording
+                            </button>
+                          </>
+                        )}
+                        {recording && (
+                          <>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', marginBottom: '18px' }}>
+                              <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#f87171', animation: 'pulse 1.2s infinite' }} />
+                              <span style={{ fontSize: '13px', color: t.TEXT, fontWeight: '400' }}>
+                                Recording — {Math.floor(recordingSeconds / 60)}:{String(recordingSeconds % 60).padStart(2, '0')}
+                              </span>
+                            </div>
+                            <button
+                              style={{
+                                padding: '9px 20px', borderRadius: RADIUS_MD,
+                                border: `1px solid rgba(248,113,113,0.4)`,
+                                background: 'rgba(248,113,113,0.12)', color: '#f87171',
+                                fontSize: '13px', fontWeight: '600',
+                                cursor: 'pointer', fontFamily: FONT_BODY,
+                              }}
+                              onClick={stopRecording}
+                            >
+                              Stop recording
+                            </button>
+                          </>
+                        )}
+                        {audioTranscribing && (
+                          <div>
+                            <div style={{ marginBottom: '12px' }}>
+                              <span className="ai-dot" />
+                              <span className="ai-dot" />
+                              <span className="ai-dot" />
+                            </div>
+                            <p style={{ color: '#a78bfa', fontSize: '13px', fontWeight: '500', margin: '0 0 4px' }}>Transcribing & processing</p>
+                            <p style={{ color: t.TEXT_MUTED, fontSize: '11px', fontWeight: '300', margin: 0 }}>This may take 30–90 seconds…</p>
+                          </div>
+                        )}
+                        {audioError && <p style={{ color: '#f87171', fontSize: '12px', margin: '10px 0 0' }}>{audioError}</p>}
+                      </div>
+                    )}
                   </>
                 )}
 
@@ -711,7 +985,7 @@ export default function Notes() {
 
                 <div style={s.composeFooter}>
                   <button style={s.cancelButton} onClick={resetCompose}>Cancel</button>
-                  {!aiResult && (
+                  {!aiResult && !wasRecorded && (
                     <button style={s.processButton} onClick={handleAiProcess} disabled={aiProcessing}>
                       {aiProcessing ? 'Processing...' : 'Process with AI'}
                     </button>

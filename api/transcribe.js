@@ -1,100 +1,154 @@
 // api/transcribe.js
-// Receives an audio blob, sends to AssemblyAI for transcription + speaker diarization.
-// Returns a diarized transcript with Advisor / Client speaker labels.
-//
-// TO ACTIVATE: Add ASSEMBLYAI_API_KEY to Vercel environment variables.
-// No code changes needed — the mock block below will be replaced automatically.
+// Vercel serverless function — transcribes audio via AssemblyAI
+// Accepts multipart form data with an audio file
+// Returns formatted transcript text with speaker labels
 
-export const config = { api: { bodyParser: false } };
+export const config = {
+  api: {
+    bodyParser: false, // required for multipart/form-data
+  },
+};
+
+const ASSEMBLYAI_API = 'https://api.assemblyai.com/v2';
+
+async function uploadAudio(buffer, contentType) {
+  const res = await fetch(`${ASSEMBLYAI_API}/upload`, {
+    method: 'POST',
+    headers: {
+      authorization: process.env.ASSEMBLYAI_API_KEY,
+      'content-type': contentType || 'application/octet-stream',
+      'transfer-encoding': 'chunked',
+    },
+    body: buffer,
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || 'AssemblyAI upload failed');
+  }
+  const { upload_url } = await res.json();
+  return upload_url;
+}
+
+async function requestTranscript(uploadUrl, speakerLabels) {
+  const res = await fetch(`${ASSEMBLYAI_API}/transcript`, {
+    method: 'POST',
+    headers: {
+      authorization: process.env.ASSEMBLYAI_API_KEY,
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({
+      audio_url: uploadUrl,
+      speaker_labels: speakerLabels,
+    }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || 'AssemblyAI transcript request failed');
+  }
+  const { id } = await res.json();
+  return id;
+}
+
+async function pollTranscript(transcriptId) {
+  const maxAttempts = 60; // 5 minutes max (5s intervals)
+  for (let i = 0; i < maxAttempts; i++) {
+    await new Promise(r => setTimeout(r, 5000));
+
+    const res = await fetch(`${ASSEMBLYAI_API}/transcript/${transcriptId}`, {
+      headers: { authorization: process.env.ASSEMBLYAI_API_KEY },
+    });
+    const data = await res.json();
+
+    if (data.status === 'completed') return data;
+    if (data.status === 'error') throw new Error(data.error || 'Transcription failed');
+    // status === 'processing' or 'queued' — keep polling
+  }
+  throw new Error('Transcription timed out. Please try again.');
+}
+
+function formatTranscript(data) {
+  // If speaker diarization is available, format as labelled turns
+  if (data.utterances?.length) {
+    return data.utterances
+      .map(u => `Speaker ${u.speaker}: ${u.text}`)
+      .join('\n\n');
+  }
+  // Fallback to plain text
+  return data.text || '';
+}
+
+async function parseMultipart(req) {
+  // Simple multipart parser for a single file field named 'audio'
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    req.on('data', chunk => chunks.push(chunk));
+    req.on('end', () => {
+      const body = Buffer.concat(chunks);
+      const contentType = req.headers['content-type'] || '';
+      const boundaryMatch = contentType.match(/boundary=(.+)$/);
+      if (!boundaryMatch) return reject(new Error('No boundary in multipart'));
+
+      const boundary = `--${boundaryMatch[1]}`;
+      const bodyStr = body.toString('binary');
+      const parts = bodyStr.split(boundary).filter(p => p !== '--\r\n' && p.trim());
+
+      for (const part of parts) {
+        const [headerSection, ...contentParts] = part.split('\r\n\r\n');
+        if (!headerSection.includes('filename')) continue;
+
+        const contentTypeMatch = headerSection.match(/Content-Type:\s*(.+)/i);
+        const fileContentType = contentTypeMatch?.[1]?.trim() || 'audio/webm';
+
+        // Strip trailing boundary markers
+        const contentStr = contentParts.join('\r\n\r\n').replace(/\r\n$/, '');
+        const fileBuffer = Buffer.from(contentStr, 'binary');
+
+        return resolve({ buffer: fileBuffer, contentType: fileContentType });
+      }
+      reject(new Error('No audio file found in request'));
+    });
+    req.on('error', reject);
+  });
+}
 
 export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-  // ─── MOCK MODE (no API key present) ──────────────────────────────────────
+  if (req.method === 'OPTIONS') return res.status(200).end();
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+
   if (!process.env.ASSEMBLYAI_API_KEY) {
-    return res.status(200).json({
-      mock: true,
-      transcript: [
-        { speaker: 'Advisor', text: 'Good morning. How are you feeling about your portfolio this quarter?' },
-        { speaker: 'Client',  text: 'Generally positive, but I have some concerns about the tech allocation.' },
-        { speaker: 'Advisor', text: 'That's a fair point. Let's walk through the numbers together.' },
-        { speaker: 'Client',  text: 'I'd also like to discuss rebalancing before year end.' },
-      ],
-      raw_text: 'Good morning. How are you feeling about your portfolio this quarter? Generally positive, but I have some concerns about the tech allocation. That\'s a fair point. Let\'s walk through the numbers together. I\'d also like to discuss rebalancing before year end.',
-    });
+    return res.status(500).json({ error: 'AssemblyAI API key not configured.' });
   }
 
-  // ─── LIVE MODE ────────────────────────────────────────────────────────────
   try {
-    // 1. Read raw audio bytes from request
-    const chunks = [];
-    for await (const chunk of req) chunks.push(chunk);
-    const audioBuffer = Buffer.concat(chunks);
+    const { buffer, contentType } = await parseMultipart(req);
 
-    // 2. Upload audio to AssemblyAI
-    const uploadRes = await fetch('https://api.assemblyai.com/v2/upload', {
-      method: 'POST',
-      headers: {
-        authorization: process.env.ASSEMBLYAI_API_KEY,
-        'content-type': 'application/octet-stream',
-      },
-      body: audioBuffer,
-    });
-    const { upload_url } = await uploadRes.json();
-
-    // 3. Submit transcription job with speaker diarization
-    const transcriptRes = await fetch('https://api.assemblyai.com/v2/transcript', {
-      method: 'POST',
-      headers: {
-        authorization: process.env.ASSEMBLYAI_API_KEY,
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify({
-        audio_url: upload_url,
-        speaker_labels: true,
-        speakers_expected: 2,
-      }),
-    });
-    const { id: transcriptId } = await transcriptRes.json();
-
-    // 4. Poll until complete (max 2 minutes)
-    let result;
-    for (let i = 0; i < 24; i++) {
-      await new Promise(r => setTimeout(r, 5000));
-      const poll = await fetch(`https://api.assemblyai.com/v2/transcript/${transcriptId}`, {
-        headers: { authorization: process.env.ASSEMBLYAI_API_KEY },
-      });
-      result = await poll.json();
-      if (result.status === 'completed') break;
-      if (result.status === 'error') throw new Error(result.error);
+    if (!buffer || buffer.length === 0) {
+      return res.status(400).json({ error: 'No audio data received.' });
     }
 
-    if (result.status !== 'completed') {
-      return res.status(408).json({ error: 'Transcription timed out' });
+    // Upload audio to AssemblyAI
+    const uploadUrl = await uploadAudio(buffer, contentType);
+
+    // Request transcription with speaker diarization
+    const transcriptId = await requestTranscript(uploadUrl, true);
+
+    // Poll until complete
+    const result = await pollTranscript(transcriptId);
+
+    // Format and return
+    const transcript = formatTranscript(result);
+    if (!transcript) {
+      return res.status(422).json({ error: 'No speech detected in audio. Please try again.' });
     }
 
-    // 5. Map speaker labels A/B → Advisor/Client
-    // AssemblyAI returns speaker A and B — first speaker is assumed to be the Advisor.
-    const speakerMap = {};
-    const roles = ['Advisor', 'Client'];
-    let roleIndex = 0;
-
-    const transcript = result.utterances.map(u => {
-      if (!speakerMap[u.speaker]) {
-        speakerMap[u.speaker] = roles[roleIndex] || `Speaker ${u.speaker}`;
-        roleIndex++;
-      }
-      return { speaker: speakerMap[u.speaker], text: u.text };
-    });
-
-    const raw_text = transcript.map(u => `${u.speaker}: ${u.text}`).join('\n');
-
-    return res.status(200).json({ mock: false, transcript, raw_text });
+    return res.status(200).json({ transcript });
 
   } catch (err) {
-    console.error('Transcription error:', err);
-    return res.status(500).json({ error: 'Transcription failed', detail: err.message });
+    console.error('transcribe error:', err);
+    return res.status(500).json({ error: err.message || 'Transcription failed. Please try again.' });
   }
 }
