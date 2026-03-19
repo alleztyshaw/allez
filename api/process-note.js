@@ -3,7 +3,7 @@
 // De-identifies transcript → calls Anthropic → re-identifies response
 // PII never leaves this function in identifiable form
 
-const SYSTEM_PROMPT = `You are a financial advisory CRM note-taking assistant. You will receive a meeting transcript that has been de-identified — names and sensitive data have been replaced with tokens like [CLIENT], [ADVISOR_1], [AMOUNT], [PHONE], etc.
+const SYSTEM_PROMPT = `You are a financial advisory CRM note-taking assistant. You will receive a meeting transcript that has been de-identified — names and sensitive data have been replaced with tokens like CLIENT_NAME, ADVISOR_1, ADVISOR_2, AMOUNT_REDACTED, PHONE_REDACTED, etc.
 
 Extract structured intelligence and return ONLY a valid JSON object. No preamble, no explanation, no markdown code blocks. The response must be directly parseable by JSON.parse().
 
@@ -17,7 +17,7 @@ Required format:
 }
 
 Rules:
-- Preserve all tokens exactly as written (e.g. [CLIENT], [ADVISOR_1])
+- Preserve all tokens exactly as written (e.g. CLIENT_NAME, ADVISOR_1, ADVISOR_2)
 - Be specific and concise
 - Return empty arrays [] for sections with no content
 - action_items.due should be a string like "next week", "by end of March", or null if not mentioned
@@ -32,22 +32,22 @@ function buildEntities(clientName, orgMemberNames) {
   const entities = [];
 
   if (clientName && clientName.trim()) {
-    entities.push({ original: clientName.trim(), token: '[CLIENT]' });
+    entities.push({ original: clientName.trim(), token: 'CLIENT_NAME' });
     // Also catch first and last name used in isolation
     const parts = clientName.trim().split(/\s+/);
     if (parts.length >= 2) {
-      entities.push({ original: parts[0], token: '[CLIENT]' });
-      entities.push({ original: parts[parts.length - 1], token: '[CLIENT]' });
+      entities.push({ original: parts[0], token: 'CLIENT_NAME' });
+      entities.push({ original: parts[parts.length - 1], token: 'CLIENT_NAME' });
     }
   }
 
   (orgMemberNames || []).forEach((name, i) => {
     if (!name || !name.trim()) return;
-    entities.push({ original: name.trim(), token: `[ADVISOR_${i + 1}]` });
+    entities.push({ original: name.trim(), token: `ADVISOR_${i + 1}` });
     const parts = name.trim().split(/\s+/);
     if (parts.length >= 2) {
-      entities.push({ original: parts[0], token: `[ADVISOR_${i + 1}]` });
-      entities.push({ original: parts[parts.length - 1], token: `[ADVISOR_${i + 1}]` });
+      entities.push({ original: parts[0], token: `ADVISOR_${i + 1}` });
+      entities.push({ original: parts[parts.length - 1], token: `ADVISOR_${i + 1}` });
     }
   });
 
@@ -95,10 +95,13 @@ function reidentify(obj, entities) {
       .join(' ');
     str = str.replace(regex, properCased);
   }
+  // Fallback: replace any unreplaced tokens
+  str = str.replace(/\bADVISOR_\d+\b/g, 'Advisor');
+  str = str.replace(/\bCLIENT_NAME\b/g, 'Client');
   try {
     return JSON.parse(str);
   } catch {
-    return obj; // Return original if re-parse fails
+    return obj;
   }
 }
 

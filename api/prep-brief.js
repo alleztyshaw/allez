@@ -13,7 +13,7 @@ Required format:
 {
   "snapshot": "2-3 sentence paragraph covering who this client is today — AUM, fee rate, risk profile, how long they have been a client, custodian. Facts only.",
   "recent_meetings": ["One sentence per meeting, most recent first. Maximum 3 entries. Each sentence captures the point of the conversation, not a transcript."],
-  "open_commitments": ["Each item written action-first with the owner named at the start. Format: '[Name] to [action]' or '[Name] will [action]'. Example: 'Tom to send estate planning referral to client by end of month.' Maximum 5 entries."],
+  "open_commitments": ["Each item written action-first with the owner named at the start. Use the token exactly as given. Format: 'ADVISOR_1 to action' or 'ADVISOR_1 will action'. Example: 'ADVISOR_1 to send estate planning referral to CLIENT_NAME by end of month.' Maximum 5 entries."],
   "relationship_notes": ["Confirmed material changes to the relationship only — e.g. risk tolerance formally updated, major life event that was actioned, fee restructuring completed. 1-3 lines maximum. Omit this array entirely if nothing confirmed and material exists."]
 }
 
@@ -26,25 +26,26 @@ Critical rules:
 - recent_meetings must be one sentence each — no bullet points within a sentence
 - open_commitments must start with the person's name followed by "to" or "will" — never use an em dash or append names at the end
 - The entire brief must not exceed 400 words
-- All tokens like [CLIENT], [ADVISOR_1] must be preserved exactly as written — do not replace them`;
+- All tokens like CLIENT_NAME, ADVISOR_1, ADVISOR_2 must be preserved exactly as written — do not replace or modify them in any way`;
 
 function buildEntities(clientName, orgMemberNames) {
   const entities = [];
   if (clientName?.trim()) {
-    entities.push({ original: clientName.trim(), token: '[CLIENT]' });
+    entities.push({ original: clientName.trim(), token: 'CLIENT_NAME' });
     const parts = clientName.trim().split(/\s+/);
     if (parts.length >= 2) {
-      entities.push({ original: parts[0], token: '[CLIENT]' });
-      entities.push({ original: parts[parts.length - 1], token: '[CLIENT]' });
+      entities.push({ original: parts[0], token: 'CLIENT_NAME' });
+      entities.push({ original: parts[parts.length - 1], token: 'CLIENT_NAME' });
     }
   }
+  // Input is pre-filtered — every name is valid, index = position
   (orgMemberNames || []).forEach((name, i) => {
-    if (!name?.trim()) return;
-    entities.push({ original: name.trim(), token: `[ADVISOR_${i + 1}]` });
+    const token = `ADVISOR_${i + 1}`;
+    entities.push({ original: name.trim(), token });
     const parts = name.trim().split(/\s+/);
     if (parts.length >= 2) {
-      entities.push({ original: parts[0], token: `[ADVISOR_${i + 1}]` });
-      entities.push({ original: parts[parts.length - 1], token: `[ADVISOR_${i + 1}]` });
+      entities.push({ original: parts[0], token });
+      entities.push({ original: parts[parts.length - 1], token });
     }
   });
   return entities.sort((a, b) => b.original.length - a.original.length);
@@ -57,9 +58,9 @@ function deidentify(text, entities) {
     const escaped = original.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     result = result.replace(new RegExp(`\\b${escaped}\\b`, 'gi'), token);
   }
-  result = result.replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, '[EMAIL]');
-  result = result.replace(/\b\d{3}[-.\s]?\d{3}[-.\s]?\d{4}\b/g, '[PHONE]');
-  result = result.replace(/\b\d{3}-\d{2}-\d{4}\b/g, '[SSN]');
+  result = result.replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, 'EMAIL_REDACTED');
+  result = result.replace(/\b\d{3}[-.\s]?\d{3}[-.\s]?\d{4}\b/g, 'PHONE_REDACTED');
+  result = result.replace(/\b\d{3}-\d{2}-\d{4}\b/g, 'SSN_REDACTED');
   return result;
 }
 
@@ -75,9 +76,13 @@ function reidentify(obj, entities) {
       .join(' ');
     str = str.replace(new RegExp(escapedToken, 'g'), properCased);
   }
-  // Clean up any unreplaced tokens — e.g. [ADVISOR_2] if not enough members
-  str = str.replace(/\[ADVISOR_\d+\]/g, 'Advisor');
-  str = str.replace(/\[CLIENT\]/g, 'Client');
+  // Clean up any unreplaced tokens in all possible forms
+  // Fallback: replace any unreplaced tokens
+  str = str.replace(/\bADVISOR_\d+\b/g, 'Advisor');
+  str = str.replace(/\bCLIENT_NAME\b/g, 'Client');
+  str = str.replace(/\bEMAIL_REDACTED\b/g, '');
+  str = str.replace(/\bPHONE_REDACTED\b/g, '');
+  str = str.replace(/\bSSN_REDACTED\b/g, '');
   try { return JSON.parse(str); } catch { return obj; }
 }
 
@@ -130,16 +135,22 @@ export default async function handler(req, res) {
   try {
     const clientFullName = client.first_name && client.last_name
       ? `${client.first_name} ${client.last_name}` : '';
-    const memberNames = (org_member_names || [])
-      .map(m => m.first_name && m.last_name ? `${m.first_name} ${m.last_name}` : null)
-      .filter(Boolean);
 
+    // Build a single aligned list of { user_id, name } — only valid names, preserving order
+    const validMembers = (org_member_names || [])
+      .map(m => ({
+        user_id: m.user_id,
+        name: m.first_name && m.last_name ? `${m.first_name} ${m.last_name}`.trim() : null,
+      }))
+      .filter(m => m.name);
+
+    const memberNames = validMembers.map(m => m.name);
     const entities = buildEntities(clientFullName, memberNames);
 
-    // Build advisor lookup map
+    // Build advisor lookup map — uses same filtered order as buildEntities
     const advisorMap = {};
-    (org_member_names || []).forEach((m, i) => {
-      if (m.user_id) advisorMap[m.user_id] = `[ADVISOR_${i + 1}]`;
+    validMembers.forEach((m, i) => {
+      if (m.user_id) advisorMap[m.user_id] = `ADVISOR_${i + 1}`;
     });
 
     // Recent 5 notes — full content

@@ -1,111 +1,57 @@
-// api/prep-brief.js
-// Generates an AI relationship brief for a client.
-// Mode: 'review' (ClientDetail) — synthesises history, open loops, confirmed changes.
-// De-identifies notes before Anthropic call, re-identifies on return.
+// api/draft-email.js
+// Vercel serverless function — generates a client-facing follow-up email draft
+// from an AI note summary. De-identifies before Anthropic call, re-identifies on return.
 
-const REVIEW_SYSTEM_PROMPT = `You are a financial advisor assistant generating a relationship brief for an advisor reviewing a client.
+import { createClient } from '@supabase/supabase-js';
 
-Your job is to synthesise what is known about this client into a concise, scannable brief — 300 to 400 words maximum. The advisor should be able to read it in 90 seconds.
+const SYSTEM_PROMPT = `You are a professional financial advisor assistant. You will receive structured notes from a client meeting that have been de-identified — names replaced with tokens like CLIENT_NAME, ADVISOR_1, AMOUNT_REDACTED, etc.
 
-Return ONLY a valid JSON object. No preamble, no markdown, no explanation. Directly parseable by JSON.parse().
+Generate a concise follow-up email draft based on the provided meeting content and instructions.
+
+Return ONLY a valid JSON object — no preamble, no explanation, no markdown. Directly parseable by JSON.parse().
 
 Required format:
 {
-  "snapshot": "2-3 sentence paragraph covering who this client is today — AUM, fee rate, risk profile, how long they have been a client, custodian. Facts only.",
-  "recent_meetings": ["One sentence per meeting, most recent first. Maximum 3 entries. Each sentence captures the point of the conversation, not a transcript."],
-  "open_commitments": ["Each item written action-first with the owner named at the start. Format: '[Name] to [action]' or '[Name] will [action]'. Example: 'Tom to send estate planning referral to client by end of month.' Maximum 5 entries."],
-  "relationship_notes": ["Confirmed material changes to the relationship only — e.g. risk tolerance formally updated, major life event that was actioned, fee restructuring completed. 1-3 lines maximum. Omit this array entirely if nothing confirmed and material exists."]
+  "subject": "Concise, professional email subject line",
+  "body": "Full email body text"
 }
 
-Critical rules:
-- Only include confirmed facts and completed actions
-- Do not include client intentions, passing mentions, or discussions with no confirmed outcome
-- If uncertain whether something was confirmed or just discussed, omit it
-- Empty sections should be empty arrays [], not omitted keys
-- relationship_notes should only contain things that materially changed how the advisor manages this client
-- recent_meetings must be one sentence each — no bullet points within a sentence
-- open_commitments must start with the person's name followed by "to" or "will" — never use an em dash or append names at the end
-- The entire brief must not exceed 400 words
-- All tokens like [CLIENT], [ADVISOR_1] must be preserved exactly as written — do not replace them`;
-
-function buildEntities(clientName, orgMemberNames) {
-  const entities = [];
-  if (clientName?.trim()) {
-    entities.push({ original: clientName.trim(), token: '[CLIENT]' });
-    const parts = clientName.trim().split(/\s+/);
-    if (parts.length >= 2) {
-      entities.push({ original: parts[0], token: '[CLIENT]' });
-      entities.push({ original: parts[parts.length - 1], token: '[CLIENT]' });
-    }
-  }
-  // Input is pre-filtered — every name is valid, index = position
-  (orgMemberNames || []).forEach((name, i) => {
-    const token = `[ADVISOR_${i + 1}]`;
-    entities.push({ original: name.trim(), token });
-    const parts = name.trim().split(/\s+/);
-    if (parts.length >= 2) {
-      entities.push({ original: parts[0], token });
-      entities.push({ original: parts[parts.length - 1], token });
-    }
-  });
-  return entities.sort((a, b) => b.original.length - a.original.length);
-}
+Rules:
+- Preserve all tokens exactly as written — do not replace or guess names
+- Match the requested tone exactly: Formal = Dear/Sincerely, Professional = Hi/Best regards, Conversational = Hey/Talk soon
+- Only include sections explicitly requested in the instructions
+- Write in first person as the advisor
+- Do not include a salutation line in the body — it will be prepended separately
+- Do not include a sign-off line — it will be appended separately
+- Body should be just the email content paragraphs
+- BE CONCISE — the entire email body should rarely exceed 150 words
+- No padding, no pleasantries beyond what is natural, no restating what was already said
+- One short paragraph per included section — decisions as a brief inline list if more than one
+- If only one section is included, a single short paragraph is sufficient`;
 
 function deidentify(text, entities) {
-  if (!text) return '';
   let result = text;
   for (const { original, token } of entities) {
     const escaped = original.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     result = result.replace(new RegExp(`\\b${escaped}\\b`, 'gi'), token);
   }
-  result = result.replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, '[EMAIL]');
-  result = result.replace(/\b\d{3}[-.\s]?\d{3}[-.\s]?\d{4}\b/g, '[PHONE]');
-  result = result.replace(/\b\d{3}-\d{2}-\d{4}\b/g, '[SSN]');
+  // Only strip contact info — amounts are kept since this is a client-facing email
+  result = result.replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, 'EMAIL_REDACTED');
+  result = result.replace(/\b\d{3}[-.\\s]?\d{3}[-.\\s]?\d{4}\b/g, 'PHONE_REDACTED');
   return result;
 }
 
-function reidentify(obj, entities) {
-  let str = JSON.stringify(obj);
-  // Sort longest tokens first to avoid partial replacements
-  const sorted = [...entities].sort((a, b) => b.token.length - a.token.length);
-  for (const { original, token } of sorted) {
+function reidentify(str, entities) {
+  const reversed = [...entities].sort((a, b) => a.original.length - b.original.length);
+  for (const { original, token } of reversed) {
     const escapedToken = token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const properCased = original
+    str = str.replace(new RegExp(escapedToken, 'g'), original
       .split(/\s+/)
       .map(w => w.charAt(0).toUpperCase() + w.slice(1))
-      .join(' ');
-    str = str.replace(new RegExp(escapedToken, 'g'), properCased);
+      .join(' ')
+    );
   }
-  // Clean up any unreplaced tokens in all possible forms
-  str = str.replace(/\[ADVISOR_\d+\]/g, 'Advisor');
-  str = str.replace(/ADVISOR_\d+/g, 'Advisor');  // catches bracket-stripped remnants
-  str = str.replace(/\[CLIENT\]/g, 'Client');
-  str = str.replace(/\[EMAIL\]/g, '');
-  str = str.replace(/\[PHONE\]/g, '');
-  try { return JSON.parse(str); } catch { return obj; }
-}
-
-function formatClientSnapshot(client) {
-  const parts = [];
-  if (client.aum) parts.push(`AUM: ${client.aum}`);
-  if (client.fee_rate) parts.push(`Fee rate: ${client.fee_rate}`);
-  if (client.risk_tolerance) parts.push(`Risk tolerance: ${client.risk_tolerance}`);
-  if (client.custodian) parts.push(`Custodian: ${client.custodian}`);
-  if (client.client_since) parts.push(`Client since: ${client.client_since}`);
-  if (client.investment_objective) parts.push(`Objective: ${client.investment_objective}`);
-  if (client.next_review_date) parts.push(`Next review: ${client.next_review_date}`);
-  return parts.join(' · ');
-}
-
-function formatNote(note, advisorMap) {
-  const authorName = advisorMap[note.created_by] || 'Unknown';
-  const date = note.created_at ? new Date(note.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
-  const aiSummary = (() => {
-    try { return note.ai_summary ? JSON.parse(note.ai_summary) : null; } catch { return null; }
-  })();
-  const content = aiSummary?.summary || note.body || '';
-  const followUps = aiSummary?.follow_ups?.length ? `Follow-ups noted: ${aiSummary.follow_ups.join('; ')}` : '';
-  return `[${date} — ${authorName}]: ${content}${followUps ? ` | ${followUps}` : ''}`;
+  return str;
 }
 
 export default async function handler(req, res) {
@@ -121,78 +67,73 @@ export default async function handler(req, res) {
   }
 
   const {
-    client,           // client record object
-    notes,            // array of note objects, sorted recent first
-    tasks,            // array of client_task objects
-    org_member_names, // array of { user_id, first_name, last_name }
+    ai_summary,       // { summary, decisions, action_items, follow_ups }
+    client_name,      // full name string
+    advisor_name,     // full name string
+    salutation,       // e.g. "Hi Barbara" — prepended to final body
+    sign_off,         // e.g. "Best," — appended to final body
+    tone,             // 'formal' | 'professional' | 'conversational'
+    include,          // array: ['summary', 'decisions', 'action_items', 'follow_ups']
   } = req.body;
 
-  if (!client || !notes) {
-    return res.status(400).json({ error: 'client and notes are required.' });
+  if (!ai_summary || !include?.length) {
+    return res.status(400).json({ error: 'ai_summary and include sections are required.' });
   }
 
   try {
-    const clientFullName = client.first_name && client.last_name
-      ? `${client.first_name} ${client.last_name}` : '';
+    // Build entity map for de-identification
+    const entities = [];
+    if (client_name?.trim()) {
+      entities.push({ original: client_name.trim(), token: 'CLIENT_NAME' });
+      const parts = client_name.trim().split(/\s+/);
+      if (parts.length >= 2) {
+        entities.push({ original: parts[0], token: 'CLIENT_NAME' });
+        entities.push({ original: parts[parts.length - 1], token: 'CLIENT_NAME' });
+      }
+    }
+    if (advisor_name?.trim()) {
+      entities.push({ original: advisor_name.trim(), token: 'ADVISOR_NAME' });
+      const parts = advisor_name.trim().split(/\s+/);
+      if (parts.length >= 2) {
+        entities.push({ original: parts[0], token: 'ADVISOR_NAME' });
+        entities.push({ original: parts[parts.length - 1], token: 'ADVISOR_NAME' });
+      }
+    }
+    entities.sort((a, b) => b.original.length - a.original.length);
 
-    // Build a single aligned list of { user_id, name } — only valid names, preserving order
-    const validMembers = (org_member_names || [])
-      .map(m => ({
-        user_id: m.user_id,
-        name: m.first_name && m.last_name ? `${m.first_name} ${m.last_name}`.trim() : null,
-      }))
-      .filter(m => m.name);
+    // Build content string from selected sections
+    const sections = [];
+    if (include.includes('summary') && ai_summary.summary) {
+      sections.push(`Meeting Summary:\n${deidentify(ai_summary.summary, entities)}`);
+    }
+    if (include.includes('decisions') && ai_summary.decisions?.length) {
+      sections.push(`Key Decisions:\n${ai_summary.decisions.map(d => `- ${deidentify(d, entities)}`).join('\n')}`);
+    }
+    if (include.includes('action_items') && ai_summary.action_items?.length) {
+      sections.push(`Action Items:\n${ai_summary.action_items.map(a => `- ${deidentify(a.task, entities)}${a.due ? ` (by ${a.due})` : ''}`).join('\n')}`);
+    }
+    if (include.includes('follow_ups') && ai_summary.follow_ups?.length) {
+      sections.push(`Follow-up Topics:\n${ai_summary.follow_ups.map(f => `- ${deidentify(f, entities)}`).join('\n')}`);
+    }
 
-    const memberNames = validMembers.map(m => m.name);
-    const entities = buildEntities(clientFullName, memberNames);
+    if (!sections.length) {
+      return res.status(400).json({ error: 'No content available for selected sections.' });
+    }
 
-    // Build advisor lookup map — uses same filtered order as buildEntities
-    const advisorMap = {};
-    validMembers.forEach((m, i) => {
-      if (m.user_id) advisorMap[m.user_id] = `[ADVISOR_${i + 1}]`;
-    });
+    const toneLabel = {
+      formal: 'Formal (Dear/Sincerely)',
+      professional: 'Professional (Hi/Best regards)',
+      conversational: 'Conversational (Hey/Talk soon)',
+    }[tone] || 'Professional';
 
-    // Recent 5 notes — full content
-    const recentNotes = notes.slice(0, 5).map(n => formatNote(n, advisorMap));
+    const userPrompt = `Tone: ${toneLabel}
+Client token: CLIENT_NAME
+Advisor token: ADVISOR_NAME
 
-    // Notes 6-20 — summary only for material change scanning
-    const olderNotes = notes.slice(5, 20).map(n => {
-      const aiSummary = (() => {
-        try { return n.ai_summary ? JSON.parse(n.ai_summary) : null; } catch { return null; }
-      })();
-      const content = aiSummary?.summary || n.body || '';
-      const date = n.created_at ? new Date(n.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : '';
-      return `[${date}]: ${content.slice(0, 200)}`;
-    });
+Meeting content to include:
+${sections.join('\n\n')}
 
-    // Tasks
-    const openTasks = (tasks || [])
-      .filter(t => !t.completed)
-      .map(t => {
-        const owner = advisorMap[t.assigned_to] || 'Advisor';
-        const due = t.due_date ? ` (due ${t.due_date})` : '';
-        return `${t.title}${due} — ${owner}`;
-      });
-
-    const completedTasks = (tasks || [])
-      .filter(t => t.completed && t.completed_at)
-      .sort((a, b) => new Date(b.completed_at) - new Date(a.completed_at))
-      .slice(0, 5)
-      .map(t => `${t.title} (completed ${new Date(t.completed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })})`);
-
-    // Build de-identified prompt
-    const clientSnapshotRaw = formatClientSnapshot(client);
-    const clientSnapshot = deidentify(clientSnapshotRaw, entities);
-
-    const sections = [
-      `CLIENT SNAPSHOT:\n${clientSnapshot}`,
-      recentNotes.length ? `RECENT NOTES (last ${recentNotes.length}, full content):\n${recentNotes.map(n => deidentify(n, entities)).join('\n\n')}` : null,
-      olderNotes.length ? `OLDER NOTES (scan for confirmed material changes only — ignore passing mentions or unacted intentions):\n${olderNotes.map(n => deidentify(n, entities)).join('\n')}` : null,
-      openTasks.length ? `OPEN TASKS AND COMMITMENTS:\n${openTasks.map(t => deidentify(t, entities)).join('\n')}` : null,
-      completedTasks.length ? `RECENTLY COMPLETED TASKS:\n${completedTasks.join('\n')}` : null,
-    ].filter(Boolean);
-
-    const userPrompt = sections.join('\n\n---\n\n');
+Write a follow-up email draft. Do not include salutation or sign-off — body content only.`;
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -203,8 +144,8 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
-        max_tokens: 1500,
-        system: REVIEW_SYSTEM_PROMPT,
+        max_tokens: 1000,
+        system: SYSTEM_PROMPT,
         messages: [{ role: 'user', content: userPrompt }],
       }),
     });
@@ -226,17 +167,22 @@ export default async function handler(req, res) {
       return res.status(502).json({ error: 'AI returned an unexpected format. Please try again.' });
     }
 
-    const reidentified = reidentify(parsed, entities);
+    // Re-identify — swap tokens back to real names
+    const reidentifiedSubject = reidentify(parsed.subject || '', entities);
+    const reidentifiedBody = reidentify(parsed.body || '', entities);
+
+    // Assemble final email with salutation and sign-off
+    const finalSalutation = salutation?.trim() || '';
+    const finalSignOff = sign_off?.trim() || '';
+    const fullBody = [finalSalutation, reidentifiedBody, finalSignOff].filter(Boolean).join('\n\n');
 
     return res.status(200).json({
-      snapshot: reidentified.snapshot || '',
-      recent_meetings: reidentified.recent_meetings || [],
-      open_commitments: reidentified.open_commitments || [],
-      relationship_notes: reidentified.relationship_notes || [],
+      subject: reidentifiedSubject,
+      body: fullBody,
     });
 
   } catch (err) {
-    console.error('prep-brief error:', err);
+    console.error('draft-email error:', err);
     return res.status(500).json({ error: 'An unexpected error occurred.' });
   }
 }
