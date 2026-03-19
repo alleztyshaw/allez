@@ -1,11 +1,10 @@
-import { useState, useEffect } from 'react';
 import {
   ACCENT,
   FONT_DISPLAY,
   RADIUS_LG, SHADOW_MD,
   pageStyles,
   MOBILE_BREAKPOINT,
-  FW_LIGHT, FW_REGULAR, FW_MEDIUM, FW_SEMIBOLD} from '../utils/hqConstants';
+  FW_LIGHT, FW_MEDIUM, FW_SEMIBOLD} from '../utils/hqConstants';
 import { useTokens } from '../context/ThemeContext';
 import useWindowWidth from '../hooks/useWindowWidth';
 
@@ -22,7 +21,7 @@ function Contact() {
     optionCard: { border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_LG, padding: '28px', background: t.SURFACE, boxShadow: SHADOW_MD },
     optionLabel: { fontSize: '10px', fontWeight: FW_SEMIBOLD, textTransform: 'uppercase', letterSpacing: '0.12em', color: ACCENT, margin: '0 0 10px' },
     optionValue: { fontSize: '18px', fontWeight: FW_MEDIUM, margin: '0 0 10px', letterSpacing: '0.01em', color: t.TEXT },
-    optionNote: { fontSize: '13px', lineHeight: '1.6', fontWeight: FW_LIGHT, margin: 0, color: t.TEXT_MUTED },
+    optionNote: { fontSize: '13px', lineHeight: '1.6', fontWeight: FW_LIGHT, margin: 0, color: t.TEXT_MUTED }
   };
   // Override title/subtitle after spread — Contact uses larger hero typography
   s.title    = { fontFamily: FONT_DISPLAY, fontSize: isMobile ? '36px' : '52px', fontWeight: FW_LIGHT, lineHeight: 1.15, margin: '0 0 20px', letterSpacing: '0.01em', color: t.TEXT };

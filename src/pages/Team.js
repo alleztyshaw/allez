@@ -9,7 +9,7 @@ import {
   SHADOW_MD,
   pageStyles,
   MOBILE_BREAKPOINT,
-  FW_LIGHT, FW_REGULAR, FW_MEDIUM, FW_SEMIBOLD} from '../utils/hqConstants';
+  FW_LIGHT, FW_REGULAR, FW_SEMIBOLD} from '../utils/hqConstants';
 import { useTokens } from '../context/ThemeContext';
 import useWindowWidth from '../hooks/useWindowWidth';
 
@@ -20,7 +20,7 @@ const ROLE_DESCRIPTIONS = {
   manager:    'View all clients and advisors, cannot manage org settings',
   advisor:    'Full access to assigned clients and notes',
   associate:  'View and add notes on assigned clients',
-  compliance: 'Read-only access to all clients and notes',
+  compliance: 'Read-only access to all clients and notes'
 };
 
 export default function Team() {
@@ -124,7 +124,7 @@ export default function Team() {
       const res = await fetch('/api/resend-invite', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: m.email, org_id: selectedOrg, role: m.role }),
+        body: JSON.stringify({ email: m.email, org_id: selectedOrg, role: m.role })
       });
       const data = await res.json();
       if (!res.ok) {
@@ -158,103 +158,103 @@ export default function Team() {
       padding: '10px 14px', background: t.SURFACE,
       border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_MD,
       cursor: 'pointer', fontSize: '14px', color: t.TEXT,
-      fontFamily: FONT_BODY, gap: '8px',
+      fontFamily: FONT_BODY, gap: '8px'
     },
     dropdownMenu: {
       position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0,
       background: t.SURFACE, border: `1px solid ${t.BORDER}`,
       borderRadius: RADIUS_MD, boxShadow: SHADOW_MD,
-      zIndex: 100, overflow: 'hidden',
+      zIndex: 100, overflow: 'hidden'
     },
     dropdownSearch: {
       width: '100%', padding: '10px 14px',
       background: t.SURFACE_ALT, border: 'none',
       borderBottom: `1px solid ${t.BORDER}`,
       fontSize: '13px', color: t.TEXT, fontFamily: FONT_BODY,
-      outline: 'none', boxSizing: 'border-box',
+      outline: 'none', boxSizing: 'border-box'
     },
     dropdownOption: {
       padding: '10px 14px', fontSize: '13px',
-      color: t.TEXT, cursor: 'pointer', fontFamily: FONT_BODY,
+      color: t.TEXT, cursor: 'pointer', fontFamily: FONT_BODY
     },
     tableWrap: {
       border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_LG,
-      overflow: 'hidden', boxShadow: SHADOW_MD, overflowX: 'auto',
+      overflow: 'hidden', boxShadow: SHADOW_MD, overflowX: 'auto'
     },
     tableHead: {
       display: 'grid', gridTemplateColumns: cols,
       padding: '10px 20px', background: t.SURFACE_ALT,
-      borderBottom: `1px solid ${t.BORDER}`, gap: '8px',
+      borderBottom: `1px solid ${t.BORDER}`, gap: '8px'
     },
     tableHeadCell: {
       fontSize: '10px', fontWeight: FW_SEMIBOLD,
       textTransform: 'uppercase', letterSpacing: '0.1em', color: t.TEXT_MUTED,
-      textAlign: 'left',
+      textAlign: 'left'
     },
     tableRow: {
       display: 'grid', gridTemplateColumns: cols,
       padding: '14px 20px', borderBottom: `1px solid ${t.BORDER}`,
-      background: t.SURFACE, alignItems: 'center', gap: '8px',
+      background: t.SURFACE, alignItems: 'center', gap: '8px'
     },
     tableCell: { fontSize: '13px', color: t.TEXT, display: 'flex', alignItems: 'center', justifyContent: 'flex-start' },
     tableCellMuted: { fontSize: '12px', color: t.TEXT_MUTED, display: 'flex', alignItems: 'center', justifyContent: 'flex-start', fontWeight: FW_LIGHT },
     inviteSection: {
       background: t.SURFACE, border: `1px solid ${t.BORDER}`,
       borderRadius: RADIUS_LG, padding: '24px',
-      marginBottom: '28px', boxShadow: SHADOW_MD,
+      marginBottom: '28px', boxShadow: SHADOW_MD
     },
     inviteTitle: {
       fontSize: '10px', fontWeight: FW_SEMIBOLD,
       textTransform: 'uppercase', letterSpacing: '0.12em',
-      color: t.ACCENT, margin: '0 0 16px',
+      color: t.ACCENT, margin: '0 0 16px'
     },
     input: {
       background: t.SURFACE_ALT, border: `1px solid ${t.BORDER}`,
       borderRadius: RADIUS_MD, padding: '10px 14px',
       fontSize: '14px', color: t.TEXT,
       fontFamily: FONT_BODY, width: '100%',
-      boxSizing: 'border-box', outline: 'none',
+      boxSizing: 'border-box', outline: 'none'
     },
     select: {
       background: t.SURFACE_ALT, border: `1px solid ${t.BORDER}`,
       borderRadius: RADIUS_MD, padding: '8px 12px',
       fontSize: '13px', color: t.TEXT,
-      fontFamily: FONT_BODY, cursor: 'pointer',
+      fontFamily: FONT_BODY, cursor: 'pointer'
     },
     saveButton: {
       background: t.ACCENT_MUTED, border: `1px solid ${t.ACCENT_BORDER}`,
       borderRadius: RADIUS_MD, padding: '8px 16px',
       fontSize: '13px', color: t.ACCENT, fontWeight: FW_SEMIBOLD,
-      cursor: 'pointer', fontFamily: FONT_BODY,
+      cursor: 'pointer', fontFamily: FONT_BODY
     },
     cancelButton: {
       background: 'none', border: `1px solid ${t.BORDER}`,
       borderRadius: RADIUS_MD, padding: '8px 16px',
       fontSize: '13px', color: t.TEXT_MUTED,
-      cursor: 'pointer', fontFamily: FONT_BODY,
+      cursor: 'pointer', fontFamily: FONT_BODY
     },
     linkButton: {
       background: 'none', border: 'none', padding: 0,
       fontSize: '12px', color: t.ACCENT, cursor: 'pointer',
       fontFamily: FONT_BODY, textDecoration: 'underline',
-      textUnderlineOffset: '2px',
+      textUnderlineOffset: '2px'
     },
     linkButtonMuted: {
       background: 'none', border: 'none', padding: 0,
       fontSize: '12px', color: t.TEXT_MUTED, cursor: 'pointer',
       fontFamily: FONT_BODY, textDecoration: 'underline',
-      textUnderlineOffset: '2px',
+      textUnderlineOffset: '2px'
     },
     roleDesc: {
       fontSize: '11px', color: t.TEXT_MUTED,
-      margin: '4px 0 0', fontStyle: 'italic', fontWeight: FW_LIGHT,
+      margin: '4px 0 0', fontStyle: 'italic', fontWeight: FW_LIGHT
     },
     addButton: {
       background: 'transparent', border: `1px solid ${t.ACCENT_BORDER}`,
       borderRadius: RADIUS_MD, padding: '10px 20px',
       fontSize: '14px', color: t.ACCENT, fontWeight: FW_SEMIBOLD,
-      cursor: 'pointer', fontFamily: FONT_BODY,
-    },
+      cursor: 'pointer', fontFamily: FONT_BODY
+    }
   };
 
   return (
@@ -276,7 +276,7 @@ export default function Team() {
             color: toast.type === 'success' ? t.ACCENT : '#f87171',
             borderRadius: RADIUS_LG, padding: '14px 20px',
             fontSize: '14px', fontFamily: FONT_BODY,
-            zIndex: 1000, animation: 'fadeIn 0.2s ease',
+            zIndex: 1000, animation: 'fadeIn 0.2s ease'
           }}>
             {toast.type === 'success' ? '✓ ' : '✕ '}{toast.message}
           </div>
@@ -323,7 +323,7 @@ export default function Team() {
                     style={{
                       ...s.dropdownOption,
                       color: o.org_id === selectedOrg ? t.ACCENT : t.TEXT,
-                      fontWeight: o.org_id === selectedOrg ? '500' : '300',
+                      fontWeight: o.org_id === selectedOrg ? '500' : '300'
                     }}
                     onClick={() => {
                       setSelectedOrg(o.org_id);
@@ -396,8 +396,8 @@ export default function Team() {
                             role: inviteRole,
                             org_id: selectedOrg,
                             first_name: inviteFirstName.trim(),
-                            last_name: inviteLastName.trim(),
-                          }),
+                            last_name: inviteLastName.trim()
+                          })
                         });
                         const data = await res.json();
                         if (!res.ok) {
@@ -475,7 +475,7 @@ export default function Team() {
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <span style={{
                         width: '7px', height: '7px', borderRadius: '50%', flexShrink: 0,
-                        background: isPending ? '#fbbf24' : t.ACCENT,
+                        background: isPending ? '#fbbf24' : t.ACCENT
                       }} />
                     </div>
                   )}

@@ -7,7 +7,7 @@ import {
   D_TEXT, D_TEXT_MUTED,
   FONT_DISPLAY, FONT_BODY,
   RADIUS_MD, RADIUS_LG,
-  FW_LIGHT, FW_REGULAR, FW_MEDIUM, FW_SEMIBOLD,
+  FW_LIGHT, FW_SEMIBOLD
 } from '../utils/hqConstants';
 
 export default function Welcome() {
@@ -20,7 +20,7 @@ export default function Welcome() {
     last_name: '',
     display_name: '',
     password: '',
-    confirm_password: '',
+    confirm_password: ''
   });
   const [displayNameEdited, setDisplayNameEdited] = useState(false);
   const [aiConsent, setAiConsent] = useState(false);
@@ -53,7 +53,7 @@ export default function Welcome() {
           ...prev,
           first_name: data.first_name || prev.first_name,
           last_name: data.last_name || prev.last_name,
-          display_name: prev.display_name || data.first_name || '',
+          display_name: prev.display_name || data.first_name || ''
         }));
       }
     }
@@ -139,7 +139,7 @@ export default function Welcome() {
 
     const { error: updateError } = await supabase.auth.updateUser({
       password: form.password,
-      data: { display_name: displayName, onboarding_complete: true, ai_consent: true },
+      data: { display_name: displayName, onboarding_complete: true, ai_consent: true }
     });
 
     if (updateError) {
@@ -160,7 +160,7 @@ export default function Welcome() {
         first_name: form.first_name.trim(),
         last_name: form.last_name.trim(),
         onboarding_complete: true,
-        display_name: displayName,
+        display_name: displayName
       }).eq('user_id', session.user.id);
 
       if (memberError) console.error('org_members update error:', memberError);
@@ -265,12 +265,12 @@ const s = {
   page: {
     minHeight: '100vh', width: '100%', background: D_BG,
     display: 'flex', alignItems: 'center', justifyContent: 'center',
-    fontFamily: FONT_BODY, padding: '40px 20px', boxSizing: 'border-box',
+    fontFamily: FONT_BODY, padding: '40px 20px', boxSizing: 'border-box'
   },
   card: {
     background: D_SURFACE, border: `1px solid ${D_BORDER}`,
     borderRadius: RADIUS_LG, padding: '48px', width: '100%', maxWidth: '440px',
-    boxShadow: '0 24px 64px rgba(0,0,0,0.4)',
+    boxShadow: '0 24px 64px rgba(0,0,0,0.4)'
   },
   logo: { fontFamily: FONT_DISPLAY, fontSize: '20px', fontWeight: FW_LIGHT, color: ACCENT, margin: '0 0 32px', letterSpacing: '0.06em' },
   title: { fontFamily: FONT_DISPLAY, fontSize: '32px', fontWeight: FW_LIGHT, color: D_TEXT, margin: '0 0 8px', letterSpacing: '0.01em', lineHeight: 1.2 },
@@ -282,31 +282,31 @@ const s = {
   divider: { height: '1px', background: D_BORDER, margin: '24px 0' },
   consentRow: {
     display: 'flex', alignItems: 'flex-start', gap: '12px',
-    cursor: 'pointer', marginBottom: '20px',
+    cursor: 'pointer', marginBottom: '20px'
   },
   checkbox: {
     flexShrink: 0, width: '16px', height: '16px', marginTop: '2px',
     borderRadius: '4px', border: `1px solid ${D_BORDER}`,
     background: D_SURFACE_ALT,
     display: 'flex', alignItems: 'center', justifyContent: 'center',
-    transition: 'border-color 0.15s',
+    transition: 'border-color 0.15s'
   },
   checkboxChecked: {
-    borderColor: ACCENT, background: ACCENT_MUTED,
+    borderColor: ACCENT, background: ACCENT_MUTED
   },
   consentText: {
     fontSize: '12px', fontWeight: FW_LIGHT, color: D_TEXT_MUTED,
-    lineHeight: '1.6', margin: 0,
+    lineHeight: '1.6', margin: 0
   },
   submitBtn: {
     width: '100%', background: ACCENT_MUTED, border: `1px solid ${ACCENT_BORDER}`,
     borderRadius: RADIUS_MD, padding: '13px', fontSize: '14px', fontWeight: FW_SEMIBOLD,
     color: ACCENT, cursor: 'pointer', fontFamily: FONT_BODY,
-    letterSpacing: '0.03em', marginTop: '8px',
+    letterSpacing: '0.03em', marginTop: '8px'
   },
   submitDisabled: {
-    opacity: 0.4, cursor: 'not-allowed',
+    opacity: 0.4, cursor: 'not-allowed'
   },
   error: { fontSize: '13px', color: '#f87171', margin: '12px 0 0' },
-  loadingText: { color: D_TEXT_MUTED, fontSize: '14px', textAlign: 'center', fontWeight: FW_LIGHT, margin: 0 },
+  loadingText: { color: D_TEXT_MUTED, fontSize: '14px', textAlign: 'center', fontWeight: FW_LIGHT, margin: 0 }
 };

@@ -7,7 +7,7 @@ import {
   SHADOW_MD,
   pageStyles,
   MOBILE_BREAKPOINT,
-  FW_LIGHT, FW_REGULAR, FW_MEDIUM, FW_SEMIBOLD} from '../utils/hqConstants';
+  FW_LIGHT, FW_REGULAR, FW_SEMIBOLD} from '../utils/hqConstants';
 import { useTokens } from '../context/ThemeContext';
 import { useOrg } from '../context/OrgContext';
 import useWindowWidth from '../hooks/useWindowWidth';
@@ -46,7 +46,7 @@ export default function Settings() {
     if (!displayNameInput.trim()) return;
     setDisplayNameSaving(true);
     const { error } = await supabase.auth.updateUser({
-      data: { display_name: displayNameInput.trim() },
+      data: { display_name: displayNameInput.trim() }
     });
     if (!error) {
       // Also update org_members table
@@ -91,17 +91,17 @@ export default function Settings() {
     section: {
       background: t.SURFACE, border: `1px solid ${t.BORDER}`,
       borderRadius: RADIUS_LG, overflow: 'hidden',
-      boxShadow: SHADOW_MD, marginBottom: '24px',
+      boxShadow: SHADOW_MD, marginBottom: '24px'
     },
     sectionLabel: {
       fontSize: '10px', fontWeight: FW_SEMIBOLD, textTransform: 'uppercase',
       letterSpacing: '0.12em', color: t.ACCENT,
-      padding: '20px 24px 0', margin: '0 0 4px',
+      padding: '20px 24px 0', margin: '0 0 4px'
     },
     row: {
       display: 'flex', alignItems: 'center',
       justifyContent: 'space-between',
-      padding: '20px 24px', gap: '16px',
+      padding: '20px 24px', gap: '16px'
     },
     rowDivider: { height: '1px', background: t.BORDER, margin: '0 24px' },
     rowLeft: { display: 'flex', flexDirection: 'column', gap: '3px', flex: 1 },
@@ -111,25 +111,25 @@ export default function Settings() {
       background: 'none', border: `1px solid ${t.BORDER}`,
       borderRadius: RADIUS_MD, padding: '6px 14px',
       fontSize: '12px', color: t.TEXT_MUTED,
-      cursor: 'pointer', fontFamily: FONT_BODY, flexShrink: 0,
+      cursor: 'pointer', fontFamily: FONT_BODY, flexShrink: 0
     },
     input: {
       background: t.SURFACE_ALT, border: `1px solid ${t.BORDER}`,
       borderRadius: RADIUS_MD, padding: '9px 14px',
       fontSize: '14px', color: t.TEXT, fontFamily: FONT_BODY,
-      outline: 'none', width: '100%', boxSizing: 'border-box',
+      outline: 'none', width: '100%', boxSizing: 'border-box'
     },
     saveButton: {
       background: t.ACCENT_MUTED, border: `1px solid ${t.ACCENT_BORDER}`,
       borderRadius: RADIUS_MD, padding: '7px 16px',
       fontSize: '12px', color: t.ACCENT, fontWeight: FW_SEMIBOLD,
-      cursor: 'pointer', fontFamily: FONT_BODY, flexShrink: 0,
+      cursor: 'pointer', fontFamily: FONT_BODY, flexShrink: 0
     },
     cancelButton: {
       background: 'none', border: `1px solid ${t.BORDER}`,
       borderRadius: RADIUS_MD, padding: '7px 16px',
       fontSize: '12px', color: t.TEXT_MUTED,
-      cursor: 'pointer', fontFamily: FONT_BODY, flexShrink: 0,
+      cursor: 'pointer', fontFamily: FONT_BODY, flexShrink: 0
     },
     successText: { fontSize: '12px', color: t.ACCENT, margin: 0, fontWeight: FW_REGULAR },
     errorText: { fontSize: '12px', color: '#f87171', margin: '8px 0 0' },
@@ -139,15 +139,15 @@ export default function Settings() {
       background: isDark ? t.ACCENT : t.BORDER,
       border: `2px solid ${isDark ? t.ACCENT : t.BORDER}`,
       cursor: 'pointer', flexShrink: 0,
-      transition: 'background 0.25s ease, border-color 0.25s ease',
+      transition: 'background 0.25s ease, border-color 0.25s ease'
     },
     thumb: {
       position: 'absolute', top: '2px',
       left: isDark ? '22px' : '2px',
       width: '23px', height: '23px', borderRadius: '50%',
       background: '#ffffff', boxShadow: '0 2px 6px rgba(0,0,0,0.25)',
-      transition: 'left 0.25s ease',
-    },
+      transition: 'left 0.25s ease'
+    }
   };
 
   return (
