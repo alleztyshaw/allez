@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 
-const IDLE_TIMEOUT_MS = 60 * 60 * 1000; // 1 hour
+const IDLE_TIMEOUT_MS = 12 * 60 * 60 * 1000; // 12 hours
 
 // Events that count as "user is active"
 const ACTIVITY_EVENTS = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll', 'click'];
