@@ -16,6 +16,11 @@ export const ACCENT_HOVER_LIGHT  = '#29C47A';
 export const ACCENT_MUTED_LIGHT  = 'rgba(26, 158, 95, 0.12)';
 export const ACCENT_BORDER_LIGHT = 'rgba(26, 158, 95, 0.22)';
 
+// AI feature color — used for AI processing buttons, result labels, animated dots
+export const AI_COLOR        = '#a78bfa';
+export const AI_COLOR_MUTED  = 'rgba(139,92,246,0.12)';
+export const AI_COLOR_BORDER = 'rgba(139,92,246,0.4)';
+
 // --- SITE ACCENT — Allez Capital Portfolio (allezcapital.com) ---
 export const SITE_ACCENT        = '#667eea'; // Purple — portfolio brand colour
 export const SITE_ACCENT_HOVER  = '#5a6fd6';

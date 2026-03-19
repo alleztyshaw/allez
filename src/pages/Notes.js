@@ -14,6 +14,9 @@ import {
   WRITE_ROLES,
   pageStyles,
   MOBILE_BREAKPOINT,
+  AI_COLOR,
+  AI_COLOR_MUTED,
+  AI_COLOR_BORDER,
 } from '../utils/hqConstants';
 import { useTokens } from '../context/ThemeContext';
 
@@ -577,7 +580,7 @@ export default function Notes() {
     modeToggle: { display: 'flex', gap: '2px', background: t.SURFACE_ALT, borderRadius: RADIUS_MD, padding: '3px', border: `1px solid ${t.BORDER}` },
     modeTabActive: { padding: '5px 14px', fontSize: '12px', fontWeight: '600', letterSpacing: '0.04em', borderRadius: '4px', border: 'none', cursor: 'pointer', fontFamily: FONT_BODY, background: t.ACCENT_MUTED, color: t.ACCENT },
     modeTabInactive: { padding: '5px 14px', fontSize: '12px', fontWeight: '600', letterSpacing: '0.04em', borderRadius: '4px', border: 'none', cursor: 'pointer', fontFamily: FONT_BODY, background: 'transparent', color: t.TEXT_MUTED },
-    aiBadge: { fontSize: '10px', fontWeight: '600', letterSpacing: '0.08em', padding: '2px 8px', borderRadius: RADIUS_PILL, background: 'rgba(139,92,246,0.12)', color: '#a78bfa', border: '1px solid rgba(139,92,246,0.25)', textTransform: 'uppercase' },
+    aiBadge: { fontSize: '10px', fontWeight: '600', letterSpacing: '0.08em', padding: '2px 8px', borderRadius: RADIUS_PILL, background: AI_COLOR_MUTED, color: AI_COLOR, border: `1px solid ${AI_COLOR_BORDER}`, textTransform: 'uppercase' },
     manualBadge: { fontSize: '10px', fontWeight: '600', letterSpacing: '0.08em', padding: '2px 8px', borderRadius: RADIUS_PILL, background: t.SURFACE_ALT, color: t.TEXT_MUTED, border: `1px solid ${t.BORDER}`, textTransform: 'uppercase' },
     formRow: { display: 'flex', gap: '12px', marginBottom: '12px', flexWrap: 'wrap' },
     formField: { display: 'flex', flexDirection: 'column', gap: '4px', flex: 1, minWidth: '180px' },
@@ -588,27 +591,27 @@ export default function Notes() {
     composeFooter: { display: 'flex', justifyContent: 'flex-end', gap: '10px', alignItems: 'center', marginTop: '20px' },
     cancelButton: { padding: '10px 22px', borderRadius: RADIUS_MD, border: `1px solid ${t.BORDER}`, background: 'transparent', fontSize: '13px', cursor: 'pointer', color: t.TEXT_MUTED, fontFamily: FONT_BODY },
     saveButton: { padding: '10px 22px', borderRadius: RADIUS_MD, border: `1px solid ${t.ACCENT_BORDER}`, background: t.ACCENT_MUTED, color: t.ACCENT, fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: FONT_BODY },
-    processButton: { padding: '10px 22px', borderRadius: RADIUS_MD, border: '1px solid rgba(139,92,246,0.4)', background: 'rgba(139,92,246,0.12)', color: '#a78bfa', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: FONT_BODY },
+    processButton: { padding: '10px 22px', borderRadius: RADIUS_MD, border: `1px solid ${AI_COLOR_BORDER}`, background: AI_COLOR_MUTED, color: AI_COLOR, fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: FONT_BODY },
     errorText: { color: '#f87171', fontSize: '13px', marginBottom: '10px' },
     resultCard: { background: t.SURFACE_ALT, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_MD, padding: '20px', marginBottom: '16px' },
     resultSection: { marginBottom: '16px' },
-    resultLabel: { fontSize: '10px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#a78bfa', marginBottom: '8px' },
+    resultLabel: { fontSize: '10px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.1em', color: AI_COLOR, marginBottom: '8px' },
     resultText: { fontSize: '14px', color: t.TEXT, lineHeight: '1.65', fontWeight: '300', margin: 0 },
     resultListItem: { fontSize: '13px', color: t.TEXT, lineHeight: '1.6', fontWeight: '300', padding: '5px 0', borderBottom: `1px solid ${t.BORDER}`, display: 'flex', gap: '8px' },
-    resultBullet: { color: '#a78bfa', flexShrink: 0, fontSize: '12px', marginTop: '2px' },
+    resultBullet: { color: AI_COLOR, flexShrink: 0, fontSize: '12px', marginTop: '2px' },
     dateGroup: { marginBottom: '28px' },
     dateLabel: { fontSize: '11px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.08em', color: t.TEXT_MUTED, marginBottom: '10px' },
     noteCard: { background: t.SURFACE, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_LG, padding: '18px 20px', marginBottom: '10px', boxShadow: SHADOW_MD },
     noteHeader: { display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px', flexWrap: 'wrap' },
     noteTitle: { fontFamily: FONT_DISPLAY, fontSize: '17px', fontWeight: '400', color: t.TEXT, flex: 1, letterSpacing: '0.01em' },
     noteTypeBadge: { fontSize: '11px', fontWeight: '400', color: t.TEXT_MUTED, letterSpacing: '0.03em' },
-    noteAiBadge: { fontSize: '10px', fontWeight: '600', padding: '2px 10px', borderRadius: RADIUS_PILL, background: 'rgba(139,92,246,0.12)', color: '#a78bfa', border: '1px solid rgba(139,92,246,0.25)', letterSpacing: '0.06em', textTransform: 'uppercase' },
+    noteAiBadge: { fontSize: '10px', fontWeight: '600', padding: '2px 10px', borderRadius: RADIUS_PILL, background: AI_COLOR_MUTED, color: AI_COLOR, border: `1px solid ${AI_COLOR_BORDER}`, letterSpacing: '0.06em', textTransform: 'uppercase' },
     clientBadge: { fontSize: '11px', fontWeight: '600', padding: '2px 10px', borderRadius: RADIUS_PILL, background: 'rgba(96,165,250,0.12)', color: '#60a5fa', border: 'rgba(96,165,250,0.2)', textDecoration: 'none', transition: 'background 0.15s, box-shadow 0.15s' },
     noteBody: { fontSize: '14px', color: t.TEXT_MUTED, lineHeight: '1.65', margin: '0 0 10px', whiteSpace: 'pre-wrap', fontWeight: '300' },
     noteActions: { display: 'flex', gap: '12px' },
     noteAction: { background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px', color: t.TEXT_MUTED, padding: 0, fontFamily: FONT_BODY },
     aiSection: { marginBottom: '12px' },
-    aiSectionLabel: { fontSize: '10px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.08em', color: '#a78bfa', marginBottom: '6px' },
+    aiSectionLabel: { fontSize: '10px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.08em', color: AI_COLOR, marginBottom: '6px' },
     aiSectionText: { fontSize: '13px', color: t.TEXT_MUTED, lineHeight: '1.6', fontWeight: '300', margin: 0 },
     aiListItem: { display: 'flex', gap: '8px', fontSize: '13px', color: t.TEXT_MUTED, lineHeight: '1.6', fontWeight: '300', marginBottom: '4px' },
     emptyState: { background: t.SURFACE, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_LG, padding: '48px', textAlign: 'center', color: t.TEXT_MUTED, fontSize: '14px', fontWeight: '300' },
@@ -638,7 +641,7 @@ export default function Notes() {
           @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
           .expand-triangle { display: inline-block; width: 0; height: 0; border-top: 4px solid transparent; border-bottom: 4px solid transparent; border-left: 5px solid currentColor; transition: transform 0.2s ease; margin-left: 4px; vertical-align: middle; }
           .expand-triangle.open { transform: rotate(90deg); }
-          .ai-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #a78bfa; animation: aiPulse 1.2s ease-in-out infinite; margin: 0 2px; }
+          .ai-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: ${AI_COLOR}; animation: aiPulse 1.2s ease-in-out infinite; margin: 0 2px; }
           .ai-dot:nth-child(2) { animation-delay: 0.2s; }
           .ai-dot:nth-child(3) { animation-delay: 0.4s; }
         `}</style>
@@ -842,8 +845,8 @@ export default function Notes() {
                             <button
                               style={{
                                 padding: '9px 20px', borderRadius: RADIUS_MD,
-                                border: `1px solid ${t.ACCENT_BORDER}`,
-                                background: t.ACCENT_MUTED, color: t.ACCENT,
+                                border: `1px solid ${AI_COLOR_BORDER}`,
+                                background: AI_COLOR_MUTED, color: AI_COLOR,
                                 fontSize: '13px', fontWeight: '600',
                                 cursor: 'pointer', fontFamily: FONT_BODY,
                               }}
@@ -882,7 +885,7 @@ export default function Notes() {
                               <span className="ai-dot" />
                               <span className="ai-dot" />
                             </div>
-                            <p style={{ color: '#a78bfa', fontSize: '13px', fontWeight: '500', margin: '0 0 4px' }}>Transcribing & processing</p>
+                            <p style={{ color: AI_COLOR, fontSize: '13px', fontWeight: '500', margin: '0 0 4px' }}>Transcribing & processing</p>
                             <p style={{ color: t.TEXT_MUTED, fontSize: '11px', fontWeight: '300', margin: 0 }}>This may take 30–90 seconds…</p>
                           </div>
                         )}
@@ -900,7 +903,7 @@ export default function Notes() {
                       <span className="ai-dot" />
                       <span className="ai-dot" />
                     </div>
-                    <p style={{ color: '#a78bfa', fontSize: '13px', fontWeight: '500', margin: '0 0 4px' }}>Analysing transcript</p>
+                    <p style={{ color: AI_COLOR, fontSize: '13px', fontWeight: '500', margin: '0 0 4px' }}>Analysing transcript</p>
                     <p style={{ color: t.TEXT_MUTED, fontSize: '11px', fontWeight: '300', margin: 0 }}>De-identifying · Processing · Re-identifying</p>
                   </div>
                 )}
@@ -985,7 +988,7 @@ export default function Notes() {
 
                 <div style={s.composeFooter}>
                   <button style={s.cancelButton} onClick={resetCompose}>Cancel</button>
-                  {!aiResult && !wasRecorded && (
+                  {!aiResult && inputMode !== 'record' && !wasRecorded && (
                     <button style={s.processButton} onClick={handleAiProcess} disabled={aiProcessing}>
                       {aiProcessing ? 'Processing...' : 'Process with AI'}
                     </button>
@@ -1065,7 +1068,7 @@ export default function Notes() {
                                   <p style={s.aiSectionLabel}>Decisions</p>
                                   {aiSummary.decisions.map((d, j) => (
                                     <div key={j} style={s.aiListItem}>
-                                      <span style={{ color: '#a78bfa', flexShrink: 0 }}>·</span>
+                                      <span style={{ color: AI_COLOR, flexShrink: 0 }}>·</span>
                                       <span style={s.aiSectionText}>{d}</span>
                                     </div>
                                   ))}
@@ -1080,7 +1083,7 @@ export default function Notes() {
                                     return (
                                       <div key={j} style={{ ...s.aiListItem, justifyContent: 'space-between', alignItems: 'flex-start' }}>
                                         <div style={{ display: 'flex', gap: '8px', flex: 1 }}>
-                                          <span style={{ color: '#a78bfa', flexShrink: 0 }}>·</span>
+                                          <span style={{ color: AI_COLOR, flexShrink: 0 }}>·</span>
                                           <span style={s.aiSectionText}>
                                             {item.task}
                                             {item.owner && <span style={{ opacity: 0.7 }}> · {item.owner}</span>}
@@ -1118,7 +1121,7 @@ export default function Notes() {
                                   <p style={s.aiSectionLabel}>Follow-ups</p>
                                   {aiSummary.follow_ups.map((f, j) => (
                                     <div key={j} style={s.aiListItem}>
-                                      <span style={{ color: '#a78bfa', flexShrink: 0 }}>·</span>
+                                      <span style={{ color: AI_COLOR, flexShrink: 0 }}>·</span>
                                       <span style={s.aiSectionText}>{f}</span>
                                     </div>
                                   ))}
