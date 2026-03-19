@@ -5,6 +5,7 @@ const OrgContext = createContext({});
 
 export function OrgProvider({ children }) {
   const [orgId,           setOrgId]           = useState(null);
+  const [userId,          setUserId]          = useState(null);
   const [userRole,        setUserRole]        = useState(null);
   const [isAdmin,         setIsAdmin]         = useState(false);
   const [isPlatformAdmin, setIsPlatformAdmin] = useState(false);
@@ -17,6 +18,8 @@ export function OrgProvider({ children }) {
     // getSession reads from local storage — no network round trip
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.user) { setOrgLoading(false); return; }
+
+    setUserId(session.user.id);
 
     // Single RPC returns org_id, role, and is_platform_admin in one call
     const { data, error } = await supabase.rpc('get_my_org_context');
@@ -53,7 +56,7 @@ export function OrgProvider({ children }) {
   }, [load]);
 
   return (
-    <OrgContext.Provider value={{ orgId, userRole, isAdmin, isPlatformAdmin, orgLoading }}>
+    <OrgContext.Provider value={{ orgId, userId, userRole, isAdmin, isPlatformAdmin, orgLoading }}>
       {children}
     </OrgContext.Provider>
   );

@@ -219,6 +219,19 @@ export default function ClientDetail() {
       gap: '16px',
       marginBottom: '20px',
     },
+    tabRow: {
+      display: 'flex', gap: '4px', marginBottom: '28px',
+      borderBottom: `1px solid ${t.BORDER}`, paddingBottom: '0',
+    },
+    tab: {
+      padding: '8px 20px', fontSize: '13px', fontWeight: '500',
+      fontFamily: FONT_BODY, cursor: 'pointer', background: 'none',
+      border: 'none', borderBottom: '2px solid transparent',
+      color: t.TEXT_MUTED, marginBottom: '-1px', transition: 'color 0.15s',
+    },
+    tabActive: {
+      color: t.TEXT, borderBottom: `2px solid ${t.ACCENT}`,
+    },
     section: {
       background: t.SURFACE,
       border: `1px solid ${t.BORDER}`,
@@ -449,12 +462,20 @@ export default function ClientDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const { orgId } = useOrg();
-  const [userRole, setUserRole] = useState(null);
+  const { orgId, userId, userRole } = useOrg();
   const canWrite = WRITE_ROLES.includes(userRole);
   const canManageAdvisors = FULL_ACCESS_ROLES.includes(userRole);
+  const canGenerateBrief  = ['admin', 'manager', 'advisor'].includes(userRole);
   const backPath = location.state?.from || '/hq/clients';
   const backLabel = backPath === '/hq/notes' ? '← Back to Notes' : backPath === '/hq/crm' ? '← Back to CRM' : '← Back to Clients';
+
+  // Tab state
+  const [activeTab, setActiveTab] = useState('overview'); // 'overview' | 'brief' | 'notes'
+
+  // Brief state
+  const [brief, setBrief]                   = useState(null);   // stored brief from DB
+  const [briefGenerating, setBriefGenerating] = useState(false);
+  const [briefError, setBriefError]         = useState('');
   const [client, setClient] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showEdit, setShowEdit] = useState(false);
@@ -499,12 +520,66 @@ export default function ClientDetail() {
     async function loadOrgMembers() {
       const { data } = await supabase.rpc('get_org_members', { target_org_id: orgId });
       setOrgMembers(data || []);
-      const { data: { user } } = await supabase.auth.getUser();
-      const me = (data || []).find(m => m.user_id === user?.id);
-      setUserRole(me?.role || null);
     }
-    if (orgId) { fetchClient(); loadNotes(); loadAdvisors(); loadOrgMembers(); }
-  }, [id, orgId]);
+    if (orgId) { fetchClient(); loadNotes(); loadAdvisors(); loadOrgMembers(); fetchBrief(); }
+  }, [id, orgId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function fetchBrief() {
+    const { data } = await supabase
+      .from('client_briefs')
+      .select('*')
+      .eq('client_id', id)
+      .single();
+    if (data) setBrief(data);
+  }
+
+  async function handleGenerateBrief() {
+    if (!client) return;
+    setBriefGenerating(true);
+    setBriefError('');
+    try {
+      const memberNames = orgMembers.map(m => ({
+        user_id: m.user_id,
+        first_name: m.first_name,
+        last_name: m.last_name,
+      }));
+      const res = await fetch('/api/prep-brief', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          client,
+          notes: clientNotes,
+          tasks: [],
+          org_member_names: memberNames,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setBriefError(data.error || 'Brief generation failed. Please try again.');
+      } else {
+        const now = new Date().toISOString();
+        const { error: upsertError } = await supabase
+          .from('client_briefs')
+          .upsert({
+            client_id: id,
+            org_id: orgId,
+            body: data,
+            generated_at: now,
+            generated_by: userId,
+            previous_generated_at: brief?.generated_at || null,
+          }, { onConflict: 'client_id' });
+        if (upsertError) {
+          console.error('Brief upsert error:', upsertError);
+          setBriefError('Brief generated but could not be saved. Please try again.');
+        } else {
+          setBrief({ body: data, generated_at: now });
+        }
+      }
+    } catch {
+      setBriefError('Could not reach the processing service. Please try again.');
+    }
+    setBriefGenerating(false);
+  }
 
   async function fetchNotes() {
     const { data } = await supabase
@@ -780,101 +855,228 @@ export default function ClientDetail() {
           </div>
         )}
 
-        {/* Detail sections */}
-        <div style={s.grid}>
-          <Section title="Core Identity" s={s}>
-            <Field label="Date of Birth" value={client.date_of_birth} s={s} />
-            <Field label="Preferred Contact" value={client.preferred_contact_method} s={s} />
-            <Field label="Communication Frequency" value={client.communication_frequency} s={s} />
-          </Section>
-          <Section title="Account Details" s={s}>
-            <Field label="AUM" value={formatAUM(client.aum)} s={s} />
-            <Field label="Fee Rate" value={formatFeeRate(client.fee_rate)} s={s} />
-            <Field label="Est. Annual Revenue" value={formatEstRevenue(client.aum, client.fee_rate)} s={s} />
-            <Field label="Custodian" value={client.custodian || '—'} s={s} />
-            {client.aum_source === 'api' && client.aum_synced_at && (
-              <div style={{ fontSize: '11px', color: t.TEXT_SUBTLE, fontWeight: '300', marginTop: '2px' }}>
-                Synced {new Date(client.aum_synced_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-              </div>
-            )}
-          </Section>
-          <Section title="Financial Profile" s={s}>
-            <Field label="Asset Level" value={client.asset_level} s={s} />
-            <Field label="Risk Tolerance" value={client.risk_tolerance} s={s} />
-            <Field label="Investment Objective" value={client.investment_objective} s={s} />
-            <Field label="Time Horizon" value={client.time_horizon} s={s} />
-            <Field label="Tax Bracket" value={client.tax_bracket} s={s} />
-            <Field label="Liquidity Needs" value={client.liquidity_needs} s={s} />
-          </Section>
-          <Section title="Relationship" s={s}>
-            {client.status === 'Prospect' && client.pipeline_stage && (
-              <Field
-                label="Pipeline Stage"
-                value={client.is_reactivation ? `${client.pipeline_stage} *` : client.pipeline_stage}
-                s={s}
-              />
-            )}
-            <Field label="Client Since" value={client.client_since} s={s} />
-            <Field label="Referral Source" value={client.referral_source} s={s} />
-            <Field label="Next Review Date" value={client.next_review_date} s={s} />
-          </Section>
+        {/* Tabs */}
+        <div style={s.tabRow}>
+          {['overview', 'brief', 'notes'].map(tab => (
+            <button
+              key={tab}
+              style={{ ...s.tab, ...(activeTab === tab ? s.tabActive : {}) }}
+              onClick={() => setActiveTab(tab)}
+            >
+              {tab.charAt(0).toUpperCase() + tab.slice(1)}
+            </button>
+          ))}
         </div>
 
-        {/* Profile Notes */}
-        {client.notes && (
-          <div style={s.notesCard}>
-            <p style={s.sectionLabel}>Profile Notes</p>
-            <p style={s.notesText}>{client.notes}</p>
+        {/* ── Overview tab ─────────────────────────────────────────────── */}
+        {activeTab === 'overview' && (
+          <>
+            <div style={s.grid}>
+              <Section title="Core Identity" s={s}>
+                <Field label="Date of Birth" value={client.date_of_birth} s={s} />
+                <Field label="Preferred Contact" value={client.preferred_contact_method} s={s} />
+                <Field label="Communication Frequency" value={client.communication_frequency} s={s} />
+              </Section>
+              <Section title="Account Details" s={s}>
+                <Field label="AUM" value={formatAUM(client.aum)} s={s} />
+                <Field label="Fee Rate" value={formatFeeRate(client.fee_rate)} s={s} />
+                <Field label="Est. Annual Revenue" value={formatEstRevenue(client.aum, client.fee_rate)} s={s} />
+                <Field label="Custodian" value={client.custodian || '—'} s={s} />
+                {client.aum_source === 'api' && client.aum_synced_at && (
+                  <div style={{ fontSize: '11px', color: t.TEXT_SUBTLE, fontWeight: '300', marginTop: '2px' }}>
+                    Synced {new Date(client.aum_synced_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                  </div>
+                )}
+              </Section>
+              <Section title="Financial Profile" s={s}>
+                <Field label="Asset Level" value={client.asset_level} s={s} />
+                <Field label="Risk Tolerance" value={client.risk_tolerance} s={s} />
+                <Field label="Investment Objective" value={client.investment_objective} s={s} />
+                <Field label="Time Horizon" value={client.time_horizon} s={s} />
+                <Field label="Tax Bracket" value={client.tax_bracket} s={s} />
+                <Field label="Liquidity Needs" value={client.liquidity_needs} s={s} />
+              </Section>
+              <Section title="Relationship" s={s}>
+                {client.status === 'Prospect' && client.pipeline_stage && (
+                  <Field
+                    label="Pipeline Stage"
+                    value={client.is_reactivation ? `${client.pipeline_stage} *` : client.pipeline_stage}
+                    s={s}
+                  />
+                )}
+                <Field label="Client Since" value={client.client_since} s={s} />
+                <Field label="Referral Source" value={client.referral_source} s={s} />
+                <Field label="Next Review Date" value={client.next_review_date} s={s} />
+              </Section>
+            </div>
+            {client.notes && (
+              <div style={s.notesCard}>
+                <p style={s.sectionLabel}>Profile Notes</p>
+                <p style={s.notesText}>{client.notes}</p>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* ── Brief tab ────────────────────────────────────────────────── */}
+        {activeTab === 'brief' && (
+          <div>
+            {!brief && !briefGenerating && (
+              <div style={{ ...s.notesCard, textAlign: 'center', padding: '40px 32px' }}>
+                <p style={{ fontSize: '14px', color: t.TEXT, fontWeight: '400', margin: '0 0 8px' }}>
+                  No brief yet
+                </p>
+                <p style={{ fontSize: '13px', color: t.TEXT_MUTED, fontWeight: '300', margin: '0 0 24px', lineHeight: '1.6', maxWidth: '420px', marginLeft: 'auto', marginRight: 'auto' }}>
+                  Generate an AI-powered summary of this client's relationship — drawing from recent meeting notes, open tasks, and key account details.
+                </p>
+                {canGenerateBrief ? (
+                  <button
+                    style={{ padding: '10px 24px', borderRadius: RADIUS_MD, border: `1px solid ${t.ACCENT_BORDER}`, background: t.ACCENT_MUTED, color: t.ACCENT, fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: FONT_BODY }}
+                    onClick={handleGenerateBrief}
+                  >
+                    Generate Brief
+                  </button>
+                ) : (
+                  <p style={{ fontSize: '12px', color: t.TEXT_MUTED, fontStyle: 'italic' }}>Contact your advisor to generate a brief.</p>
+                )}
+              </div>
+            )}
+
+            {briefGenerating && (
+              <div style={{ textAlign: 'center', padding: '48px 0' }}>
+                <p style={{ color: t.TEXT_MUTED, fontSize: '13px', fontWeight: '300' }}>Generating brief…</p>
+              </div>
+            )}
+
+            {briefError && (
+              <p style={{ color: '#f87171', fontSize: '13px', margin: '0 0 16px' }}>{briefError}</p>
+            )}
+
+            {brief && !briefGenerating && (() => {
+              const b = brief.body;
+              const generatedDate = brief.generated_at
+                ? new Date(brief.generated_at).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })
+                : null;
+              return (
+                <div>
+                  {/* Brief header */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                    {generatedDate && (
+                      <span style={{ fontSize: '11px', color: t.TEXT_MUTED, fontWeight: '300' }}>
+                        Last updated {generatedDate}
+                      </span>
+                    )}
+                    {canGenerateBrief && (
+                      <button
+                        style={{ background: 'none', border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_MD, padding: '6px 14px', fontSize: '12px', color: t.TEXT_MUTED, cursor: 'pointer', fontFamily: FONT_BODY }}
+                        onClick={handleGenerateBrief}
+                        disabled={briefGenerating}
+                      >
+                        Update Brief
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Snapshot */}
+                  {b.snapshot && (
+                    <div style={{ ...s.notesCard, marginBottom: '16px' }}>
+                      <p style={s.sectionLabel}>Snapshot</p>
+                      <p style={{ ...s.notesText, lineHeight: '1.7' }}>{b.snapshot}</p>
+                    </div>
+                  )}
+
+                  {/* Recent meetings */}
+                  {b.recent_meetings?.length > 0 && (
+                    <div style={{ ...s.notesCard, marginBottom: '16px' }}>
+                      <p style={s.sectionLabel}>Recent Meetings</p>
+                      {b.recent_meetings.map((m, i) => (
+                        <div key={i} style={{ display: 'flex', gap: '10px', padding: '6px 0', borderBottom: i < b.recent_meetings.length - 1 ? `1px solid ${t.BORDER}` : 'none' }}>
+                          <span style={{ color: t.ACCENT, flexShrink: 0, marginTop: '2px' }}>·</span>
+                          <span style={{ fontSize: '13px', color: t.TEXT, fontWeight: '300', lineHeight: '1.6' }}>{m}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Open commitments */}
+                  {b.open_commitments?.length > 0 && (
+                    <div style={{ ...s.notesCard, marginBottom: '16px' }}>
+                      <p style={s.sectionLabel}>Open Commitments</p>
+                      {b.open_commitments.map((c, i) => (
+                        <div key={i} style={{ display: 'flex', gap: '10px', padding: '6px 0', borderBottom: i < b.open_commitments.length - 1 ? `1px solid ${t.BORDER}` : 'none' }}>
+                          <span style={{ color: '#fbbf24', flexShrink: 0, marginTop: '2px' }}>·</span>
+                          <span style={{ fontSize: '13px', color: t.TEXT, fontWeight: '300', lineHeight: '1.6' }}>{c}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Relationship notes */}
+                  {b.relationship_notes?.length > 0 && (
+                    <div style={{ ...s.notesCard, marginBottom: '16px' }}>
+                      <p style={s.sectionLabel}>Relationship Notes</p>
+                      {b.relationship_notes.map((r, i) => (
+                        <div key={i} style={{ display: 'flex', gap: '10px', padding: '6px 0', borderBottom: i < b.relationship_notes.length - 1 ? `1px solid ${t.BORDER}` : 'none' }}>
+                          <span style={{ color: t.TEXT_MUTED, flexShrink: 0, marginTop: '2px' }}>·</span>
+                          <span style={{ fontSize: '13px', color: t.TEXT, fontWeight: '300', lineHeight: '1.6' }}>{r}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
           </div>
         )}
 
-        {/* Notes section */}
-        <div style={{ marginTop: '36px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <p style={{ ...s.sectionLabel, margin: 0 }}>Notes ({clientNotes.length})</p>
-            {canWrite && (
-              <button style={s.editButton} onClick={() => navigate(`/hq/notes?client_id=${id}`, { state: { from: `/hq/clients/${id}` } })}>
-                + Record Note
-              </button>
-            )}
-          </div>
-
-          {clientNotes.length === 0 ? (
-            <div style={{ ...s.notesCard, textAlign: 'center', color: t.TEXT_MUTED, fontSize: '14px' }}>
-              No notes yet.{' '}
+        {/* ── Notes tab ────────────────────────────────────────────────── */}
+        {activeTab === 'notes' && (
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <p style={{ ...s.sectionLabel, margin: 0 }}>Notes ({clientNotes.length})</p>
               {canWrite && (
-                <span style={{ color: t.ACCENT, cursor: 'pointer' }} onClick={() => navigate(`/hq/notes?client_id=${id}`, { state: { from: `/hq/clients/${id}` } })}>
-                  Add the first note →
-                </span>
+                <button style={s.editButton} onClick={() => navigate(`/hq/notes?client_id=${id}`, { state: { from: `/hq/clients/${id}` } })}>
+                  + Record Note
+                </button>
               )}
             </div>
-          ) : (
-            groupNotesByDate(clientNotes).map(([date, dateNotes]) => (
-              <div key={date} style={{ marginBottom: '20px' }}>
-                <p style={{ fontSize: '11px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.08em', color: t.TEXT_MUTED, marginBottom: '8px' }}>
-                  {formatDateLabel(date)}
-                </p>
-                {dateNotes.map((note) => (
-                  <div key={note.id} style={{ ...s.notesCard, marginBottom: '10px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: note.body ? '8px' : '0', flexWrap: 'wrap' }}>
-                      <span style={{ fontFamily: FONT_DISPLAY, fontSize: '17px', fontWeight: '400', color: t.TEXT, flex: 1, letterSpacing: '0.01em' }}>{note.title}</span>
-                      {note.note_type && (
-                        <span style={{ fontSize: '10px', fontWeight: '600', padding: '2px 10px', borderRadius: RADIUS_PILL, background: t.ACCENT_MUTED, color: t.ACCENT, border: `1px solid ${t.ACCENT_BORDER}`, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
-                          {note.note_type}
-                        </span>
-                      )}
-                    </div>
-                    {note.body && <p style={{ ...s.notesText, marginBottom: '10px' }}>{note.body}</p>}
-                    <div style={{ display: 'flex', gap: '12px' }}>
-                      <button style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px', color: t.TEXT_MUTED, padding: 0, fontFamily: FONT_BODY }} onClick={() => openEditNote(note)}>Edit</button>
-                      <button style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px', color: '#f87171', padding: 0, fontFamily: FONT_BODY }} onClick={() => handleDeleteNote(note.id)}>Delete</button>
-                    </div>
-                  </div>
-                ))}
+            {clientNotes.length === 0 ? (
+              <div style={{ ...s.notesCard, textAlign: 'center', color: t.TEXT_MUTED, fontSize: '14px' }}>
+                No notes yet.{' '}
+                {canWrite && (
+                  <span style={{ color: t.ACCENT, cursor: 'pointer' }} onClick={() => navigate(`/hq/notes?client_id=${id}`, { state: { from: `/hq/clients/${id}` } })}>
+                    Add the first note →
+                  </span>
+                )}
               </div>
-            ))
-          )}
-        </div>
+            ) : (
+              groupNotesByDate(clientNotes).map(([date, dateNotes]) => (
+                <div key={date} style={{ marginBottom: '20px' }}>
+                  <p style={{ fontSize: '11px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.08em', color: t.TEXT_MUTED, marginBottom: '8px' }}>
+                    {formatDateLabel(date)}
+                  </p>
+                  {dateNotes.map((note) => (
+                    <div key={note.id} style={{ ...s.notesCard, marginBottom: '10px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: note.body ? '8px' : '0', flexWrap: 'wrap' }}>
+                        <span style={{ fontFamily: FONT_DISPLAY, fontSize: '17px', fontWeight: '400', color: t.TEXT, flex: 1, letterSpacing: '0.01em' }}>{note.title}</span>
+                        {note.note_type && (
+                          <span style={{ fontSize: '10px', fontWeight: '600', padding: '2px 10px', borderRadius: RADIUS_PILL, background: t.ACCENT_MUTED, color: t.ACCENT, border: `1px solid ${t.ACCENT_BORDER}`, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                            {note.note_type}
+                          </span>
+                        )}
+                      </div>
+                      {note.body && <p style={{ ...s.notesText, marginBottom: '10px' }}>{note.body}</p>}
+                      <div style={{ display: 'flex', gap: '12px' }}>
+                        <button style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px', color: t.TEXT_MUTED, padding: 0, fontFamily: FONT_BODY }} onClick={() => openEditNote(note)}>Edit</button>
+                        <button style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px', color: '#f87171', padding: 0, fontFamily: FONT_BODY }} onClick={() => handleDeleteNote(note.id)}>Delete</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ))
+            )}
+          </div>
+        )}
 
         {/* Edit Note Modal */}
         {editingNote && (

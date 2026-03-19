@@ -53,7 +53,7 @@ function isOverdue(dateStr) {
 export default function DailyBrief() {
   const navigate  = useNavigate();
   const t         = useTokens();
-  const { orgId, userRole } = useOrg();
+  const { orgId, userId, userRole } = useOrg();
   const windowWidth = useWindowWidth();
   const isMobile    = windowWidth < MOBILE_BREAKPOINT;
 
@@ -66,7 +66,7 @@ export default function DailyBrief() {
   const [completing, setCompleting] = useState(null); // task id being completed
 
   const load = useCallback(async () => {
-    if (!orgId || !userRole) return;
+    if (!orgId || !userRole || !userId) return;
     setLoading(true);
 
     const today    = todayStr();
@@ -118,7 +118,7 @@ export default function DailyBrief() {
       const { data: advisorClients } = await supabase
         .from('client_advisors')
         .select('client_id')
-        .eq('user_id', (await supabase.auth.getUser()).data.user.id);
+        .eq('user_id', userId);
 
       const myClientIds = (advisorClients || []).map(r => r.client_id);
 
@@ -166,7 +166,7 @@ export default function DailyBrief() {
     }
 
     setLoading(false);
-  }, [orgId, userRole, isFullAccess]);
+  }, [orgId, userId, userRole, isFullAccess]);
 
   useEffect(() => { load(); }, [load]);
 
