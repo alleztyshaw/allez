@@ -8,7 +8,6 @@ export function OrgProvider({ children }) {
   const [orgId,           setOrgId]           = useState(null);
   const [userId,          setUserId]          = useState(null);
   const [realRole,        setRealRole]        = useState(null);
-  const [isAdmin,         setIsAdmin]         = useState(false);
   const [isPlatformAdmin, setIsPlatformAdmin] = useState(false);
   const [orgLoading,      setOrgLoading]      = useState(true);
 
@@ -32,7 +31,6 @@ export function OrgProvider({ children }) {
     const { org_id, role, is_platform_admin } = data[0];
     setOrgId(org_id);
     setRealRole(role);
-    setIsAdmin(role === 'admin');
     setIsPlatformAdmin(!!is_platform_admin);
     setOrgLoading(false);
   }, []);
@@ -44,7 +42,7 @@ export function OrgProvider({ children }) {
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') load();
       if (event === 'SIGNED_OUT') {
         setOrgId(null); setUserId(null); setRealRole(null);
-        setIsAdmin(false); setIsPlatformAdmin(false); setOrgLoading(false);
+        setIsPlatformAdmin(false); setOrgLoading(false);
         setDevRoleOverride(null); setDevMobileOverride(false);
       }
     });

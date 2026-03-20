@@ -18,7 +18,7 @@ export default function DevToolbar({ onClose }) {
   const {
     devRoleOverride, devMobileOverride,
     setDevRoleOverride, setDevMobileOverride,
-    exitDevMode, userRole,
+    userRole,
   } = useOrg();
 
   // Local selections — only committed when Activate is clicked
