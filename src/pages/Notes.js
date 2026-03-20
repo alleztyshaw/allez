@@ -12,7 +12,6 @@ import {
   SHADOW_LG,
   STATUS_COLORS,
   WRITE_ROLES,
-  FULL_ACCESS_ROLES,
   pageStyles,
   MOBILE_BREAKPOINT,
   AI_COLOR,
@@ -111,9 +110,6 @@ export default function Notes() {
   const [emailError, setEmailError]         = useState('');
   const [emailCopied, setEmailCopied]       = useState(false);
   const [emailDrafts, setEmailDrafts]       = useState({}); // persisted drafts keyed by note id
-
-  // Compliance results visible to compliance/admin roles only
-  const canViewFlags = FULL_ACCESS_ROLES.includes(userRole);
 
   // Note list
   const [editingNote, setEditingNote] = useState(null);
@@ -1155,20 +1151,6 @@ export default function Notes() {
                       </div>
                     )}
 
-                    {/* Compliance flag — auto-set on save, visible to compliance/admin only */}
-                    {note.compliance_flagged && canViewFlags && (() => {
-                      const severityColor = note.compliance_severity === 'high' ? '#f87171' : note.compliance_severity === 'medium' ? '#fbbf24' : t.TEXT_MUTED;
-                      return (
-                        <div style={{ marginTop: '10px', padding: '10px 12px', background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.2)', borderRadius: RADIUS_MD }}>
-                          <p style={{ fontSize: '11px', fontWeight: FW_SEMIBOLD, color: severityColor, margin: '0 0 6px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                            ⚑ Compliance review — {note.compliance_severity || 'flagged'}
-                          </p>
-                          {(note.compliance_reasons || []).map((r, i) => (
-                            <p key={i} style={{ fontSize: '12px', color: t.TEXT_MUTED, margin: '2px 0', fontWeight: FW_LIGHT, lineHeight: '1.5' }}>· {r}</p>
-                          ))}
-                        </div>
-                      );
-                    })()}
                   </div>
                 );
               })}
