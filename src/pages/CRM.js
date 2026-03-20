@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { useOrg } from '../context/OrgContext';
@@ -9,11 +9,12 @@ import {
   SHADOW_MD,
   pageStyles,
   MOBILE_BREAKPOINT,
+  COLOR_ERROR, COLOR_WARNING,
   FW_LIGHT, FW_REGULAR, FW_MEDIUM, FW_SEMIBOLD} from '../utils/hqConstants';
 import { useTokens } from '../context/ThemeContext';
 import useWindowWidth from '../hooks/useWindowWidth';
 
-const TABS = ['Tasks', 'Activity', 'Pipeline'];
+const TABS = ['Calendar', 'Tasks', 'Activity', 'Pipeline'];
 
 function formatAUM(val) {
   if (!val) return '—';
@@ -72,11 +73,14 @@ export default function CRM() {
   const isMobile = windowWidth < MOBILE_BREAKPOINT;
   const isTablet = windowWidth < 1100;
 
-  const [tab, setTab] = useState('Tasks');
-  const [clients, setClients] = useState([]);
-  const [tasks, setTasks] = useState([]);
-  const [notes, setNotes] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [tab, setTab]               = useState('Calendar');
+  const [calendarView, setCalendarView] = useState('week'); // 'day' | 'week' | 'month'
+  const [calendarAnchor, setCalendarAnchor] = useState(new Date()); // current nav anchor date
+  const [clients, setClients]       = useState([]);
+  const [tasks, setTasks]           = useState([]);
+  const [notes, setNotes]           = useState([]);
+  const [meetings, setMeetings]     = useState([]);
+  const [loading, setLoading]       = useState(true);
 
   // Task form
   const [showTaskForm, setShowTaskForm] = useState(false);
@@ -89,14 +93,16 @@ export default function CRM() {
 
   const fetchData = useCallback(async () => {
     if (!orgId) return;
-    const [{ data: c }, { data: tk }, { data: n }] = await Promise.all([
+    const [{ data: c }, { data: tk }, { data: n }, { data: mt }] = await Promise.all([
       supabase.from('clients').select('id, first_name, last_name, status, pipeline_stage, is_reactivation, aum, fee_rate, next_review_date, custodian, aum_source, aum_synced_at').eq('org_id', orgId).is('deleted_at', null).order('last_name'),
       supabase.from('client_tasks').select('id, org_id, client_id, title, due_date, notes, completed, completed_at, created_at').eq('org_id', orgId).is('deleted_at', null).order('due_date', { ascending: true, nullsFirst: false }),
       supabase.from('notes').select('id, title, note_type, client_id, created_at').eq('org_id', orgId).is('deleted_at', null).order('created_at', { ascending: false }).limit(50),
+      supabase.from('meetings').select('id, client_id, user_id, title, category, meeting_type, status, scheduled_at, duration_mins, meeting_link').eq('org_id', orgId).is('deleted_at', null).order('scheduled_at', { ascending: true }),
     ]);
     setClients(c || []);
     setTasks(tk || []);
     setNotes(n || []);
+    setMeetings(mt || []);
     setLoading(false);
   }, [orgId]);
 
@@ -113,6 +119,67 @@ export default function CRM() {
     const c = clients.find(c => c.id === id);
     return c ? `${c.first_name} ${c.last_name}` : '—';
   }
+
+  // ── Calendar helpers ──────────────────────────────────────────────────────
+  function startOf(view, anchor) {
+    const d = new Date(anchor);
+    if (view === 'day') { d.setHours(0,0,0,0); return d; }
+    if (view === 'week') {
+      const day = d.getDay(); // 0=Sun
+      d.setDate(d.getDate() - day);
+      d.setHours(0,0,0,0); return d;
+    }
+    d.setDate(1); d.setHours(0,0,0,0); return d;
+  }
+
+  function getDays(view, anchor) {
+    const start = startOf(view, anchor);
+    const days = view === 'day' ? 1 : view === 'week' ? 7 : new Date(anchor.getFullYear(), anchor.getMonth()+1, 0).getDate();
+    return Array.from({ length: days }, (_, i) => {
+      const d = new Date(start); d.setDate(start.getDate() + i); return d;
+    });
+  }
+
+  function navCalendar(dir) {
+    setCalendarAnchor(prev => {
+      const d = new Date(prev);
+      if (calendarView === 'day') d.setDate(d.getDate() + dir);
+      else if (calendarView === 'week') d.setDate(d.getDate() + dir * 7);
+      else d.setMonth(d.getMonth() + dir);
+      return d;
+    });
+  }
+
+  function calendarTitle() {
+    const opts = calendarView === 'month'
+      ? { month: 'long', year: 'numeric' }
+      : { month: 'short', day: 'numeric', year: 'numeric' };
+    if (calendarView === 'week') {
+      const days = getDays('week', calendarAnchor);
+      const start = days[0].toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      const end   = days[6].toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      return `${start} – ${end}`;
+    }
+    return calendarAnchor.toLocaleDateString('en-US', opts);
+  }
+
+  function meetingsForDay(day) {
+    return meetings.filter(m => {
+      const md = new Date(m.scheduled_at);
+      return md.getFullYear() === day.getFullYear() &&
+             md.getMonth()    === day.getMonth()    &&
+             md.getDate()     === day.getDate();
+    }).sort((a, b) => new Date(a.scheduled_at) - new Date(b.scheduled_at));
+  }
+
+  function isCalToday(day) {
+    const now = new Date();
+    return day.getFullYear() === now.getFullYear() &&
+           day.getMonth()    === now.getMonth()    &&
+           day.getDate()     === now.getDate();
+  }
+
+  const calDays = getDays(calendarView, calendarAnchor);
 
   async function handleSaveTask() {
     if (!taskForm.title.trim()) { setTaskError('Please enter a task title.'); return; }
@@ -312,6 +379,170 @@ export default function CRM() {
         ) : (
 
           <>
+            {/* CALENDAR TAB */}
+            {tab === 'Calendar' && (
+              <div>
+                {/* Calendar controls */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', flexWrap: 'wrap', gap: '10px' }}>
+                  {/* Nav */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <button onClick={() => navCalendar(-1)} style={{ background: 'none', border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_MD, padding: '5px 12px', color: t.TEXT_MUTED, cursor: 'pointer', fontSize: '14px', fontFamily: FONT_BODY }}>‹</button>
+                    <span style={{ fontSize: '15px', fontWeight: FW_MEDIUM, color: t.TEXT, fontFamily: FONT_BODY, minWidth: isMobile ? 'auto' : '220px', textAlign: 'center' }}>{calendarTitle()}</span>
+                    <button onClick={() => navCalendar(1)}  style={{ background: 'none', border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_MD, padding: '5px 12px', color: t.TEXT_MUTED, cursor: 'pointer', fontSize: '14px', fontFamily: FONT_BODY }}>›</button>
+                    <button onClick={() => setCalendarAnchor(new Date())} style={{ background: 'none', border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_MD, padding: '5px 12px', color: t.ACCENT, cursor: 'pointer', fontSize: '12px', fontFamily: FONT_BODY, fontWeight: FW_MEDIUM }}>Today</button>
+                  </div>
+                  {/* View toggle */}
+                  <div style={{ display: 'flex', gap: '4px' }}>
+                    {['Day', 'Week', 'Month'].map(v => (
+                      <button
+                        key={v}
+                        onClick={() => setCalendarView(v.toLowerCase())}
+                        style={{ padding: '5px 14px', borderRadius: RADIUS_MD, border: `1px solid ${calendarView === v.toLowerCase() ? t.ACCENT_BORDER : t.BORDER}`, background: calendarView === v.toLowerCase() ? t.ACCENT_MUTED : 'none', color: calendarView === v.toLowerCase() ? t.ACCENT : t.TEXT_MUTED, fontSize: '12px', fontWeight: FW_MEDIUM, fontFamily: FONT_BODY, cursor: 'pointer' }}
+                      >
+                        {v}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Calendar grid */}
+                {calendarView === 'month' ? (
+                  // Month view — 7-column grid with day headers
+                  <div>
+                    {/* Day headers */}
+                    {!isMobile && (
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '2px', marginBottom: '2px' }}>
+                        {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d => (
+                          <div key={d} style={{ textAlign: 'center', fontSize: '11px', fontWeight: FW_SEMIBOLD, color: t.TEXT_MUTED, padding: '4px 0', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{d}</div>
+                        ))}
+                      </div>
+                    )}
+                    {/* Fill leading blank days */}
+                    {(() => {
+                      const firstDay = startOf('month', calendarAnchor).getDay();
+                      const blanks = Array.from({ length: firstDay }, (_, i) => i);
+                      const allCells = [...blanks.map(() => null), ...calDays];
+                      // Pad to complete last row
+                      while (allCells.length % 7 !== 0) allCells.push(null);
+                      return (
+                        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(7, 1fr)' : 'repeat(7, 1fr)', gap: '2px' }}>
+                          {allCells.map((day, i) => {
+                            if (!day) return <div key={`blank-${i}`} style={{ minHeight: '80px', background: t.SURFACE_ALT, borderRadius: RADIUS_MD, opacity: 0.3 }} />;
+                            const dayMeetings = meetingsForDay(day);
+                            const today = isCalToday(day);
+                            return (
+                              <div key={day.toISOString()} style={{ minHeight: '80px', background: t.SURFACE, border: `1px solid ${today ? t.ACCENT_BORDER : t.BORDER}`, borderRadius: RADIUS_MD, padding: '6px', overflow: 'hidden' }}>
+                                <span style={{ fontSize: '12px', fontWeight: today ? FW_SEMIBOLD : FW_LIGHT, color: today ? t.ACCENT : t.TEXT_MUTED, display: 'block', marginBottom: '4px' }}>{day.getDate()}</span>
+                                {dayMeetings.slice(0, isMobile ? 1 : 3).map(m => (
+                                  <div key={m.id} title={`${m.category}${m.client_id ? ' · ' + clientName(m.client_id) : ''}`} style={{ fontSize: '10px', fontWeight: FW_MEDIUM, color: t.ACCENT, background: t.ACCENT_MUTED, borderRadius: '3px', padding: '2px 4px', marginBottom: '2px', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis', cursor: 'pointer' }}
+                                    onClick={() => m.client_id && navigate(`/hq/clients/${m.client_id}`)}
+                                  >
+                                    {new Date(m.scheduled_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })} {m.category}
+                                  </div>
+                                ))}
+                                {dayMeetings.length > (isMobile ? 1 : 3) && (
+                                  <span style={{ fontSize: '10px', color: t.TEXT_MUTED }}>+{dayMeetings.length - (isMobile ? 1 : 3)} more</span>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      );
+                    })()}
+                  </div>
+                ) : (
+                  // Day / Week view — time grid with hours on Y axis
+                  (() => {
+                    const HOUR_HEIGHT = 56; // px per hour
+                    const HOURS = Array.from({ length: 24 }, (_, i) => i); // 0–23
+                    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                    const tzLabel = new Date().toLocaleTimeString('en-US', { timeZoneName: 'short' }).split(' ').pop();
+                    return (
+                      <div>
+                        {/* Timezone indicator */}
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '6px' }}>
+                          <span style={{ fontSize: '11px', color: t.TEXT_SUBTLE, fontWeight: FW_LIGHT, fontFamily: FONT_BODY }}>
+                            {tz} · {tzLabel}
+                          </span>
+                        </div>
+
+                        {/* Day column headers */}
+                        <div style={{ display: 'grid', gridTemplateColumns: `52px repeat(${calDays.length}, 1fr)`, marginBottom: '2px' }}>
+                          <div /> {/* spacer for time axis */}
+                          {calDays.map(day => {
+                            const today = isCalToday(day);
+                            return (
+                              <div key={day.toISOString()} style={{ textAlign: 'center', padding: '6px 4px 8px', borderBottom: `2px solid ${today ? t.ACCENT : t.BORDER}` }}>
+                                <span style={{ fontSize: '11px', fontWeight: FW_SEMIBOLD, color: today ? t.ACCENT : t.TEXT_MUTED, textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block' }}>
+                                  {day.toLocaleDateString('en-US', { weekday: 'short' })}
+                                </span>
+                                <span style={{ fontSize: '18px', fontWeight: today ? FW_MEDIUM : FW_LIGHT, color: today ? t.ACCENT : t.TEXT }}>
+                                  {day.getDate()}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        {/* Scrollable time grid — starts scrolled to 6am */}
+                        <div
+                          style={{ overflowY: 'auto', maxHeight: '560px', position: 'relative', background: t.SURFACE, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_LG }}
+                          ref={el => { if (el && !el.dataset.scrolled) { el.scrollTop = 6 * HOUR_HEIGHT; el.dataset.scrolled = '1'; } }}
+                        >
+                          <div style={{ display: 'grid', gridTemplateColumns: `52px repeat(${calDays.length}, 1fr)`, position: 'relative' }}>
+                            {/* Hour rows */}
+                            {HOURS.map(hour => (
+                              <React.Fragment key={hour}>
+                                {/* Time label */}
+                                <div style={{ height: HOUR_HEIGHT, borderTop: `1px solid ${t.BORDER}`, paddingTop: '4px', paddingRight: '8px', textAlign: 'right', flexShrink: 0 }}>
+                                  <span style={{ fontSize: '12px', color: t.TEXT_MUTED, fontWeight: FW_REGULAR, fontFamily: FONT_BODY, lineHeight: 1 }}>
+                                    {hour === 0 ? '12am' : hour < 12 ? `${hour}am` : hour === 12 ? '12pm' : `${hour-12}pm`}
+                                  </span>
+                                </div>
+                                {/* Day cells */}
+                                {calDays.map(day => {
+                                  const today = isCalToday(day);
+                                  const dayMeetingsThisHour = meetingsForDay(day).filter(m => new Date(m.scheduled_at).getHours() === hour);
+                                  return (
+                                    <div key={`${day.toISOString()}-${hour}`} style={{ height: HOUR_HEIGHT, borderTop: `1px solid ${t.BORDER}`, borderLeft: `1px solid ${today ? t.ACCENT_BORDER : t.BORDER}`, background: today && hour >= 6 && hour < 20 ? `${t.ACCENT_MUTED}33` : t.SURFACE, padding: '2px 3px', overflow: 'hidden' }}>
+                                      {dayMeetingsThisHour.map(m => {
+                                        const isPast = new Date(m.scheduled_at) < new Date() && m.status !== 'completed';
+                                        const statusColor = m.status === 'completed' ? t.ACCENT : m.status === 'cancelled' ? COLOR_ERROR : isPast ? COLOR_WARNING : t.ACCENT;
+                                        const startMin = new Date(m.scheduled_at).getMinutes();
+                                        const topOffset = (startMin / 60) * HOUR_HEIGHT;
+                                        const blockHeight = Math.max(20, (m.duration_mins / 60) * HOUR_HEIGHT - 2);
+                                        return (
+                                          <div
+                                            key={m.id}
+                                            onClick={() => m.client_id && navigate(`/hq/clients/${m.client_id}`)}
+                                            title={`${m.category}${m.client_id ? ' · ' + clientName(m.client_id) : ''}\n${new Date(m.scheduled_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`}
+                                            style={{ position: 'relative', marginTop: topOffset, height: blockHeight, background: `${statusColor}22`, borderLeft: `3px solid ${statusColor}`, borderRadius: '3px', padding: '2px 5px', cursor: m.client_id ? 'pointer' : 'default', overflow: 'hidden' }}
+                                          >
+                                            <p style={{ fontSize: '10px', fontWeight: FW_SEMIBOLD, color: statusColor, margin: 0, lineHeight: 1.3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                              {new Date(m.scheduled_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })} {m.category}
+                                            </p>
+                                            {blockHeight > 28 && m.client_id && (
+                                              <p style={{ fontSize: '9px', fontWeight: FW_LIGHT, color: t.TEXT_MUTED, margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                {clientName(m.client_id)}
+                                              </p>
+                                            )}
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  );
+                                })}
+                              </React.Fragment>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()
+                )}
+              </div>
+            )}
+
             {/* PIPELINE TAB */}
             {tab === 'Pipeline' && (
               <PipelineTable clients={clients} navigate={navigate} s={s} t={t} isMobile={isMobile} orgId={orgId} onStageChange={fetchData} />

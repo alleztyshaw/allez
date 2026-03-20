@@ -21,6 +21,10 @@ export const AI_COLOR        = '#a78bfa';
 export const AI_COLOR_MUTED  = 'rgba(139,92,246,0.12)';
 export const AI_COLOR_BORDER = 'rgba(139,92,246,0.4)';
 
+// Semantic status colors — use these instead of hardcoding hex values
+export const COLOR_ERROR   = '#f87171'; // red — destructive actions, errors, cancelled
+export const COLOR_WARNING = '#fbbf24'; // amber — caution, overdue, pending
+
 // --- SITE ACCENT — Allez Capital Portfolio (allezcapital.com) ---
 export const SITE_ACCENT        = '#667eea'; // Purple — portfolio brand colour
 export const SITE_ACCENT_HOVER  = '#5a6fd6';
@@ -166,7 +170,51 @@ export const REFERRAL_SOURCE_OPTIONS         = [
 ];
 
 // ============================================================
-// AI NOTE-TAKER
+// MEETINGS
+// Single source of truth for meeting categories, types, and
+// recurrence options. Used by UI dropdowns and DB validation.
+// ============================================================
+
+export const MEETING_CATEGORIES = [
+  'Annual Review',
+  'Quarterly Check-in',
+  'Financial Planning',
+  'New Client / Onboarding',
+  'Portfolio Review',
+  'Estate / Tax Planning',
+  'Ad Hoc / Follow-up',
+  'Internal',
+];
+
+export const MEETING_TYPES = [
+  { value: 'video',      label: 'Video Call'  },
+  { value: 'phone',      label: 'Phone Call'  },
+  { value: 'in_person',  label: 'In Person'   },
+  { value: 'other',      label: 'Other'       },
+];
+
+export const MEETING_STATUSES = [
+  { value: 'scheduled',  label: 'Scheduled'  },
+  { value: 'completed',  label: 'Completed'  },
+  { value: 'cancelled',  label: 'Cancelled'  },
+];
+
+export const MEETING_RECURRENCES = [
+  { value: 'none',       label: 'Does not repeat' },
+  { value: 'weekly',     label: 'Weekly'           },
+  { value: 'monthly',    label: 'Monthly'          },
+  { value: 'quarterly',  label: 'Quarterly'        },
+  { value: 'annually',   label: 'Annually'         },
+];
+
+export const MEETING_DURATION_OPTIONS = [
+  { value: 15,  label: '15 minutes' },
+  { value: 30,  label: '30 minutes' },
+  { value: 45,  label: '45 minutes' },
+  { value: 60,  label: '1 hour'     },
+  { value: 90,  label: '90 minutes' },
+  { value: 120, label: '2 hours'    },
+];
 // Prompt template mirrored here for reference and tuning.
 // The authoritative copy used at runtime lives in api/process-note.js.
 // Update both if you change the prompt.

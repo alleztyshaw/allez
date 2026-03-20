@@ -25,8 +25,17 @@ import {
   BRIEF_ROLES,
   CUSTODIAN_OPTIONS,
   aumToAssetLevel,
+  MEETING_CATEGORIES,
+  MEETING_TYPES,
+  MEETING_STATUSES,
+  MEETING_RECURRENCES,
+  MEETING_DURATION_OPTIONS,
+  COLOR_ERROR,
+  COLOR_WARNING,
+  MOBILE_BREAKPOINT,
   FW_LIGHT, FW_REGULAR, FW_MEDIUM, FW_SEMIBOLD} from '../utils/hqConstants';
 import { useTokens } from '../context/ThemeContext';
+import useWindowWidth from '../hooks/useWindowWidth';
 
 
 function Field({ label, value, s }) {
@@ -99,6 +108,8 @@ function stripAUMFormat(str) {
 
 export default function ClientDetail() {
   const t = useTokens();
+  const windowWidth = useWindowWidth();
+  const isMobile = windowWidth < MOBILE_BREAKPOINT;
 
   const s = {
     pageWrapper: {
@@ -166,22 +177,6 @@ export default function ClientDetail() {
       alignItems: 'center',
       gap: '20px',
       marginBottom: '28px',
-    },
-    avatarLarge: {
-      width: '64px',
-      height: '64px',
-      borderRadius: '50%',
-      background: t.ACCENT_MUTED,
-      border: `1px solid ${t.ACCENT_BORDER}`,
-      color: t.ACCENT,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      fontSize: '22px',
-      fontWeight: FW_REGULAR,
-      fontFamily: FONT_DISPLAY,
-      letterSpacing: '0.02em',
-      flexShrink: 0,
     },
     headerText: { flex: 1 },
     name: {
@@ -287,7 +282,7 @@ export default function ClientDetail() {
     },
     // Modal
     overlay: {
-      position: 'fixed',
+      position: isMobile ? 'absolute' : 'fixed',
       inset: 0,
       background: 'rgba(0,0,0,0.65)',
       display: 'flex',
@@ -355,12 +350,16 @@ export default function ClientDetail() {
       gap: '4px',
     },
     label: {
+      display: 'block',
       fontSize: '12px',
       fontWeight: FW_MEDIUM,
       color: t.TEXT_MUTED,
       letterSpacing: '0.02em',
+      marginBottom: '6px',
     },
     input: {
+      width: '100%',
+      boxSizing: 'border-box',
       border: `1px solid ${t.BORDER}`,
       borderRadius: RADIUS_MD,
       padding: '8px 12px',
@@ -385,7 +384,7 @@ export default function ClientDetail() {
       boxSizing: 'border-box',
     },
     errorText: {
-      color: '#f87171',
+      color: COLOR_ERROR,
       fontSize: '13px',
       marginTop: '12px',
     },
@@ -452,7 +451,7 @@ export default function ClientDetail() {
       borderRadius: RADIUS_MD,
       border: '1px solid rgba(248,113,113,0.4)',
       background: 'transparent',
-      color: '#f87171',
+      color: COLOR_ERROR,
       fontSize: '14px',
       fontWeight: FW_SEMIBOLD,
       cursor: 'pointer',
@@ -471,7 +470,7 @@ export default function ClientDetail() {
   const backLabel = backPath === '/hq/notes' ? '← Back to Notes' : backPath === '/hq/crm' ? '← Back to CRM' : '← Back to Clients';
 
   // Tab state
-  const [activeTab, setActiveTab] = useState('overview'); // 'overview' | 'brief' | 'notes'
+  const [activeTab, setActiveTab] = useState('overview'); // 'overview' | 'meetings' | 'brief' | 'notes'
 
   // Brief state
   const [brief, setBrief]                   = useState(null);   // stored brief from DB
@@ -486,7 +485,25 @@ export default function ClientDetail() {
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState('');
   const [clientNotes, setClientNotes] = useState([]);
-  const [clientTasks, setClientTasks] = useState([]);
+  const [clientTasks,    setClientTasks]    = useState([]);
+  const [meetings,       setMeetings]       = useState([]);
+  const [meetingModal,   setMeetingModal]   = useState(false);
+  const [editingMeeting, setEditingMeeting] = useState(null); // null = new, object = edit
+  const [meetingSaving,  setMeetingSaving]  = useState(false);
+  const [meetingError,   setMeetingError]   = useState('');
+
+  const BLANK_MEETING = {
+    category:     MEETING_CATEGORIES[0],
+    meeting_type: MEETING_TYPES[0].value,
+    status:       'scheduled',
+    scheduled_date: '',
+    scheduled_time: '',
+    duration_mins: 60,
+    description:  '',
+    recurrence:   'none',
+    meeting_link: '',
+  };
+  const [meetingForm, setMeetingForm] = useState(BLANK_MEETING);
   const [editingNote, setEditingNote] = useState(null);
 
   const [editNoteForm, setEditNoteForm] = useState({});
@@ -517,6 +534,13 @@ export default function ClientDetail() {
         .order('due_date', { ascending: true });
       setClientTasks(data || []);
     }
+    async function loadMeetings() {
+      const { data } = await supabase
+        .from('meetings').select('*')
+        .eq('client_id', id).eq('org_id', orgId).is('deleted_at', null)
+        .order('scheduled_at', { ascending: false });
+      setMeetings(data || []);
+    }
     async function loadAdvisors() {
       const { data } = await supabase
         .from('client_advisors').select('id, user_id, is_primary')
@@ -530,7 +554,7 @@ export default function ClientDetail() {
       const { data } = await supabase.rpc('get_org_members', { target_org_id: orgId });
       setOrgMembers(data || []);
     }
-    if (orgId) { fetchClient(); loadNotes(); loadTasks(); loadAdvisors(); loadOrgMembers(); fetchBrief(); }
+    if (orgId) { fetchClient(); loadNotes(); loadTasks(); loadMeetings(); loadAdvisors(); loadOrgMembers(); fetchBrief(); }
   }, [id, orgId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function fetchBrief() {
@@ -588,6 +612,81 @@ export default function ClientDetail() {
       setBriefError('Could not reach the processing service. Please try again.');
     }
     setBriefGenerating(false);
+  }
+
+  async function handleMeetingSave() {
+    if (!meetingForm.scheduled_date || !meetingForm.scheduled_time) {
+      setMeetingError('Please set a date and time.');
+      return;
+    }
+    setMeetingSaving(true);
+    setMeetingError('');
+    const scheduled_at = new Date(`${meetingForm.scheduled_date}T${meetingForm.scheduled_time}`).toISOString();
+    const { scheduled_date, scheduled_time, ...rest } = meetingForm;
+    const payload = {
+      ...rest,
+      scheduled_at,
+      org_id:       orgId,
+      user_id:      userId,
+      client_id:    id,
+      duration_mins: Number(meetingForm.duration_mins),
+      meeting_link: meetingForm.meeting_link || null,
+    };
+    const { error } = editingMeeting
+      ? await supabase.from('meetings').update(payload).eq('id', editingMeeting.id)
+      : await supabase.from('meetings').insert([payload]);
+    if (error) {
+      setMeetingError('Could not save meeting. Please try again.');
+      console.error(error);
+    } else {
+      setMeetingModal(false);
+      setEditingMeeting(null);
+      setMeetingForm(BLANK_MEETING);
+      const { data } = await supabase
+        .from('meetings').select('*')
+        .eq('client_id', id).eq('org_id', orgId).is('deleted_at', null)
+        .order('scheduled_at', { ascending: false });
+      setMeetings(data || []);
+    }
+    setMeetingSaving(false);
+  }
+
+  function openNewMeeting() {
+    setEditingMeeting(null);
+    setMeetingForm(BLANK_MEETING);
+    setMeetingError('');
+    setMeetingModal(true);
+  }
+
+  function openEditMeeting(meeting) {
+    setEditingMeeting(meeting);
+    const dt = meeting.scheduled_at ? new Date(meeting.scheduled_at) : null;
+    const pad = n => String(n).padStart(2, '0');
+    setMeetingForm({
+      category:       meeting.category,
+      meeting_type:   meeting.meeting_type,
+      status:         meeting.status,
+      scheduled_date: dt ? `${dt.getFullYear()}-${pad(dt.getMonth()+1)}-${pad(dt.getDate())}` : '',
+      scheduled_time: dt ? `${pad(dt.getHours())}:${pad(dt.getMinutes())}` : '',
+      duration_mins:  meeting.duration_mins,
+      description:    meeting.description || '',
+      recurrence:     meeting.recurrence,
+      meeting_link:   meeting.meeting_link || '',
+    });
+    setMeetingError('');
+    setMeetingModal(true);
+  }
+
+  async function handleMeetingDelete(meetingId) {
+    await supabase.from('meetings')
+      .update({ deleted_at: new Date().toISOString() })
+      .eq('id', meetingId);
+    setMeetings(prev => prev.filter(m => m.id !== meetingId));
+  }
+
+  async function handleMeetingStatus(meetingId, newStatus) {
+    await supabase.from('meetings').update({ status: newStatus }).eq('id', meetingId);
+    setMeetings(prev => prev.map(m => m.id === meetingId ? { ...m, status: newStatus } : m));
   }
 
   async function fetchNotes() {
@@ -769,9 +868,6 @@ export default function ClientDetail() {
 
         {/* Header */}
         <div style={s.header}>
-          <div style={s.avatarLarge}>
-            {client.first_name?.[0]}{client.last_name?.[0]}
-          </div>
           <div style={s.headerText}>
             <h1 style={s.name}>{fullName}</h1>
             {client.email && <p style={s.email}>{client.email}</p>}
@@ -828,7 +924,7 @@ export default function ClientDetail() {
                     <button onClick={() => handleSetPrimary(a.id)} style={{ background: 'none', border: 'none', fontSize: '11px', color: t.TEXT_MUTED, cursor: 'pointer', padding: 0 }}>Set primary</button>
                   )}
                   {canManageAdvisors && (
-                    <button onClick={() => handleRemoveAdvisor(a.id)} style={{ background: 'none', border: 'none', fontSize: '11px', color: '#f87171', cursor: 'pointer', padding: 0 }}>✕</button>
+                    <button onClick={() => handleRemoveAdvisor(a.id)} style={{ background: 'none', border: 'none', fontSize: '11px', color: COLOR_ERROR, cursor: 'pointer', padding: 0 }}>✕</button>
                   )}
                 </div>
               ))}
@@ -866,7 +962,7 @@ export default function ClientDetail() {
 
         {/* Tabs */}
         <div style={s.tabRow}>
-          {['overview', 'brief', 'notes'].map(tab => (
+          {['overview', 'meetings', 'brief', 'notes'].map(tab => (
             <button
               key={tab}
               style={{ ...s.tab, ...(activeTab === tab ? s.tabActive : {}) }}
@@ -927,6 +1023,190 @@ export default function ClientDetail() {
           </>
         )}
 
+        {/* ── Meetings tab ──────────────────────────────────────────────── */}
+        {activeTab === 'meetings' && (
+          <div>
+            {/* Header row */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <p style={{ ...s.sectionLabel, margin: 0 }}>
+                Meetings ({meetings.length})
+              </p>
+              {canWrite && (
+                <button
+                  style={{ padding: '7px 16px', borderRadius: RADIUS_MD, border: `1px solid ${t.ACCENT_BORDER}`, background: t.ACCENT_MUTED, color: t.ACCENT, fontSize: '12px', fontWeight: FW_SEMIBOLD, cursor: 'pointer', fontFamily: FONT_BODY }}
+                  onClick={openNewMeeting}
+                >
+                  + Schedule Meeting
+                </button>
+              )}
+            </div>
+
+            {meetings.length === 0 ? (
+              <div style={{ ...s.notesCard, textAlign: 'center', padding: '40px 32px' }}>
+                <p style={{ fontSize: '14px', color: t.TEXT, fontWeight: FW_REGULAR, margin: '0 0 6px' }}>No meetings yet</p>
+                <p style={{ fontSize: '13px', color: t.TEXT_MUTED, fontWeight: FW_LIGHT, margin: 0 }}>Schedule a meeting to start building this client's history.</p>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                {meetings.map(meeting => {
+                  const isPast = new Date(meeting.scheduled_at) < new Date();
+                  const statusColor = meeting.status === 'completed' ? t.ACCENT : meeting.status === 'cancelled' ? COLOR_ERROR : isPast ? COLOR_WARNING : t.TEXT_MUTED;
+                  const meetingDate = new Date(meeting.scheduled_at).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+                  const meetingTime = new Date(meeting.scheduled_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+                  const typeLabel = MEETING_TYPES.find(mt => mt.value === meeting.meeting_type)?.label || meeting.meeting_type;
+                  const durationLabel = MEETING_DURATION_OPTIONS.find(d => d.value === meeting.duration_mins)?.label || `${meeting.duration_mins} min`;
+                  return (
+                    <div key={meeting.id} style={{ ...s.notesCard, padding: '16px 18px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px', flexWrap: 'wrap' }}>
+                            <span style={{ fontSize: '14px', fontWeight: FW_MEDIUM, color: t.TEXT }}>{meeting.category}</span>
+                            <span style={{ fontSize: '11px', fontWeight: FW_SEMIBOLD, padding: '2px 8px', borderRadius: RADIUS_PILL, background: `${statusColor}18`, color: statusColor, border: `1px solid ${statusColor}33`, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                              {meeting.status}
+                            </span>
+                          </div>
+                          <p style={{ fontSize: '12px', color: t.TEXT_MUTED, fontWeight: FW_LIGHT, margin: '0 0 4px' }}>
+                            {meetingDate} · {meetingTime} · {durationLabel} · {typeLabel}
+                          </p>
+                          {meeting.recurrence !== 'none' && (
+                            <p style={{ fontSize: '11px', color: t.TEXT_MUTED, fontWeight: FW_LIGHT, margin: '0 0 4px' }}>
+                              Repeats {MEETING_RECURRENCES.find(r => r.value === meeting.recurrence)?.label?.toLowerCase()}
+                            </p>
+                          )}
+                          {meeting.description && (
+                            <p style={{ fontSize: '12px', color: t.TEXT_MUTED, fontWeight: FW_LIGHT, margin: '6px 0 0', lineHeight: '1.5' }}>{meeting.description}</p>
+                          )}
+                        </div>
+                      </div>
+                      {canWrite && (
+                        <div style={{ display: 'flex', gap: '12px', marginTop: '10px', borderTop: `1px solid ${t.BORDER}`, paddingTop: '10px' }}>
+                          {meeting.status === 'scheduled' && (
+                            <button style={s.noteAction} onClick={() => handleMeetingStatus(meeting.id, 'completed')}>Mark Complete</button>
+                          )}
+                          {meeting.status === 'scheduled' && (
+                            <button style={s.noteAction} onClick={() => handleMeetingStatus(meeting.id, 'cancelled')}>Cancel</button>
+                          )}
+                          <button style={s.noteAction} onClick={() => openEditMeeting(meeting)}>Edit</button>
+                          <button style={{ ...s.noteAction, color: COLOR_ERROR }} onClick={() => handleMeetingDelete(meeting.id)}>Delete</button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Meeting modal */}
+            {meetingModal && (
+              <div style={s.overlay}>
+                <div style={{ ...s.modal, maxWidth: isMobile ? '100%' : '520px' }}>
+                  <div style={s.modalHeader}>
+                    <h2 style={s.modalTitle}>{editingMeeting ? 'Edit Meeting' : 'Schedule Meeting'}</h2>
+                    <button style={s.closeButton} onClick={() => { setMeetingModal(false); setEditingMeeting(null); }}>✕</button>
+                  </div>
+                  <div style={s.modalBody}>
+                    {meetingError && <p style={{ color: COLOR_ERROR, fontSize: '13px', margin: '0 0 16px' }}>{meetingError}</p>}
+
+                    {/* Row 1 — Category (full width) */}
+                    <div style={{ marginBottom: '16px' }}>
+                      <label style={s.label}>Category</label>
+                      <select style={s.input} value={meetingForm.category} onChange={e => setMeetingForm(f => ({ ...f, category: e.target.value }))}>
+                        {MEETING_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                      </select>
+                    </div>
+
+                    {/* Row 2 — Date · Time · Duration */}
+                    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : '1fr 1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+                      <div style={isMobile ? { gridColumn: '1 / -1' } : {}}>
+                        <label style={s.label}>Date</label>
+                        <input
+                          style={s.input}
+                          type="date"
+                          value={meetingForm.scheduled_date}
+                          onChange={e => setMeetingForm(f => ({ ...f, scheduled_date: e.target.value }))}
+                        />
+                      </div>
+                      <div>
+                        <label style={s.label}>Time</label>
+                        <input
+                          style={s.input}
+                          type="time"
+                          value={meetingForm.scheduled_time}
+                          onChange={e => setMeetingForm(f => ({ ...f, scheduled_time: e.target.value }))}
+                        />
+                      </div>
+                      <div>
+                        <label style={s.label}>Duration</label>
+                        <select style={s.input} value={meetingForm.duration_mins} onChange={e => setMeetingForm(f => ({ ...f, duration_mins: e.target.value }))}>
+                          {MEETING_DURATION_OPTIONS.map(d => <option key={d.value} value={d.value}>{d.label}</option>)}
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Row 3 — Meeting Type · Recurrence (· Status if editing) */}
+                    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : editingMeeting ? '1fr 1fr 1fr' : '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+                      <div>
+                        <label style={s.label}>Type</label>
+                        <select style={s.input} value={meetingForm.meeting_type} onChange={e => setMeetingForm(f => ({ ...f, meeting_type: e.target.value }))}>
+                          {MEETING_TYPES.map(mt => <option key={mt.value} value={mt.value}>{mt.label}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <label style={s.label}>Recurrence</label>
+                        <select style={s.input} value={meetingForm.recurrence} onChange={e => setMeetingForm(f => ({ ...f, recurrence: e.target.value }))}>
+                          {MEETING_RECURRENCES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+                        </select>
+                      </div>
+                      {editingMeeting && (
+                        <div>
+                          <label style={s.label}>Status</label>
+                          <select style={s.input} value={meetingForm.status} onChange={e => setMeetingForm(f => ({ ...f, status: e.target.value }))}>
+                            {MEETING_STATUSES.map(ms => <option key={ms.value} value={ms.value}>{ms.label}</option>)}
+                          </select>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Row 4 — Meeting link (video/phone only) */}
+                    {['video', 'phone'].includes(meetingForm.meeting_type) && (
+                      <div style={{ marginBottom: '16px' }}>
+                        <label style={s.label}>
+                          {meetingForm.meeting_type === 'video' ? 'Video Link' : 'Phone Number'}
+                          <span style={{ fontWeight: FW_LIGHT, opacity: 0.6 }}> — optional</span>
+                        </label>
+                        <input
+                          style={s.input}
+                          type={meetingForm.meeting_type === 'phone' ? 'tel' : 'url'}
+                          placeholder={meetingForm.meeting_type === 'video' ? 'https://zoom.us/j/...' : '+1 (555) 000-0000'}
+                          value={meetingForm.meeting_link}
+                          onChange={e => setMeetingForm(f => ({ ...f, meeting_link: e.target.value }))}
+                        />
+                      </div>
+                    )}
+
+                    {/* Row 5 — Agenda (full width) */}
+                    <div>
+                      <label style={s.label}>Agenda <span style={{ fontWeight: FW_LIGHT, opacity: 0.6 }}>— optional</span></label>
+                      <textarea
+                        style={{ ...s.textarea, minHeight: '72px', marginBottom: 0 }}
+                        value={meetingForm.description}
+                        onChange={e => setMeetingForm(f => ({ ...f, description: e.target.value }))}
+                        placeholder="What needs to be covered..."
+                      />
+                    </div>
+                  </div>
+                  <div style={s.modalFooter}>
+                    <button style={s.cancelButton} onClick={() => { setMeetingModal(false); setEditingMeeting(null); }}>Cancel</button>
+                    <button style={s.saveButton} onClick={handleMeetingSave} disabled={meetingSaving}>
+                      {meetingSaving ? 'Saving…' : editingMeeting ? 'Save Changes' : 'Schedule'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* ── Brief tab ────────────────────────────────────────────────── */}
         {activeTab === 'brief' && (
           <div>
@@ -958,7 +1238,7 @@ export default function ClientDetail() {
             )}
 
             {briefError && (
-              <p style={{ color: '#f87171', fontSize: '13px', margin: '0 0 16px' }}>{briefError}</p>
+              <p style={{ color: COLOR_ERROR, fontSize: '13px', margin: '0 0 16px' }}>{briefError}</p>
             )}
 
             {brief && !briefGenerating && (() => {
@@ -1081,7 +1361,7 @@ export default function ClientDetail() {
                       {note.body && <p style={{ ...s.notesText, marginBottom: '10px' }}>{note.body}</p>}
                       <div style={{ display: 'flex', gap: '12px' }}>
                         <button style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px', color: t.TEXT_MUTED, padding: 0, fontFamily: FONT_BODY }} onClick={() => openEditNote(note)}>Edit</button>
-                        <button style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px', color: '#f87171', padding: 0, fontFamily: FONT_BODY }} onClick={() => handleDeleteNote(note.id)}>Delete</button>
+                        <button style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px', color: COLOR_ERROR, padding: 0, fontFamily: FONT_BODY }} onClick={() => handleDeleteNote(note.id)}>Delete</button>
                       </div>
                     </div>
                   ))}

@@ -556,18 +556,8 @@ export default function Clients() {
                 className="client-card"
                 style={{ ...s.card, animationDelay: `${i * 60}ms` }}
               >
-                {/* Avatar + Name */}
+                {/* Name */}
                 <div style={s.cardTop}>
-                  <Link
-                    to={`/hq/clients/${client.id}`}
-                    state={{ from: '/hq/clients' }}
-                    style={s.avatarLink}
-                    className="client-avatar-link"
-                  >
-                    <div style={s.avatar} className="client-avatar">
-                      {client.first_name?.[0]}{client.last_name?.[0]}
-                    </div>
-                  </Link>
                   <div>
                     <Link
                       to={`/hq/clients/${client.id}`}
