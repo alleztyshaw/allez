@@ -45,6 +45,23 @@ export function OrgProvider({ children }) {
     load();
   }, [load]);
 
+  // Re-load when auth state changes — catches sign-in after redirect
+  // This is what makes roles/org load without a refresh after signing in
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') load();
+      if (event === 'SIGNED_OUT') {
+        setOrgId(null);
+        setUserId(null);
+        setUserRole(null);
+        setIsAdmin(false);
+        setIsPlatformAdmin(false);
+        setOrgLoading(false);
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [load]);
+
   // Re-check membership whenever the user returns to this tab
   // Catches the case where an admin removed this user while the app was open
   useEffect(() => {

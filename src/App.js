@@ -24,11 +24,7 @@ import './App.css';
 
 function ProtectedLayout({ children }) {
   const t = useTokens();
-  const { pathname } = useLocation();
   useIdleTimeout();
-
-  // Reset scroll position on every route change — React Router does not do this automatically
-  useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
   return (
     <ProtectedRoute>
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: t.BG }}>
@@ -59,11 +55,19 @@ function ProtectedLayout({ children }) {
   );
 }
 
+// Resets scroll on every navigation — covers all routes including pre-auth pages
+function ScrollReset() {
+  const { pathname } = useLocation();
+  useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
+  return null;
+}
+
 function App() {
   return (
     <ThemeProvider>
       <OrgProvider>
         <Router>
+          <ScrollReset />
           <div className="App">
             <Routes>
               <Route path="/"        element={<Login />} />
