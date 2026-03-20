@@ -3,17 +3,20 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { useOrg } from '../context/OrgContext';
 import { useTokens } from '../context/ThemeContext';
+import DevToolbar from './DevToolbar';
 import {
   FONT_DISPLAY, FONT_BODY,
   FW_LIGHT, FW_REGULAR, FW_MEDIUM, FW_SEMIBOLD,
+  SITE_ACCENT,
   TOPBAR_HEIGHT, SIDEBAR_WIDTH,
 } from '../utils/hqConstants';
 
 export default function Sidebar() {
   const [displayName, setDisplayName] = useState('');
   const [open, setOpen]               = useState(false);
+  const [devToolbarOpen, setDevToolbarOpen] = useState(false);
 
-  const { isAdmin, isPlatformAdmin, orgLoading, userRole } = useOrg();
+  const { isAdmin, isPlatformAdmin, orgLoading, userRole, isDevMode, devMobileOverride } = useOrg();
   const t        = useTokens();
   const navigate = useNavigate();
   const location = useLocation();
@@ -60,13 +63,16 @@ export default function Sidebar() {
 
   const s = {
     topbar: {
-      position:       'fixed', top: 0, left: 0, right: 0,
-      height:         TOPBAR_HEIGHT,
-      background:     t.BG,
-      display:        'flex', alignItems: 'center', justifyContent: 'space-between',
-      padding:        '0 24px',
-      zIndex:         300,
-      fontFamily:     FONT_BODY,
+      position:   devMobileOverride ? 'relative' : 'fixed',
+      top:        devMobileOverride ? undefined : 0,
+      left:       devMobileOverride ? undefined : 0,
+      right:      devMobileOverride ? undefined : 0,
+      height:     TOPBAR_HEIGHT,
+      background: t.BG,
+      display:    'flex', alignItems: 'center', justifyContent: 'space-between',
+      padding:    '0 24px',
+      zIndex:     300,
+      fontFamily: FONT_BODY,
     },
     topbarLeft: {
       display: 'flex', alignItems: 'center', gap: '12px',
@@ -93,14 +99,14 @@ export default function Sidebar() {
       color: t.TEXT_MUTED, fontWeight: FW_REGULAR,
     },
     backdrop: {
-      position: 'fixed', inset: 0,
+      position: devMobileOverride ? 'absolute' : 'fixed', inset: 0,
       background: 'rgba(0,0,0,0.45)',
       zIndex: 199,
     },
     sidebar: {
-      position:      'fixed',
-      top:           TOPBAR_HEIGHT, left: 0,
-      height:        `calc(100vh - ${TOPBAR_HEIGHT}px)`,
+      position:      devMobileOverride ? 'absolute' : 'fixed',
+      top:           devMobileOverride ? 0 : TOPBAR_HEIGHT, left: 0,
+      height:        devMobileOverride ? '100%' : `calc(100vh - ${TOPBAR_HEIGHT}px)`,
       width:         SIDEBAR_WIDTH,
       background:    t.SURFACE,
       borderRight:   `1px solid ${t.BORDER}`,
@@ -145,6 +151,27 @@ export default function Sidebar() {
       fontFamily:     FONT_BODY, textAlign: 'left',
       width:          '100%', whiteSpace: 'nowrap',
       transition:     'color 0.15s',
+    },
+    devBadge: {
+      display:     'flex', alignItems: 'center', gap: '6px',
+      margin:      '8px 20px 0',
+      padding:     '5px 10px',
+      background:  isDevMode ? 'rgba(251,191,36,0.12)' : 'transparent',
+      border:      `1px solid ${isDevMode ? 'rgba(251,191,36,0.4)' : t.BORDER}`,
+      borderRadius: '6px',
+      cursor:      'pointer',
+      transition:  'all 0.15s',
+    },
+    devDot: {
+      width: '6px', height: '6px', borderRadius: '50%',
+      background: isDevMode ? SITE_ACCENT : t.TEXT_SUBTLE,
+      flexShrink: 0,
+      transition: 'background 0.15s',
+    },
+    devLabel: {
+      fontSize: '11px', fontWeight: FW_MEDIUM,
+      color: isDevMode ? SITE_ACCENT : t.TEXT_SUBTLE,
+      fontFamily: FONT_BODY, letterSpacing: '0.04em',
     },
   };
 
@@ -195,8 +222,18 @@ export default function Sidebar() {
         <div style={s.sidebarBottom}>
           <Link to="/contact" style={s.bottomLink}>Contact</Link>
           <button style={s.bottomLink} onClick={handleLogout}>Log Out</button>
+          {isPlatformAdmin && (
+            <button style={s.devBadge} onClick={() => setDevToolbarOpen(true)}>
+              <span style={s.devDot} />
+              <span style={s.devLabel}>{isDevMode ? 'Dev Mode On' : 'Dev Mode'}</span>
+            </button>
+          )}
         </div>
       </aside>
+
+      {devToolbarOpen && (
+        <DevToolbar onClose={() => setDevToolbarOpen(false)} />
+      )}
     </>
   );
 }

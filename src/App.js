@@ -1,9 +1,7 @@
 import { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { OrgProvider } from './context/OrgContext';
-import { ThemeProvider, useTokens } from './context/ThemeContext';
-import Sidebar from './components/Sidebar';
-import ProtectedRoute from './components/ProtectedRoute';
+import { ThemeProvider } from './context/ThemeContext';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Contact from './pages/Contact';
@@ -18,41 +16,17 @@ import Welcome from './pages/Welcome';
 import Settings from './pages/Settings';
 import Orgs from './pages/Orgs';
 import AuditLog from './pages/AuditLog';
-import { TOPBAR_HEIGHT } from './utils/hqConstants';
-import useIdleTimeout from './hooks/useIdleTimeout';
+import StandardLayout from './components/StandardLayout';
+import MobilePreviewLayout from './components/MobilePreviewLayout';
+import { useOrg } from './context/OrgContext';
 import './App.css';
 
+// Thin router — delegates to the appropriate layout based on dev mode state
 function ProtectedLayout({ children }) {
-  const t = useTokens();
-  useIdleTimeout();
-  return (
-    <ProtectedRoute>
-      <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: t.BG }}>
-        <Sidebar />
-        <div style={{
-          marginTop:     TOPBAR_HEIGHT,
-          flex:          1,
-          display:       'flex',
-          flexDirection: 'column',
-          minWidth:      0,
-        }}>
-          <main style={{ flex: 1 }}>{children}</main>
-          <p style={{
-            textAlign:     'center',
-            fontSize:      '12px',
-            fontWeight:    300,
-            color:         t.TEXT_SUBTLE,
-            letterSpacing: '0.04em',
-            padding:       '24px 20px',
-            margin:        0,
-            fontFamily:    "'DM Sans', sans-serif",
-          }}>
-            © 2026 Allez HQ · All rights reserved · Built for wealth management professionals
-          </p>
-        </div>
-      </div>
-    </ProtectedRoute>
-  );
+  const { devMobileOverride } = useOrg();
+  return devMobileOverride
+    ? <MobilePreviewLayout>{children}</MobilePreviewLayout>
+    : <StandardLayout>{children}</StandardLayout>;
 }
 
 // Resets scroll on every navigation — covers all routes including pre-auth pages

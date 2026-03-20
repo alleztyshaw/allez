@@ -213,6 +213,12 @@ export const BRIEF_ROLES = ['admin', 'manager', 'advisor'];
 // Roles that can manage the org — invite members, assign/remove advisors, set primary
 export const ORG_ADMIN_ROLES = ['admin'];
 
+// All valid org member roles — single source of truth for dropdowns and validation
+export const ROLE_OPTIONS = ['admin', 'manager', 'advisor', 'associate', 'compliance'];
+
+// Footer copy — single source of truth so it never drifts between layouts
+export const FOOTER_TEXT = '© 2026 Allez HQ · All rights reserved · Built for wealth management professionals';
+
 // ============================================================
 // AI MODEL
 // Single source of truth for the Claude model used across all
