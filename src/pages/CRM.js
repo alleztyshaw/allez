@@ -389,7 +389,26 @@ export default function CRM() {
                     <button onClick={() => navCalendar(-1)} style={{ background: 'none', border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_MD, padding: '5px 12px', color: t.TEXT_MUTED, cursor: 'pointer', fontSize: '14px', fontFamily: FONT_BODY }}>‹</button>
                     <span style={{ fontSize: '15px', fontWeight: FW_MEDIUM, color: t.TEXT, fontFamily: FONT_BODY, minWidth: isMobile ? 'auto' : '220px', textAlign: 'center' }}>{calendarTitle()}</span>
                     <button onClick={() => navCalendar(1)}  style={{ background: 'none', border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_MD, padding: '5px 12px', color: t.TEXT_MUTED, cursor: 'pointer', fontSize: '14px', fontFamily: FONT_BODY }}>›</button>
-                    <button onClick={() => setCalendarAnchor(new Date())} style={{ background: 'none', border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_MD, padding: '5px 12px', color: t.ACCENT, cursor: 'pointer', fontSize: '12px', fontFamily: FONT_BODY, fontWeight: FW_MEDIUM }}>Today</button>
+                    {/* Jump to date — calendar icon triggers hidden date input */}
+                    <label style={{ position: 'relative', cursor: 'pointer' }} title={`Jump to ${calendarView}`}>
+                      <span style={{ display: 'flex', alignItems: 'center', background: 'none', border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_MD, padding: '5px 9px', color: t.TEXT_MUTED, userSelect: 'none' }}>
+                        <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <rect x="1" y="3" width="13" height="11" rx="1.5" stroke="currentColor" strokeWidth="1.2" fill="none" />
+                          <line x1="1" y1="6.5" x2="14" y2="6.5" stroke="currentColor" strokeWidth="1.1" />
+                          <line x1="4.5" y1="1.5" x2="4.5" y2="4.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+                          <line x1="10.5" y1="1.5" x2="10.5" y2="4.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+                        </svg>
+                      </span>
+                      <input
+                        type={calendarView === 'month' ? 'month' : 'date'}
+                        style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%', top: 0, left: 0, cursor: 'pointer' }}
+                        onChange={e => {
+                          if (!e.target.value) return;
+                          const d = new Date(e.target.value + (calendarView === 'month' ? '-01' : '') + 'T12:00:00');
+                          if (!isNaN(d)) setCalendarAnchor(d);
+                        }}
+                      />
+                    </label>
                   </div>
                   {/* View toggle */}
                   <div style={{ display: 'flex', gap: '4px' }}>
@@ -466,30 +485,30 @@ export default function CRM() {
                           </span>
                         </div>
 
-                        {/* Day column headers */}
-                        <div style={{ display: 'grid', gridTemplateColumns: `52px repeat(${calDays.length}, 1fr)`, marginBottom: '2px' }}>
-                          <div /> {/* spacer for time axis */}
-                          {calDays.map(day => {
-                            const today = isCalToday(day);
-                            return (
-                              <div key={day.toISOString()} style={{ textAlign: 'center', padding: '6px 4px 8px', borderBottom: `2px solid ${today ? t.ACCENT : t.BORDER}` }}>
-                                <span style={{ fontSize: '11px', fontWeight: FW_SEMIBOLD, color: today ? t.ACCENT : t.TEXT_MUTED, textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block' }}>
-                                  {day.toLocaleDateString('en-US', { weekday: 'short' })}
-                                </span>
-                                <span style={{ fontSize: '18px', fontWeight: today ? FW_MEDIUM : FW_LIGHT, color: today ? t.ACCENT : t.TEXT }}>
-                                  {day.getDate()}
-                                </span>
-                              </div>
-                            );
-                          })}
-                        </div>
-
-                        {/* Scrollable time grid — starts scrolled to 6am */}
+                        {/* Single scroll container — sticky headers share the same grid as time rows,
+                            guaranteeing column alignment regardless of OS scrollbar width */}
                         <div
-                          style={{ overflowY: 'auto', maxHeight: '560px', position: 'relative', background: t.SURFACE, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_LG }}
-                          ref={el => { if (el && !el.dataset.scrolled) { el.scrollTop = 6 * HOUR_HEIGHT; el.dataset.scrolled = '1'; } }}
+                          style={{ overflowY: 'auto', maxHeight: `${12 * HOUR_HEIGHT + 52}px`, background: t.SURFACE, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_LG }}
+                          ref={el => { if (el && !el.dataset.scrolled) { el.scrollTop = 6 * HOUR_HEIGHT + 52; el.dataset.scrolled = '1'; } }}
                         >
-                          <div style={{ display: 'grid', gridTemplateColumns: `52px repeat(${calDays.length}, 1fr)`, position: 'relative' }}>
+                          <div style={{ display: 'grid', gridTemplateColumns: `52px repeat(${calDays.length}, 1fr)` }}>
+
+                            {/* Sticky headers — same grid = guaranteed alignment */}
+                            <div style={{ position: 'sticky', top: 0, zIndex: 10, background: t.SURFACE, height: '52px' }} />
+                            {calDays.map(day => {
+                              const today = isCalToday(day);
+                              return (
+                                <div key={`hdr-${day.toISOString()}`} style={{ position: 'sticky', top: 0, zIndex: 10, background: today ? t.SURFACE_ALT : t.SURFACE, borderBottom: `2px solid ${today ? t.ACCENT : t.BORDER}`, textAlign: 'center', padding: '6px 4px 12px', height: '52px', boxSizing: 'border-box' }}>
+                                  <span style={{ fontSize: '11px', fontWeight: FW_SEMIBOLD, color: today ? t.ACCENT : t.TEXT_MUTED, textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block' }}>
+                                    {day.toLocaleDateString('en-US', { weekday: 'short' })}
+                                  </span>
+                                  <span style={{ fontSize: '18px', fontWeight: today ? FW_MEDIUM : FW_LIGHT, color: today ? t.ACCENT : t.TEXT }}>
+                                    {day.getDate()}
+                                  </span>
+                                </div>
+                              );
+                            })}
+
                             {/* Hour rows */}
                             {HOURS.map(hour => (
                               <React.Fragment key={hour}>
@@ -534,8 +553,8 @@ export default function CRM() {
                                 })}
                               </React.Fragment>
                             ))}
-                          </div>
-                        </div>
+                          </div>   {/* inner grid */}
+                        </div>     {/* scroll container */}
                       </div>
                     );
                   })()
