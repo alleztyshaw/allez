@@ -7,7 +7,7 @@ const CLAUDE_MODEL = 'claude-haiku-4-5-20251001'; // Update in hqConstants and h
 
 const SYSTEM_PROMPT = `You are a financial advisory CRM note-taking assistant. You will receive a meeting transcript that has been de-identified — names and sensitive data have been replaced with tokens like CLIENT_NAME, ADVISOR_1, ADVISOR_2, AMOUNT_REDACTED, PHONE_REDACTED, etc.
 
-Extract structured intelligence and return ONLY a valid JSON object. No preamble, no explanation, no markdown code blocks. The response must be directly parseable by JSON.parse().
+Extract structured intelligence AND perform a compliance screen. Return ONLY a valid JSON object. No preamble, no explanation, no markdown code blocks. The response must be directly parseable by JSON.parse().
 
 Required format:
 {
@@ -15,15 +15,33 @@ Required format:
   "summary": "2-3 sentence prose summary of the meeting purpose and outcome",
   "decisions": ["Each key decision made, as a complete sentence"],
   "action_items": [{"task": "What needs to be done", "owner": "token or role", "due": "timeframe or null"}],
-  "follow_ups": ["Topics or questions to revisit at a future meeting"]
+  "follow_ups": ["Topics or questions to revisit at a future meeting"],
+  "compliance_flagged": true or false,
+  "compliance_severity": "low" | "medium" | "high" | null,
+  "compliance_reasons": ["Specific reason if flagged — cite what was said, not just the category"]
 }
 
-Rules:
+Note-taking rules:
 - Preserve all tokens exactly as written (e.g. CLIENT_NAME, ADVISOR_1, ADVISOR_2)
 - Be specific and concise
 - Return empty arrays [] for sections with no content
 - action_items.due should be a string like "next week", "by end of March", or null if not mentioned
-- Do not invent names or details not present in the transcript`;
+- Do not invent names or details not present in the transcript
+
+Compliance screening rules — flag if the transcript contains ANY of:
+- Suitability concerns: recommendations that may not match the client's stated risk tolerance, time horizon, or investment objective
+- Risk tolerance changes: client expressing desire to change risk profile (even informally)
+- Performance guarantees or projections: any language suggesting guaranteed returns or specific future performance
+- Complaints: client expressing dissatisfaction, threatening legal action, or raising concerns about advice received
+- Outside business activities: advisor conducting business outside the firm
+- Gifts or entertainment above de minimis thresholds
+- Discretionary trades without explicit client approval mentioned
+- Fee disputes or concerns raised by the client
+- Specific security recommendations without documented suitability basis
+
+Compliance severity: high = complaints/guarantees/regulatory violations, medium = suitability concerns/risk changes, low = minor documentation gaps
+If nothing warrants review: compliance_flagged = false, compliance_severity = null, compliance_reasons = []
+Only flag confirmed content — do not flag based on speculation`;
 
 
 // ─── De-identification ────────────────────────────────────────────────────────
@@ -151,7 +169,7 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         model: CLAUDE_MODEL,
-        max_tokens: 1000,
+        max_tokens: 1500,
         system: SYSTEM_PROMPT,
         messages: [
           {
@@ -193,6 +211,9 @@ export default async function handler(req, res) {
       decisions: reidentified.decisions || [],
       action_items: reidentified.action_items || [],
       follow_ups: reidentified.follow_ups || [],
+      compliance_flagged:  !!reidentified.compliance_flagged,
+      compliance_severity: reidentified.compliance_severity || null,
+      compliance_reasons:  reidentified.compliance_reasons || [],
     });
 
   } catch (err) {
