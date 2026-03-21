@@ -287,7 +287,7 @@ export default function Sidebar() {
               </button>
             )
           )}
-          {isDemoOrg && !isPlatformAdmin && (
+          {isDemoOrg && (!isPlatformAdmin || isOrgSwitched) && (
             <button style={s.demoBadge} onClick={() => setDemoPickerOpen(true)}>
               <span style={s.demoDot} />
               <span style={s.demoLabel}>

@@ -1,6 +1,4 @@
 // src/components/StandardLayout.js
-// Desktop layout — fixed topbar, full-width content, dev banner when active.
-
 import Sidebar from './Sidebar';
 import DevBanner, { DEV_BANNER_HEIGHT } from './DevBanner';
 import ProtectedRoute from './ProtectedRoute';
@@ -8,7 +6,8 @@ import { useOrg } from '../context/OrgContext';
 import { useTokens } from '../context/ThemeContext';
 import useIdleTimeout from '../hooks/useIdleTimeout';
 import {
-  TOPBAR_HEIGHT, FONT_BODY, FW_LIGHT, FW_MEDIUM, FOOTER_TEXT, SITE_ACCENT,
+  TOPBAR_HEIGHT, FONT_BODY, FW_LIGHT, FW_SEMIBOLD,
+  FOOTER_TEXT, RADIUS_LG,
 } from '../utils/hqConstants';
 
 const footerStyle = {
@@ -26,6 +25,18 @@ export default function StandardLayout({ children }) {
   const { isDevMode, isDemoMode, demoRoleOverride, isOrgSwitched, switchedOrgName } = useOrg();
   useIdleTimeout();
 
+  const showIndicator = isOrgSwitched || isDemoMode;
+
+  // Build indicator label: "Viewing Demo Org as Advisor" or "Viewing Demo Org" or "Viewing as Advisor"
+  let indicatorLabel = '';
+  if (isOrgSwitched && isDemoMode) {
+    indicatorLabel = `Viewing ${switchedOrgName} as ${demoRoleOverride?.charAt(0).toUpperCase()}${demoRoleOverride?.slice(1)}`;
+  } else if (isOrgSwitched) {
+    indicatorLabel = `Viewing ${switchedOrgName}`;
+  } else if (isDemoMode) {
+    indicatorLabel = `Viewing as ${demoRoleOverride?.charAt(0).toUpperCase()}${demoRoleOverride?.slice(1)}`;
+  }
+
   return (
     <ProtectedRoute>
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: t.BG }}>
@@ -39,26 +50,36 @@ export default function StandardLayout({ children }) {
           minWidth:      0,
         }}>
           <main style={{ flex: 1 }}>{children}</main>
-          <p style={{ ...footerStyle, color: t.TEXT_SUBTLE }}>
-            {FOOTER_TEXT}
-            {isOrgSwitched && (
-              <span style={{ color: SITE_ACCENT, fontWeight: FW_MEDIUM, marginLeft: '12px' }}>
-                Viewing: {switchedOrgName}
-              </span>
-            )}
-            {isDemoMode && !isOrgSwitched && (
-              <span style={{ color: t.ACCENT, fontWeight: FW_MEDIUM, marginLeft: '12px' }}>
-                Viewing as {demoRoleOverride?.charAt(0).toUpperCase()}{demoRoleOverride?.slice(1)}
-              </span>
-            )}
-            {isOrgSwitched && isDemoMode && (
-              <span style={{ color: t.ACCENT, fontWeight: FW_MEDIUM, marginLeft: '8px' }}>
-                · Viewing as {demoRoleOverride?.charAt(0).toUpperCase()}{demoRoleOverride?.slice(1)}
-              </span>
-            )}
-          </p>
+          <p style={{ ...footerStyle, color: t.TEXT_SUBTLE }}>{FOOTER_TEXT}</p>
         </div>
         <DevBanner />
+
+        {/* Demo / org-switch indicator — fixed card, always visible */}
+        {showIndicator && (
+          <div style={{
+            position:     'fixed',
+            bottom:       '20px',
+            left:         '50%',
+            transform:    'translateX(-50%)',
+            background:   isOrgSwitched ? `rgba(102,126,234,0.92)` : `rgba(41,196,122,0.92)`,
+            backdropFilter: 'blur(8px)',
+            borderRadius: RADIUS_LG,
+            padding:      '8px 18px',
+            zIndex:       500,
+            pointerEvents: 'none',
+          }}>
+            <span style={{
+              fontSize:   '12px',
+              fontWeight: FW_SEMIBOLD,
+              color:      '#ffffff',
+              fontFamily: FONT_BODY,
+              letterSpacing: '0.02em',
+              whiteSpace: 'nowrap',
+            }}>
+              {indicatorLabel}
+            </span>
+          </div>
+        )}
       </div>
     </ProtectedRoute>
   );
