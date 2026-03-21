@@ -4,6 +4,8 @@ import { supabase } from '../supabaseClient';
 import { useOrg } from '../context/OrgContext';
 import { useTokens } from '../context/ThemeContext';
 import DevToolbar from './DevToolbar';
+import DemoRolePicker from './DemoRolePicker';
+import OrgSwitcher from './OrgSwitcher';
 import {
   FONT_DISPLAY, FONT_BODY,
   FW_LIGHT, FW_REGULAR, FW_MEDIUM, FW_SEMIBOLD,
@@ -14,9 +16,11 @@ import {
 export default function Sidebar() {
   const [displayName, setDisplayName] = useState('');
   const [open, setOpen]               = useState(false);
-  const [devToolbarOpen, setDevToolbarOpen] = useState(false);
+  const [devToolbarOpen,  setDevToolbarOpen]  = useState(false);
+  const [demoPickerOpen,  setDemoPickerOpen]  = useState(false);
+  const [orgSwitcherOpen, setOrgSwitcherOpen] = useState(false);
 
-  const { isAdmin, isPlatformAdmin, orgLoading, userRole, isDevMode, devMobileOverride } = useOrg();
+  const { isAdmin, isPlatformAdmin, orgLoading, userRole, isDevMode, devMobileOverride, isDemoOrg, isDemoMode, demoRoleOverride, isOrgSwitched, switchedOrgName, exitSwitchedOrg } = useOrg();
   const t        = useTokens();
   const navigate = useNavigate();
   const location = useLocation();
@@ -173,6 +177,46 @@ export default function Sidebar() {
       color: isDevMode ? SITE_ACCENT : t.TEXT_SUBTLE,
       fontFamily: FONT_BODY, letterSpacing: '0.04em',
     },
+    demoBadge: {
+      display:     'flex', alignItems: 'center', gap: '6px',
+      margin:      '6px 20px 0',
+      padding:     '5px 10px',
+      background:  isDemoMode ? t.ACCENT_MUTED : 'transparent',
+      border:      `1px solid ${isDemoMode ? t.ACCENT_BORDER : t.BORDER}`,
+      borderRadius: '6px',
+      cursor:      'pointer',
+      transition:  'all 0.15s',
+    },
+    demoDot: {
+      width: '6px', height: '6px', borderRadius: '50%',
+      background: isDemoMode ? t.ACCENT : t.TEXT_SUBTLE,
+      flexShrink: 0, transition: 'background 0.15s',
+    },
+    demoLabel: {
+      fontSize: '11px', fontWeight: FW_MEDIUM,
+      color: isDemoMode ? t.ACCENT : t.TEXT_SUBTLE,
+      fontFamily: FONT_BODY, letterSpacing: '0.04em',
+    },
+    orgSwitchBadge: {
+      display:     'flex', alignItems: 'center', gap: '6px',
+      margin:      '6px 20px 0',
+      padding:     '5px 10px',
+      background:  isOrgSwitched ? 'rgba(102,126,234,0.10)' : 'transparent',
+      border:      `1px solid ${isOrgSwitched ? 'rgba(102,126,234,0.25)' : t.BORDER}`,
+      borderRadius: '6px',
+      cursor:      'pointer',
+      transition:  'all 0.15s',
+    },
+    orgSwitchDot: {
+      width: '6px', height: '6px', borderRadius: '50%',
+      background: isOrgSwitched ? SITE_ACCENT : t.TEXT_SUBTLE,
+      flexShrink: 0,
+    },
+    orgSwitchLabel: {
+      fontSize: '11px', fontWeight: FW_MEDIUM,
+      color: isOrgSwitched ? SITE_ACCENT : t.TEXT_SUBTLE,
+      fontFamily: FONT_BODY, letterSpacing: '0.04em',
+    },
   };
 
   return (
@@ -228,11 +272,40 @@ export default function Sidebar() {
               <span style={s.devLabel}>{isDevMode ? 'Dev Mode On' : 'Dev Mode'}</span>
             </button>
           )}
+          {isPlatformAdmin && (
+            isOrgSwitched ? (
+              <button style={s.orgSwitchBadge} onClick={exitSwitchedOrg}>
+                <span style={s.orgSwitchDot} />
+                <span style={s.orgSwitchLabel} title="Click to return to your org">
+                  {switchedOrgName || 'Switched Org'} ✕
+                </span>
+              </button>
+            ) : (
+              <button style={s.orgSwitchBadge} onClick={() => setOrgSwitcherOpen(true)}>
+                <span style={s.orgSwitchDot} />
+                <span style={s.orgSwitchLabel}>Switch Org</span>
+              </button>
+            )
+          )}
+          {isDemoOrg && !isPlatformAdmin && (
+            <button style={s.demoBadge} onClick={() => setDemoPickerOpen(true)}>
+              <span style={s.demoDot} />
+              <span style={s.demoLabel}>
+                {isDemoMode ? `Viewing as ${demoRoleOverride}` : 'Switch Role'}
+              </span>
+            </button>
+          )}
         </div>
       </aside>
 
       {devToolbarOpen && (
         <DevToolbar onClose={() => setDevToolbarOpen(false)} />
+      )}
+      {demoPickerOpen && (
+        <DemoRolePicker onClose={() => setDemoPickerOpen(false)} />
+      )}
+      {orgSwitcherOpen && (
+        <OrgSwitcher onClose={() => setOrgSwitcherOpen(false)} />
       )}
     </>
   );

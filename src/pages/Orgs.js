@@ -42,7 +42,7 @@ export default function Orgs() {
     setLoading(true);
     const { data, error } = await supabase
       .from('organizations')
-      .select('org_id, name, is_platform_org, created_at, status')
+      .select('org_id, name, is_platform_org, is_demo, created_at, status')
       .order('name');
     if (error) console.error('fetchOrgs error:', error);
     setOrgs(data || []);
@@ -325,6 +325,11 @@ export default function Orgs() {
                       <span style={org.is_platform_org ? s.platformBadge : s.regularBadge}>
                         {org.is_platform_org ? '★ Platform' : 'Client'}
                       </span>
+                      {org.is_demo && (
+                        <span style={{ ...s.regularBadge, background: 'rgba(41,196,122,0.12)', color: t.ACCENT, border: `1px solid rgba(41,196,122,0.25)` }}>
+                          Demo
+                        </span>
+                      )}
                       <span style={{ ...s.chevron, transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}>
                         ▾
                       </span>
@@ -368,6 +373,26 @@ export default function Orgs() {
                             </div>
                           </div>
                           <p style={s.createdDate}>Created {formatDate(org.created_at)}</p>
+                          {/* Demo org toggle */}
+                          <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: `1px solid ${t.BORDER}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <div>
+                              <p style={{ fontSize: '13px', fontWeight: FW_REGULAR, color: t.TEXT, margin: '0 0 2px' }}>Demo Org</p>
+                              <p style={{ fontSize: '11px', fontWeight: FW_LIGHT, color: t.TEXT_MUTED, margin: 0 }}>
+                                Enables role switcher for all members of this org
+                              </p>
+                            </div>
+                            <button
+                              onClick={async () => {
+                                const { error } = await supabase.from('organizations')
+                                  .update({ is_demo: !org.is_demo })
+                                  .eq('org_id', org.org_id);
+                                if (!error) fetchOrgs();
+                              }}
+                              style={{ padding: '6px 14px', borderRadius: '6px', border: `1px solid ${org.is_demo ? t.ACCENT_BORDER : t.BORDER}`, background: org.is_demo ? t.ACCENT_MUTED : 'transparent', color: org.is_demo ? t.ACCENT : t.TEXT_MUTED, fontSize: '12px', fontWeight: FW_MEDIUM, cursor: 'pointer', fontFamily: FONT_BODY, flexShrink: 0 }}
+                            >
+                              {org.is_demo ? 'Demo On' : 'Set as Demo'}
+                            </button>
+                          </div>
                         </>
                       ) : null}
                     </div>
