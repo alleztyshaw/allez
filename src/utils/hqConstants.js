@@ -82,24 +82,24 @@ export const SPACE_LG  = '24px';
 export const SPACE_XL  = '40px';
 export const SPACE_2XL = '64px';
 
-// --- SHADOWS ---
-export const SHADOW_SM = '0 1px 3px rgba(0,0,0,0.08)';
+// --- SHADOWS & OVERLAYS ---
+export const SHADOW_SM  = '0 1px 3px rgba(0,0,0,0.08)';
+export const SHADOW_MD  = '0 4px 16px rgba(0,0,0,0.12)';
+export const SHADOW_LG  = '0 8px 32px rgba(0,0,0,0.18)';
+export const OVERLAY_BG = 'rgba(0,0,0,0.5)'; // Modal/drawer backdrop
 
 // ── Layout ────────────────────────────────────────────────────────────────────
-export const TOPBAR_HEIGHT          = 52;   // px — fixed top bar height
-export const SIDEBAR_WIDTH          = 154;  // px — desktop sidebar expanded width
-export const SIDEBAR_COLLAPSED_WIDTH = 24;  // px — desktop sidebar collapsed width
-export const SIDEBAR_BREAKPOINT     = 900;  // px — sidebar collapses to overlay below this
-export const MOBILE_BREAKPOINT      = 900;  // px — single source of truth for isMobile
-export const SHADOW_MD = '0 4px 16px rgba(0,0,0,0.12)';
-export const SHADOW_LG = '0 8px 32px rgba(0,0,0,0.18)';
+export const TOPBAR_HEIGHT           = 52;   // px — fixed top bar height
+export const SIDEBAR_WIDTH           = 154;  // px — desktop sidebar expanded width
+export const SIDEBAR_COLLAPSED_WIDTH = 24;   // px — desktop sidebar collapsed width
+export const SIDEBAR_BREAKPOINT      = 900;  // px — sidebar collapses to overlay below this
+export const MOBILE_BREAKPOINT       = 900;  // px — single source of truth for isMobile
 
 // --- CLIENT STATUS BADGES ---
 export const STATUS_COLORS = {
   Active:   { bg: ACCENT_MUTED,                 color: ACCENT    },
   Prospect: { bg: 'rgba(96,  165, 250, 0.15)',  color: '#60a5fa' },
   Inactive: { bg: 'rgba(251, 191, 36,  0.15)',  color: '#fbbf24' },
-
 };
 
 // --- DROPDOWN / FORM OPTIONS ---
@@ -220,6 +220,7 @@ export const MEETING_DURATION_OPTIONS = [
   { value: 90,  label: '90 minutes' },
   { value: 120, label: '2 hours'    },
 ];
+
 // Prompt template mirrored here for reference and tuning.
 // The authoritative copy used at runtime lives in api/process-note.js.
 // Update both if you change the prompt.
@@ -233,7 +234,6 @@ export const AI_NOTE_PROMPT_FIELDS = ['title', 'summary', 'decisions', 'action_i
 // automatically to every page that imports them.
 // ============================================================
 
-// Roles that can see ALL clients in the org (not just assigned ones)
 // ── Pipeline ──────────────────────────────────────────────────────────────────
 
 export const PIPELINE_STAGES = [
@@ -249,11 +249,12 @@ export const PIPELINE_STAGE_COLORS = {
   Proposal:   { bg: 'rgba(167,139,250,0.12)',  color: '#a78bfa' },
   Agreement:  { bg: 'rgba(251,191,36,0.12)',   color: '#fbbf24' },
   Onboarding: { bg: 'rgba(52,211,153,0.12)',   color: '#34d399' },
-  Active:     { bg: 'rgba(46,139,110,0.12)',    color: '#2E8B6E' },
+  Active:     { bg: 'rgba(46,139,110,0.12)',   color: '#2E8B6E' },
 };
 
 // ── Role tiers ────────────────────────────────────────────────────────────────
 
+// Roles that can see ALL clients in the org (not just assigned ones)
 export const FULL_ACCESS_ROLES = ['admin', 'manager', 'compliance'];
 
 // Roles that can write — create notes, tasks, edit client data

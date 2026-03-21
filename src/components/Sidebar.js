@@ -5,7 +5,6 @@ import { useOrg } from '../context/OrgContext';
 import { useTokens } from '../context/ThemeContext';
 import DevToolbar from './DevToolbar';
 import DemoRolePicker from './DemoRolePicker';
-import OrgSwitcher from './OrgSwitcher';
 import {
   FONT_DISPLAY, FONT_BODY,
   FW_LIGHT, FW_REGULAR, FW_MEDIUM, FW_SEMIBOLD,
@@ -13,14 +12,22 @@ import {
   TOPBAR_HEIGHT, SIDEBAR_WIDTH,
 } from '../utils/hqConstants';
 
+// Fixed demo org ID — used for the platform admin "Go to Demo" shortcut
+const DEMO_ORG_ID = 'e11ef58c-9a1f-4f15-b525-1d1e10be3687';
+
 export default function Sidebar() {
   const [displayName, setDisplayName] = useState('');
   const [open, setOpen]               = useState(false);
-  const [devToolbarOpen,  setDevToolbarOpen]  = useState(false);
-  const [demoPickerOpen,  setDemoPickerOpen]  = useState(false);
-  const [orgSwitcherOpen, setOrgSwitcherOpen] = useState(false);
+  const [devToolbarOpen, setDevToolbarOpen] = useState(false);
+  const [demoPickerOpen, setDemoPickerOpen] = useState(false);
 
-  const { isAdmin, isPlatformAdmin, orgLoading, userRole, isDevMode, devMobileOverride, isDemoOrg, isDemoMode, demoRoleOverride, isOrgSwitched, switchedOrgName, exitSwitchedOrg } = useOrg();
+  const {
+    isAdmin, isPlatformAdmin, orgLoading, userRole,
+    isDevMode, devMobileOverride,
+    isDemoOrg, isDemoMode, demoRoleOverride,
+    isOrgSwitched,
+    exitSwitchedOrg, switchOrg,
+  } = useOrg();
   const t        = useTokens();
   const navigate = useNavigate();
   const location = useLocation();
@@ -31,7 +38,6 @@ export default function Sidebar() {
     });
   }, []);
 
-  // Close on route change
   useEffect(() => { setOpen(false); }, [location.pathname]);
 
   const handleLogout = async () => {
@@ -156,6 +162,7 @@ export default function Sidebar() {
       width:          '100%', whiteSpace: 'nowrap',
       transition:     'color 0.15s',
     },
+    // Dev mode badge
     devBadge: {
       display:     'flex', alignItems: 'center', gap: '6px',
       margin:      '8px 20px 0',
@@ -169,23 +176,48 @@ export default function Sidebar() {
     devDot: {
       width: '6px', height: '6px', borderRadius: '50%',
       background: isDevMode ? SITE_ACCENT : t.TEXT_SUBTLE,
-      flexShrink: 0,
-      transition: 'background 0.15s',
+      flexShrink: 0, transition: 'background 0.15s',
     },
     devLabel: {
       fontSize: '11px', fontWeight: FW_MEDIUM,
       color: isDevMode ? SITE_ACCENT : t.TEXT_SUBTLE,
       fontFamily: FONT_BODY, letterSpacing: '0.04em',
     },
+    // "Viewing Demo" indicator — transparent background, X to exit
+    viewingDemoBadge: {
+      display:      'flex', alignItems: 'center', gap: '6px',
+      margin:       '6px 20px 0',
+      padding:      '5px 10px',
+      background:   'transparent',
+      border:       `1px solid ${t.BORDER}`,
+      borderRadius: '6px',
+    },
+    viewingDemoDot: {
+      width: '6px', height: '6px', borderRadius: '50%',
+      background: t.ACCENT, flexShrink: 0,
+    },
+    viewingDemoLabel: {
+      fontSize: '11px', fontWeight: FW_MEDIUM,
+      color: t.TEXT_SUBTLE,
+      fontFamily: FONT_BODY, letterSpacing: '0.04em',
+      flex: 1,
+    },
+    viewingDemoX: {
+      background: 'none', border: 'none', cursor: 'pointer',
+      padding: '0 0 0 2px', lineHeight: 1,
+      fontSize: '14px', color: t.TEXT_SUBTLE,
+      fontFamily: FONT_BODY, flexShrink: 0,
+    },
+    // Switch Role badge — transparent background
     demoBadge: {
       display:     'flex', alignItems: 'center', gap: '6px',
       margin:      '6px 20px 0',
       padding:     '5px 10px',
-      background:  isDemoMode ? t.ACCENT_MUTED : 'transparent',
+      background:  'transparent',
       border:      `1px solid ${isDemoMode ? t.ACCENT_BORDER : t.BORDER}`,
       borderRadius: '6px',
       cursor:      'pointer',
-      transition:  'all 0.15s',
+      transition:  'border-color 0.15s',
     },
     demoDot: {
       width: '6px', height: '6px', borderRadius: '50%',
@@ -196,26 +228,23 @@ export default function Sidebar() {
       fontSize: '11px', fontWeight: FW_MEDIUM,
       color: isDemoMode ? t.ACCENT : t.TEXT_SUBTLE,
       fontFamily: FONT_BODY, letterSpacing: '0.04em',
+      flex: 1,
     },
-    orgSwitchBadge: {
-      display:     'flex', alignItems: 'center', gap: '6px',
-      margin:      '6px 20px 0',
-      padding:     '5px 10px',
-      background:  isOrgSwitched ? 'rgba(102,126,234,0.10)' : 'transparent',
-      border:      `1px solid ${isOrgSwitched ? 'rgba(102,126,234,0.25)' : t.BORDER}`,
-      borderRadius: '6px',
-      cursor:      'pointer',
-      transition:  'all 0.15s',
+    demoBadgeX: {
+      background: 'none', border: 'none', cursor: 'pointer',
+      padding: '0 0 0 2px', lineHeight: 1,
+      fontSize: '14px', color: t.TEXT_SUBTLE,
+      fontFamily: FONT_BODY, flexShrink: 0,
     },
-    orgSwitchDot: {
-      width: '6px', height: '6px', borderRadius: '50%',
-      background: isOrgSwitched ? SITE_ACCENT : t.TEXT_SUBTLE,
-      flexShrink: 0,
-    },
-    orgSwitchLabel: {
-      fontSize: '11px', fontWeight: FW_MEDIUM,
-      color: isOrgSwitched ? SITE_ACCENT : t.TEXT_SUBTLE,
-      fontFamily: FONT_BODY, letterSpacing: '0.04em',
+    // "Go to Demo" shortcut link
+    goDemoButton: {
+      display:        'block', padding: '8px 20px',
+      fontSize:       '13px', fontWeight: FW_REGULAR,
+      color:          t.ACCENT, textDecoration: 'none',
+      background:     'none', border: 'none', cursor: 'pointer',
+      fontFamily:     FONT_BODY, textAlign: 'left',
+      width:          '100%', whiteSpace: 'nowrap',
+      transition:     'color 0.15s',
     },
   };
 
@@ -266,33 +295,46 @@ export default function Sidebar() {
         <div style={s.sidebarBottom}>
           <Link to="/contact" style={s.bottomLink}>Contact</Link>
           <button style={s.bottomLink} onClick={handleLogout}>Log Out</button>
+
+          {/* Dev mode — platform admin only */}
           {isPlatformAdmin && (
             <button style={s.devBadge} onClick={() => setDevToolbarOpen(true)}>
               <span style={s.devDot} />
               <span style={s.devLabel}>{isDevMode ? 'Dev Mode On' : 'Dev Mode'}</span>
             </button>
           )}
-          {isPlatformAdmin && (
-            isOrgSwitched ? (
-              <button style={s.orgSwitchBadge} onClick={exitSwitchedOrg}>
-                <span style={s.orgSwitchDot} />
-                <span style={s.orgSwitchLabel} title="Click to return to your org">
-                  {switchedOrgName || 'Switched Org'} ✕
-                </span>
-              </button>
-            ) : (
-              <button style={s.orgSwitchBadge} onClick={() => setOrgSwitcherOpen(true)}>
-                <span style={s.orgSwitchDot} />
-                <span style={s.orgSwitchLabel}>Switch Org</span>
-              </button>
-            )
+
+          {/* "Viewing Demo" — platform admin switched into demo, with X to exit */}
+          {isPlatformAdmin && isOrgSwitched && isDemoOrg && (
+            <div style={s.viewingDemoBadge}>
+              <span style={s.viewingDemoDot} />
+              <span style={s.viewingDemoLabel}>Viewing Demo</span>
+              <button style={s.viewingDemoX} onClick={exitSwitchedOrg} aria-label="Exit demo">×</button>
+            </div>
           )}
-          {isDemoOrg && (!isPlatformAdmin || isOrgSwitched) && (
+
+          {/* "Go to Demo" — platform admin, not currently in demo */}
+          {isPlatformAdmin && !isOrgSwitched && (
+            <button
+              style={s.goDemoButton}
+              onClick={() => switchOrg(DEMO_ORG_ID, 'Demo', true)}
+            >
+              Go to Demo
+            </button>
+          )}
+
+          {/* Switch Role picker — platform admin in demo only (not shown to real demo users) */}
+          {isPlatformAdmin && isDemoOrg && (
             <button style={s.demoBadge} onClick={() => setDemoPickerOpen(true)}>
               <span style={s.demoDot} />
               <span style={s.demoLabel}>
                 {isDemoMode ? `Viewing as ${demoRoleOverride}` : 'Switch Role'}
               </span>
+              <span
+                style={s.demoBadgeX}
+                onClick={e => { e.stopPropagation(); exitSwitchedOrg(); }}
+                aria-label="Exit demo"
+              >×</span>
             </button>
           )}
         </div>
@@ -303,9 +345,6 @@ export default function Sidebar() {
       )}
       {demoPickerOpen && (
         <DemoRolePicker onClose={() => setDemoPickerOpen(false)} />
-      )}
-      {orgSwitcherOpen && (
-        <OrgSwitcher onClose={() => setOrgSwitcherOpen(false)} />
       )}
     </>
   );

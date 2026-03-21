@@ -49,7 +49,6 @@ export default function Settings() {
       data: { display_name: displayNameInput.trim() }
     });
     if (!error) {
-      // Also update org_members table
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
         await supabase.from('org_members')
@@ -75,7 +74,7 @@ export default function Settings() {
       setPasswordError(error.message);
     } else {
       setPasswordEditing(false);
-            setNewPassword('');
+      setNewPassword('');
       setConfirmPassword('');
       setPasswordSuccess(true);
       setTimeout(() => setPasswordSuccess(false), 3000);
@@ -221,6 +220,8 @@ export default function Settings() {
           </div>
 
           <div style={s.rowDivider} />
+
+          {/* Password */}
           <div style={{ padding: '20px 24px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: passwordEditing ? '12px' : 0 }}>
               <div style={s.rowLeft}>

@@ -9,6 +9,7 @@ import {
   FW_LIGHT, FW_REGULAR, FW_SEMIBOLD,
   RADIUS_MD, RADIUS_LG,
   ROLE_OPTIONS,
+  OVERLAY_BG, SHADOW_LG,
 } from '../utils/hqConstants';
 import { useTokens } from '../context/ThemeContext';
 
@@ -30,7 +31,7 @@ export default function DemoRolePicker({ onClose }) {
   const s = {
     overlay: {
       position: 'fixed', inset: 0,
-      background: 'rgba(0,0,0,0.5)',
+      background: OVERLAY_BG,
       zIndex: 1000,
       display: 'flex', alignItems: 'center', justifyContent: 'center',
     },
@@ -41,7 +42,7 @@ export default function DemoRolePicker({ onClose }) {
       padding: '28px 28px 24px',
       width: '100%', maxWidth: '320px',
       fontFamily: FONT_BODY,
-      boxShadow: '0 8px 32px rgba(0,0,0,0.32)',
+      boxShadow: SHADOW_LG,
     },
     header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' },
     eyebrow: { fontSize: '10px', fontWeight: FW_SEMIBOLD, letterSpacing: '0.1em', textTransform: 'uppercase', color: t.ACCENT, marginBottom: '4px' },
