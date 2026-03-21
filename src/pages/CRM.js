@@ -13,6 +13,7 @@ import {
   FW_LIGHT, FW_REGULAR, FW_MEDIUM, FW_SEMIBOLD} from '../utils/hqConstants';
 import { useTokens } from '../context/ThemeContext';
 import useWindowWidth from '../hooks/useWindowWidth';
+import CalendarView from '../components/CalendarView';
 
 const TABS = ['Calendar', 'Tasks', 'Activity', 'Pipeline'];
 
@@ -74,8 +75,6 @@ export default function CRM() {
   const isTablet = windowWidth < 1100;
 
   const [tab, setTab]               = useState('Calendar');
-  const [calendarView, setCalendarView] = useState('week'); // 'day' | 'week' | 'month'
-  const [calendarAnchor, setCalendarAnchor] = useState(new Date()); // current nav anchor date
   const [clients, setClients]       = useState([]);
   const [tasks, setTasks]           = useState([]);
   const [notes, setNotes]           = useState([]);
@@ -121,65 +120,6 @@ export default function CRM() {
   }
 
   // ── Calendar helpers ──────────────────────────────────────────────────────
-  function startOf(view, anchor) {
-    const d = new Date(anchor);
-    if (view === 'day') { d.setHours(0,0,0,0); return d; }
-    if (view === 'week') {
-      const day = d.getDay(); // 0=Sun
-      d.setDate(d.getDate() - day);
-      d.setHours(0,0,0,0); return d;
-    }
-    d.setDate(1); d.setHours(0,0,0,0); return d;
-  }
-
-  function getDays(view, anchor) {
-    const start = startOf(view, anchor);
-    const days = view === 'day' ? 1 : view === 'week' ? 7 : new Date(anchor.getFullYear(), anchor.getMonth()+1, 0).getDate();
-    return Array.from({ length: days }, (_, i) => {
-      const d = new Date(start); d.setDate(start.getDate() + i); return d;
-    });
-  }
-
-  function navCalendar(dir) {
-    setCalendarAnchor(prev => {
-      const d = new Date(prev);
-      if (calendarView === 'day') d.setDate(d.getDate() + dir);
-      else if (calendarView === 'week') d.setDate(d.getDate() + dir * 7);
-      else d.setMonth(d.getMonth() + dir);
-      return d;
-    });
-  }
-
-  function calendarTitle() {
-    const opts = calendarView === 'month'
-      ? { month: 'long', year: 'numeric' }
-      : { month: 'short', day: 'numeric', year: 'numeric' };
-    if (calendarView === 'week') {
-      const days = getDays('week', calendarAnchor);
-      const start = days[0].toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-      const end   = days[6].toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-      return `${start} – ${end}`;
-    }
-    return calendarAnchor.toLocaleDateString('en-US', opts);
-  }
-
-  function meetingsForDay(day) {
-    return meetings.filter(m => {
-      const md = new Date(m.scheduled_at);
-      return md.getFullYear() === day.getFullYear() &&
-             md.getMonth()    === day.getMonth()    &&
-             md.getDate()     === day.getDate();
-    }).sort((a, b) => new Date(a.scheduled_at) - new Date(b.scheduled_at));
-  }
-
-  function isCalToday(day) {
-    const now = new Date();
-    return day.getFullYear() === now.getFullYear() &&
-           day.getMonth()    === now.getMonth()    &&
-           day.getDate()     === now.getDate();
-  }
-
-  const calDays = getDays(calendarView, calendarAnchor);
 
   async function handleSaveTask() {
     if (!taskForm.title.trim()) { setTaskError('Please enter a task title.'); return; }
@@ -282,7 +222,7 @@ export default function CRM() {
       fontSize: '10px', fontWeight: FW_SEMIBOLD, padding: '2px 10px',
       borderRadius: RADIUS_PILL,
       background: overdue ? 'rgba(248,113,113,0.12)' : today ? t.ACCENT_MUTED : soon ? 'rgba(251,191,36,0.12)' : 'rgba(96,165,250,0.12)',
-      color: overdue ? '#f87171' : today ? t.ACCENT : soon ? '#fbbf24' : '#60a5fa',
+      color: overdue ? COLOR_ERROR : today ? t.ACCENT : soon ? COLOR_WARNING : '#60a5fa',
       border: `1px solid ${overdue ? 'rgba(248,113,113,0.3)' : today ? t.ACCENT_BORDER : soon ? 'rgba(251,191,36,0.3)' : 'rgba(96,165,250,0.3)'}`,
       flexShrink: 0,
     }),
@@ -313,7 +253,7 @@ export default function CRM() {
     modalBody: { padding: '20px 22px' },
     modalFooter: { padding: '14px 22px', borderTop: `1px solid ${t.BORDER}`, display: 'flex', justifyContent: 'flex-end', gap: '10px' },
     emptyState: { background: t.SURFACE, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_LG, padding: '48px', textAlign: 'center', color: t.TEXT_MUTED, fontSize: '14px', fontWeight: FW_LIGHT },
-    errorText: { color: '#f87171', fontSize: '12px', marginBottom: '8px' },
+    errorText: { color: COLOR_ERROR, fontSize: '12px', marginBottom: '8px' },
     sectionLabel: { fontSize: '11px', fontWeight: FW_SEMIBOLD, textTransform: 'uppercase', letterSpacing: '0.1em', color: t.TEXT_MUTED, margin: '0 0 12px' },
   };
 
@@ -357,7 +297,7 @@ export default function CRM() {
           </div>
           <div style={s.biCard}>
             <p style={s.biLabel}>Open Tasks</p>
-            <p style={{ ...s.biValue, color: overdueTaskCount > 0 ? '#f87171' : t.TEXT }}>{openTasks}</p>
+            <p style={{ ...s.biValue, color: overdueTaskCount > 0 ? COLOR_ERROR : t.TEXT }}>{openTasks}</p>
             <p style={s.biSub}>{overdueTaskCount > 0 ? `${overdueTaskCount} overdue` : 'All on track'}</p>
           </div>
           <div style={s.biCard}>
@@ -381,185 +321,11 @@ export default function CRM() {
           <>
             {/* CALENDAR TAB */}
             {tab === 'Calendar' && (
-              <div>
-                {/* Calendar controls */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', flexWrap: 'wrap', gap: '10px' }}>
-                  {/* Nav */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <button onClick={() => navCalendar(-1)} style={{ background: 'none', border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_MD, padding: '5px 12px', color: t.TEXT_MUTED, cursor: 'pointer', fontSize: '14px', fontFamily: FONT_BODY }}>‹</button>
-                    <span style={{ fontSize: '15px', fontWeight: FW_MEDIUM, color: t.TEXT, fontFamily: FONT_BODY, minWidth: isMobile ? 'auto' : '220px', textAlign: 'center' }}>{calendarTitle()}</span>
-                    <button onClick={() => navCalendar(1)}  style={{ background: 'none', border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_MD, padding: '5px 12px', color: t.TEXT_MUTED, cursor: 'pointer', fontSize: '14px', fontFamily: FONT_BODY }}>›</button>
-                    {/* Jump to date — calendar icon triggers hidden date input */}
-                    <label style={{ position: 'relative', cursor: 'pointer' }} title={`Jump to ${calendarView}`}>
-                      <span style={{ display: 'flex', alignItems: 'center', background: 'none', border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_MD, padding: '5px 9px', color: t.TEXT_MUTED, userSelect: 'none' }}>
-                        <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <rect x="1" y="3" width="13" height="11" rx="1.5" stroke="currentColor" strokeWidth="1.2" fill="none" />
-                          <line x1="1" y1="6.5" x2="14" y2="6.5" stroke="currentColor" strokeWidth="1.1" />
-                          <line x1="4.5" y1="1.5" x2="4.5" y2="4.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-                          <line x1="10.5" y1="1.5" x2="10.5" y2="4.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-                        </svg>
-                      </span>
-                      <input
-                        type={calendarView === 'month' ? 'month' : 'date'}
-                        style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%', top: 0, left: 0, cursor: 'pointer' }}
-                        onChange={e => {
-                          if (!e.target.value) return;
-                          const d = new Date(e.target.value + (calendarView === 'month' ? '-01' : '') + 'T12:00:00');
-                          if (!isNaN(d)) setCalendarAnchor(d);
-                        }}
-                      />
-                    </label>
-                  </div>
-                  {/* View toggle */}
-                  <div style={{ display: 'flex', gap: '4px' }}>
-                    {['Day', 'Week', 'Month'].map(v => (
-                      <button
-                        key={v}
-                        onClick={() => setCalendarView(v.toLowerCase())}
-                        style={{ padding: '5px 14px', borderRadius: RADIUS_MD, border: `1px solid ${calendarView === v.toLowerCase() ? t.ACCENT_BORDER : t.BORDER}`, background: calendarView === v.toLowerCase() ? t.ACCENT_MUTED : 'none', color: calendarView === v.toLowerCase() ? t.ACCENT : t.TEXT_MUTED, fontSize: '12px', fontWeight: FW_MEDIUM, fontFamily: FONT_BODY, cursor: 'pointer' }}
-                      >
-                        {v}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Calendar grid */}
-                {calendarView === 'month' ? (
-                  // Month view — 7-column grid with day headers
-                  <div>
-                    {/* Day headers */}
-                    {!isMobile && (
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '2px', marginBottom: '2px' }}>
-                        {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d => (
-                          <div key={d} style={{ textAlign: 'center', fontSize: '11px', fontWeight: FW_SEMIBOLD, color: t.TEXT_MUTED, padding: '4px 0', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{d}</div>
-                        ))}
-                      </div>
-                    )}
-                    {/* Fill leading blank days */}
-                    {(() => {
-                      const firstDay = startOf('month', calendarAnchor).getDay();
-                      const blanks = Array.from({ length: firstDay }, (_, i) => i);
-                      const allCells = [...blanks.map(() => null), ...calDays];
-                      // Pad to complete last row
-                      while (allCells.length % 7 !== 0) allCells.push(null);
-                      return (
-                        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(7, 1fr)' : 'repeat(7, 1fr)', gap: '2px' }}>
-                          {allCells.map((day, i) => {
-                            if (!day) return <div key={`blank-${i}`} style={{ minHeight: '80px', background: t.SURFACE_ALT, borderRadius: RADIUS_MD, opacity: 0.3 }} />;
-                            const dayMeetings = meetingsForDay(day);
-                            const today = isCalToday(day);
-                            return (
-                              <div key={day.toISOString()} style={{ minHeight: '80px', background: t.SURFACE, border: `1px solid ${today ? t.ACCENT_BORDER : t.BORDER}`, borderRadius: RADIUS_MD, padding: '6px', overflow: 'hidden' }}>
-                                <span style={{ fontSize: '12px', fontWeight: today ? FW_SEMIBOLD : FW_LIGHT, color: today ? t.ACCENT : t.TEXT_MUTED, display: 'block', marginBottom: '4px' }}>{day.getDate()}</span>
-                                {dayMeetings.slice(0, isMobile ? 1 : 3).map(m => (
-                                  <div key={m.id} title={`${m.category}${m.client_id ? ' · ' + clientName(m.client_id) : ''}`} style={{ fontSize: '10px', fontWeight: FW_MEDIUM, color: t.ACCENT, background: t.ACCENT_MUTED, borderRadius: '3px', padding: '2px 4px', marginBottom: '2px', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis', cursor: 'pointer' }}
-                                    onClick={() => m.client_id && navigate(`/hq/clients/${m.client_id}`)}
-                                  >
-                                    {new Date(m.scheduled_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })} {m.category}
-                                  </div>
-                                ))}
-                                {dayMeetings.length > (isMobile ? 1 : 3) && (
-                                  <span style={{ fontSize: '10px', color: t.TEXT_MUTED }}>+{dayMeetings.length - (isMobile ? 1 : 3)} more</span>
-                                )}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      );
-                    })()}
-                  </div>
-                ) : (
-                  // Day / Week view — time grid with hours on Y axis
-                  (() => {
-                    const HOUR_HEIGHT = 56; // px per hour
-                    const HOURS = Array.from({ length: 24 }, (_, i) => i); // 0–23
-                    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-                    const tzLabel = new Date().toLocaleTimeString('en-US', { timeZoneName: 'short' }).split(' ').pop();
-                    return (
-                      <div>
-                        {/* Timezone indicator */}
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '6px' }}>
-                          <span style={{ fontSize: '11px', color: t.TEXT_SUBTLE, fontWeight: FW_LIGHT, fontFamily: FONT_BODY }}>
-                            {tz} · {tzLabel}
-                          </span>
-                        </div>
-
-                        {/* Single scroll container — sticky headers share the same grid as time rows,
-                            guaranteeing column alignment regardless of OS scrollbar width */}
-                        <div
-                          style={{ overflowY: 'auto', maxHeight: `${12 * HOUR_HEIGHT + 52}px`, background: t.SURFACE, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_LG }}
-                          ref={el => { if (el && !el.dataset.scrolled) { el.scrollTop = 6 * HOUR_HEIGHT + 52; el.dataset.scrolled = '1'; } }}
-                        >
-                          <div style={{ display: 'grid', gridTemplateColumns: `52px repeat(${calDays.length}, 1fr)` }}>
-
-                            {/* Sticky headers — same grid = guaranteed alignment */}
-                            <div style={{ position: 'sticky', top: 0, zIndex: 10, background: t.SURFACE, height: '52px' }} />
-                            {calDays.map(day => {
-                              const today = isCalToday(day);
-                              return (
-                                <div key={`hdr-${day.toISOString()}`} style={{ position: 'sticky', top: 0, zIndex: 10, background: today ? t.SURFACE_ALT : t.SURFACE, borderBottom: `2px solid ${today ? t.ACCENT : t.BORDER}`, textAlign: 'center', padding: '6px 4px 12px', height: '52px', boxSizing: 'border-box' }}>
-                                  <span style={{ fontSize: '11px', fontWeight: FW_SEMIBOLD, color: today ? t.ACCENT : t.TEXT_MUTED, textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block' }}>
-                                    {day.toLocaleDateString('en-US', { weekday: 'short' })}
-                                  </span>
-                                  <span style={{ fontSize: '18px', fontWeight: today ? FW_MEDIUM : FW_LIGHT, color: today ? t.ACCENT : t.TEXT }}>
-                                    {day.getDate()}
-                                  </span>
-                                </div>
-                              );
-                            })}
-
-                            {/* Hour rows */}
-                            {HOURS.map(hour => (
-                              <React.Fragment key={hour}>
-                                {/* Time label */}
-                                <div style={{ height: HOUR_HEIGHT, borderTop: `1px solid ${t.BORDER}`, paddingTop: '4px', paddingRight: '8px', textAlign: 'right', flexShrink: 0 }}>
-                                  <span style={{ fontSize: '12px', color: t.TEXT_MUTED, fontWeight: FW_REGULAR, fontFamily: FONT_BODY, lineHeight: 1 }}>
-                                    {hour === 0 ? '12am' : hour < 12 ? `${hour}am` : hour === 12 ? '12pm' : `${hour-12}pm`}
-                                  </span>
-                                </div>
-                                {/* Day cells */}
-                                {calDays.map(day => {
-                                  const today = isCalToday(day);
-                                  const dayMeetingsThisHour = meetingsForDay(day).filter(m => new Date(m.scheduled_at).getHours() === hour);
-                                  return (
-                                    <div key={`${day.toISOString()}-${hour}`} style={{ height: HOUR_HEIGHT, borderTop: `1px solid ${t.BORDER}`, borderLeft: `1px solid ${today ? t.ACCENT_BORDER : t.BORDER}`, background: today && hour >= 6 && hour < 20 ? `${t.ACCENT_MUTED}33` : t.SURFACE, padding: '2px 3px', overflow: 'hidden' }}>
-                                      {dayMeetingsThisHour.map(m => {
-                                        const isPast = new Date(m.scheduled_at) < new Date() && m.status !== 'completed';
-                                        const statusColor = m.status === 'completed' ? t.ACCENT : m.status === 'cancelled' ? COLOR_ERROR : isPast ? COLOR_WARNING : t.ACCENT;
-                                        const startMin = new Date(m.scheduled_at).getMinutes();
-                                        const topOffset = (startMin / 60) * HOUR_HEIGHT;
-                                        const blockHeight = Math.max(20, (m.duration_mins / 60) * HOUR_HEIGHT - 2);
-                                        return (
-                                          <div
-                                            key={m.id}
-                                            onClick={() => m.client_id && navigate(`/hq/clients/${m.client_id}`)}
-                                            title={`${m.category}${m.client_id ? ' · ' + clientName(m.client_id) : ''}\n${new Date(m.scheduled_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`}
-                                            style={{ position: 'relative', marginTop: topOffset, height: blockHeight, background: `${statusColor}22`, borderLeft: `3px solid ${statusColor}`, borderRadius: '3px', padding: '2px 5px', cursor: m.client_id ? 'pointer' : 'default', overflow: 'hidden' }}
-                                          >
-                                            <p style={{ fontSize: '10px', fontWeight: FW_SEMIBOLD, color: statusColor, margin: 0, lineHeight: 1.3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                              {new Date(m.scheduled_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })} {m.category}
-                                            </p>
-                                            {blockHeight > 28 && m.client_id && (
-                                              <p style={{ fontSize: '9px', fontWeight: FW_LIGHT, color: t.TEXT_MUTED, margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                                {clientName(m.client_id)}
-                                              </p>
-                                            )}
-                                          </div>
-                                        );
-                                      })}
-                                    </div>
-                                  );
-                                })}
-                              </React.Fragment>
-                            ))}
-                          </div>   {/* inner grid */}
-                        </div>     {/* scroll container */}
-                      </div>
-                    );
-                  })()
-                )}
-              </div>
+              <CalendarView
+                meetings={meetings}
+                clients={clients}
+                navigate={navigate}
+              />
             )}
 
             {/* PIPELINE TAB */}
@@ -608,7 +374,7 @@ export default function CRM() {
                 {/* Overdue */}
                 {tasks.filter(t => !t.completed && isOverdue(t.due_date)).length > 0 && (
                   <div style={{ marginBottom: '24px' }}>
-                    <p style={{ ...s.sectionLabel, color: '#f87171' }}>Overdue</p>
+                    <p style={{ ...s.sectionLabel, color: COLOR_ERROR }}>Overdue</p>
                     {tasks.filter(t => !t.completed && isOverdue(t.due_date)).map(task => (
                       <TaskRow key={task.id} task={task} clientName={clientName} onComplete={handleCompleteTask} onDelete={handleDeleteTask} onEdit={openEditTask} s={s} t={t} navigate={navigate} clients={clients} />
                     ))}
@@ -628,7 +394,7 @@ export default function CRM() {
                 {/* Due Soon */}
                 {tasks.filter(t => !t.completed && isDueSoon(t.due_date)).length > 0 && (
                   <div style={{ marginBottom: '24px' }}>
-                    <p style={{ ...s.sectionLabel, color: '#fbbf24' }}>Due Soon</p>
+                    <p style={{ ...s.sectionLabel, color: COLOR_WARNING }}>Due Soon</p>
                     {tasks.filter(t => !t.completed && isDueSoon(t.due_date)).map(task => (
                       <TaskRow key={task.id} task={task} clientName={clientName} onComplete={handleCompleteTask} onDelete={handleDeleteTask} onEdit={openEditTask} s={s} t={t} navigate={navigate} clients={clients} />
                     ))}
@@ -752,9 +518,9 @@ function TaskRow({ task, clientName, onComplete, onDelete, onEdit, s, t, navigat
   const overdue = isOverdue(task.due_date);
   const soon = isDueSoon(task.due_date);
   const today = isToday(task.due_date);
-  const checkColor = overdue ? '#f87171' : today ? t.ACCENT : soon ? '#fbbf24' : '#60a5fa';
+  const checkColor = overdue ? COLOR_ERROR : today ? t.ACCENT : soon ? COLOR_WARNING : '#60a5fa';
   const hasNotes = task.notes && task.notes.trim().length > 0;
-  const dueDateColor = overdue ? '#f87171' : today ? t.ACCENT : soon ? '#fbbf24' : t.TEXT_MUTED;
+  const dueDateColor = overdue ? COLOR_ERROR : today ? t.ACCENT : soon ? COLOR_WARNING : t.TEXT_MUTED;
 
   return (
     <div style={{ background: t.SURFACE, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_LG, marginBottom: '10px', boxShadow: SHADOW_MD, overflow: 'hidden' }}>
@@ -814,7 +580,7 @@ function TaskRow({ task, clientName, onComplete, onDelete, onEdit, s, t, navigat
         )}
         <button style={{ ...s.deleteAction, fontSize: '12px' }} onClick={() => onEdit(task)}>Edit</button>
         <span style={{ fontSize: '10px', color: t.TEXT_MUTED }}>·</span>
-        <button style={{ ...s.deleteAction, fontSize: '12px', color: '#f87171' }} onClick={() => onDelete(task.id)}>Delete</button>
+        <button style={{ ...s.deleteAction, fontSize: '12px', color: COLOR_ERROR }} onClick={() => onDelete(task.id)}>Delete</button>
       </div>
 
       {/* Expandable note */}
@@ -999,7 +765,7 @@ function PipelineTable({ clients, navigate, s, t, isMobile, orgId, onStageChange
                   <div style={{ position: 'relative' }}>
                     {client.is_reactivation ? (
                       <span
-                        style={{ fontSize: '11px', color: '#fbbf24', fontWeight: FW_MEDIUM, cursor: 'default' }}
+                        style={{ fontSize: '11px', color: COLOR_WARNING, fontWeight: FW_MEDIUM, cursor: 'default' }}
                         onMouseEnter={() => setTooltip(client.id)}
                         onMouseLeave={() => setTooltip(null)}
                       >

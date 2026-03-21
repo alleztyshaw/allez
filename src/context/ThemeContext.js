@@ -6,6 +6,7 @@ import {
   L_TEXT, L_TEXT_MUTED, L_TEXT_SUBTLE,
   ACCENT,        ACCENT_HOVER,        ACCENT_MUTED,        ACCENT_BORDER,
   ACCENT_LIGHT,  ACCENT_HOVER_LIGHT,  ACCENT_MUTED_LIGHT,  ACCENT_BORDER_LIGHT,
+  CALENDAR_TILE,
 } from '../utils/hqConstants';
 
 const ThemeContext = createContext();
@@ -54,6 +55,7 @@ export function useTokens() {
     ACCENT_HOVER:  dark ? ACCENT_HOVER  : ACCENT_HOVER_LIGHT,
     ACCENT_MUTED:  dark ? ACCENT_MUTED  : ACCENT_MUTED_LIGHT,
     ACCENT_BORDER: dark ? ACCENT_BORDER : ACCENT_BORDER_LIGHT,
+    CALENDAR_TILE: CALENDAR_TILE, // soft mint — same in both modes
     theme,
     isDark: dark,
   };

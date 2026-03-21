@@ -14,6 +14,11 @@ export const ACCENT_BORDER = 'rgba(41, 196, 122, 0.25)';
 export const ACCENT_LIGHT        = '#1A9E5F';
 export const ACCENT_HOVER_LIGHT  = '#29C47A';
 export const ACCENT_MUTED_LIGHT  = 'rgba(26, 158, 95, 0.12)';
+
+// Calendar event tile backgrounds — solid equivalents of the accent green at ~25% opacity
+// Light mode: soft mint. Dark mode: deep teal-green, noticeably lighter than the grid surface.
+export const CALENDAR_TILE    = '#e3f7ed'; // light mode tile background
+export const CALENDAR_TILE_DK = '#14433d'; // dark mode tile background
 export const ACCENT_BORDER_LIGHT = 'rgba(26, 158, 95, 0.22)';
 
 // AI feature color — used for AI processing buttons, result labels, animated dots

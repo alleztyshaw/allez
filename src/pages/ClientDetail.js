@@ -31,7 +31,6 @@ import {
   MEETING_RECURRENCES,
   MEETING_DURATION_OPTIONS,
   COLOR_ERROR,
-  COLOR_WARNING,
   MOBILE_BREAKPOINT,
   FW_LIGHT, FW_REGULAR, FW_MEDIUM, FW_SEMIBOLD} from '../utils/hqConstants';
 import { useTokens } from '../context/ThemeContext';
@@ -105,6 +104,51 @@ function stripAUMFormat(str) {
   return str.replace(/[$,]/g, '');
 }
 
+
+
+function MeetingRow({ meeting, i, total, isMobile, t, canWrite, openEditMeeting, handleMeetingDelete, COL }) {
+  const [expanded, setExpanded] = useState(false);
+  const isPast    = new Date(meeting.scheduled_at) < new Date();
+  const isCancelled = meeting.status === 'cancelled';
+  const meetingDate = new Date(meeting.scheduled_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  const meetingTime = new Date(meeting.scheduled_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  const typeLabel = MEETING_TYPES.find(mt => mt.value === meeting.meeting_type)?.label || meeting.meeting_type;
+  const recurrenceLabel = meeting.recurrence !== 'none' ? MEETING_RECURRENCES.find(r => r.value === meeting.recurrence)?.label || '—' : '—';
+  const mutedColor = isCancelled ? t.TEXT_SUBTLE : t.TEXT_MUTED;
+  const linkStyle  = { background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontSize: '12px', textDecoration: 'underline', textUnderlineOffset: '2px' };
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: COL, padding: '11px 16px', borderBottom: i < total - 1 ? `1px solid ${t.BORDER}` : 'none', alignItems: 'start', background: t.SURFACE }}>
+      <div style={{ minWidth: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
+          <span style={{ fontSize: '13px', fontWeight: '400', color: isCancelled ? t.TEXT_SUBTLE : t.TEXT, textDecoration: isCancelled ? 'line-through' : 'none', whiteSpace: 'nowrap' }}>
+            {meeting.category}
+          </span>
+          {meeting.description && (
+            <>
+              <span style={{ fontSize: '12px', fontWeight: '300', color: t.TEXT_MUTED, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: expanded ? 'normal' : 'nowrap', flex: 1, minWidth: 0 }}>
+                — {meeting.description}
+              </span>
+              <button onClick={() => setExpanded(v => !v)} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: t.TEXT_SUBTLE, fontSize: '10px', flexShrink: 0 }} aria-label={expanded ? 'Collapse' : 'Expand'}>
+                <span style={{ display: 'inline-block', width: 0, height: 0, borderLeft: '4px solid transparent', borderRight: '4px solid transparent', ...(expanded ? { borderBottom: `5px solid ${t.TEXT_SUBTLE}` } : { borderTop: `5px solid ${t.TEXT_SUBTLE}` }) }} />
+              </button>
+            </>
+          )}
+        </div>
+        <p style={{ fontSize: '11px', fontWeight: '300', color: isPast && !isCancelled ? t.TEXT_MUTED : t.TEXT_SUBTLE, margin: '2px 0 0' }}>
+          {meetingDate} · {meetingTime}
+        </p>
+      </div>
+      {!isMobile && <span style={{ fontSize: '12px', fontWeight: '300', color: mutedColor, paddingTop: '1px' }}>{typeLabel}</span>}
+      {!isMobile && <span style={{ fontSize: '12px', fontWeight: '300', color: mutedColor, paddingTop: '1px' }}>{recurrenceLabel}</span>}
+      {canWrite ? (
+        <div style={{ display: 'flex', gap: '12px', paddingTop: '1px' }}>
+          <button style={{ ...linkStyle, color: t.ACCENT }} onClick={() => openEditMeeting(meeting)}>Edit</button>
+          <button style={{ ...linkStyle, color: COLOR_ERROR }} onClick={() => handleMeetingDelete(meeting.id)}>Delete</button>
+        </div>
+      ) : <span />}
+    </div>
+  );
+}
 
 export default function ClientDetail() {
   const t = useTokens();
@@ -406,6 +450,17 @@ export default function ClientDetail() {
       color: t.TEXT_MUTED,
       fontFamily: FONT_BODY,
     },
+    noteAction: {
+      background: 'none',
+      border: 'none',
+      cursor: 'pointer',
+      fontSize: '12px',
+      color: t.TEXT_MUTED,
+      padding: 0,
+      fontFamily: FONT_BODY,
+      textDecoration: 'underline',
+      textUnderlineOffset: '2px',
+    },
     saveButton: {
       padding: '9px 20px',
       borderRadius: RADIUS_MD,
@@ -538,7 +593,7 @@ export default function ClientDetail() {
       const { data } = await supabase
         .from('meetings').select('*')
         .eq('client_id', id).eq('org_id', orgId).is('deleted_at', null)
-        .order('scheduled_at', { ascending: false });
+        .order('scheduled_at', { ascending: true });
       setMeetings(data || []);
     }
     async function loadAdvisors() {
@@ -1047,49 +1102,32 @@ export default function ClientDetail() {
                 <p style={{ fontSize: '13px', color: t.TEXT_MUTED, fontWeight: FW_LIGHT, margin: 0 }}>Schedule a meeting to start building this client's history.</p>
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {meetings.map(meeting => {
+              <div style={{ border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_LG, overflow: 'hidden' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 90px' : '1fr 100px 120px 90px', padding: '9px 16px', background: t.SURFACE_ALT, borderBottom: `1px solid ${t.BORDER}` }}>
+                  {['Meeting', ...(isMobile ? [] : ['Type', 'Recurrence']), 'Actions'].map(col => (
+                    <span key={col} style={{ fontSize: '10px', fontWeight: FW_SEMIBOLD, textTransform: 'uppercase', letterSpacing: '0.08em', color: t.TEXT_MUTED }}>{col}</span>
+                  ))}
+                </div>
+                {meetings.map((meeting, i) => {
                   const isPast = new Date(meeting.scheduled_at) < new Date();
-                  const statusColor = meeting.status === 'completed' ? t.ACCENT : meeting.status === 'cancelled' ? COLOR_ERROR : isPast ? COLOR_WARNING : t.TEXT_MUTED;
-                  const meetingDate = new Date(meeting.scheduled_at).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+                  const isCancelled = meeting.status === 'cancelled';
+                  const meetingDate = new Date(meeting.scheduled_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
                   const meetingTime = new Date(meeting.scheduled_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
                   const typeLabel = MEETING_TYPES.find(mt => mt.value === meeting.meeting_type)?.label || meeting.meeting_type;
-                  const durationLabel = MEETING_DURATION_OPTIONS.find(d => d.value === meeting.duration_mins)?.label || `${meeting.duration_mins} min`;
+                  const recurrenceLabel = meeting.recurrence !== 'none' ? MEETING_RECURRENCES.find(r => r.value === meeting.recurrence)?.label || '—' : '—';
                   return (
-                    <div key={meeting.id} style={{ ...s.notesCard, padding: '16px 18px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px', flexWrap: 'wrap' }}>
-                            <span style={{ fontSize: '14px', fontWeight: FW_MEDIUM, color: t.TEXT }}>{meeting.category}</span>
-                            <span style={{ fontSize: '11px', fontWeight: FW_SEMIBOLD, padding: '2px 8px', borderRadius: RADIUS_PILL, background: `${statusColor}18`, color: statusColor, border: `1px solid ${statusColor}33`, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                              {meeting.status}
-                            </span>
-                          </div>
-                          <p style={{ fontSize: '12px', color: t.TEXT_MUTED, fontWeight: FW_LIGHT, margin: '0 0 4px' }}>
-                            {meetingDate} · {meetingTime} · {durationLabel} · {typeLabel}
-                          </p>
-                          {meeting.recurrence !== 'none' && (
-                            <p style={{ fontSize: '11px', color: t.TEXT_MUTED, fontWeight: FW_LIGHT, margin: '0 0 4px' }}>
-                              Repeats {MEETING_RECURRENCES.find(r => r.value === meeting.recurrence)?.label?.toLowerCase()}
-                            </p>
-                          )}
-                          {meeting.description && (
-                            <p style={{ fontSize: '12px', color: t.TEXT_MUTED, fontWeight: FW_LIGHT, margin: '6px 0 0', lineHeight: '1.5' }}>{meeting.description}</p>
-                          )}
-                        </div>
-                      </div>
-                      {canWrite && (
-                        <div style={{ display: 'flex', gap: '12px', marginTop: '10px', borderTop: `1px solid ${t.BORDER}`, paddingTop: '10px' }}>
-                          {meeting.status === 'scheduled' && (
-                            <button style={s.noteAction} onClick={() => handleMeetingStatus(meeting.id, 'completed')}>Mark Complete</button>
-                          )}
-                          {meeting.status === 'scheduled' && (
-                            <button style={s.noteAction} onClick={() => handleMeetingStatus(meeting.id, 'cancelled')}>Cancel</button>
-                          )}
+                    <div key={meeting.id} style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 90px' : '1fr 100px 120px 90px', padding: '12px 16px', borderBottom: i < meetings.length - 1 ? `1px solid ${t.BORDER}` : 'none', alignItems: 'center', background: t.SURFACE }}>
+                      <p style={{ fontSize: '13px', fontWeight: FW_MEDIUM, color: isCancelled ? t.TEXT_SUBTLE : t.TEXT, margin: 0, textDecoration: isCancelled ? 'line-through' : 'none', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {meetingDate} · {meetingTime} · {meeting.category}{meeting.description ? ` · ${meeting.description}` : ''}
+                      </p>
+                      {!isMobile && <span style={{ fontSize: '12px', fontWeight: FW_LIGHT, color: isCancelled ? t.TEXT_SUBTLE : t.TEXT_MUTED }}>{typeLabel}</span>}
+                      {!isMobile && <span style={{ fontSize: '12px', fontWeight: FW_LIGHT, color: isCancelled ? t.TEXT_SUBTLE : t.TEXT_MUTED }}>{recurrenceLabel}</span>}
+                      {canWrite ? (
+                        <div style={{ display: 'flex', gap: '10px' }}>
                           <button style={s.noteAction} onClick={() => openEditMeeting(meeting)}>Edit</button>
                           <button style={{ ...s.noteAction, color: COLOR_ERROR }} onClick={() => handleMeetingDelete(meeting.id)}>Delete</button>
                         </div>
-                      )}
+                      ) : <span />}
                     </div>
                   );
                 })}
