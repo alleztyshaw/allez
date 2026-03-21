@@ -7,6 +7,7 @@ import {
   RADIUS_MD, RADIUS_LG,
   SHADOW_SM,
   FULL_ACCESS_ROLES,
+  COLOR_ERROR,
   pageStyles,
   MOBILE_BREAKPOINT,
 } from '../utils/hqConstants';
@@ -44,11 +45,13 @@ function isOverdue(dateStr) {
 export default function DailyBrief() {
   const navigate  = useNavigate();
   const t         = useTokens();
-  const { orgId, userId, userRole } = useOrg();
+  const { orgId, userId, userRole, isDemoOrg } = useOrg();
   const windowWidth = useWindowWidth();
   const isMobile    = windowWidth < MOBILE_BREAKPOINT;
 
-  const isFullAccess = FULL_ACCESS_ROLES.includes(userRole);
+  // In demo orgs, always show org-wide data regardless of role —
+  // demo users aren't in client_advisors so the scoped query returns nothing
+  const isFullAccess = isDemoOrg || FULL_ACCESS_ROLES.includes(userRole);
 
   const [orgName,    setOrgName]    = useState('');
   const [meetings,   setMeetings]   = useState([]);
@@ -72,7 +75,7 @@ export default function DailyBrief() {
     setOrgName(orgData?.name || '');
 
     if (isFullAccess) {
-      // ── Admin / Manager / Compliance — org-wide ───────────────────────
+      // ── Admin / Manager / Compliance / Demo — org-wide ────────────────
       const [{ data: clientsData }, { data: tasksData }] = await Promise.all([
         supabase
           .from('clients')
@@ -105,7 +108,7 @@ export default function DailyBrief() {
       setTasks((tasksData || []).map(t => ({ ...t, clientName: clientNameMap[t.client_id] || '—' })));
 
     } else {
-      // ── Advisor / Associate — scoped to their clients ─────────────────
+      // ── Advisor / Associate — scoped to their assigned clients ────────
       const { data: advisorClients } = await supabase
         .from('client_advisors')
         .select('client_id')
@@ -238,7 +241,7 @@ export default function DailyBrief() {
     },
     overdueBadge: {
       fontSize: '10px', fontWeight: FW_SEMIBOLD, letterSpacing: '0.06em',
-      color: '#f87171', textTransform: 'uppercase',
+      color: COLOR_ERROR, textTransform: 'uppercase',
     },
     completeBtn: {
       background: 'none', border: `1px solid ${t.BORDER}`,

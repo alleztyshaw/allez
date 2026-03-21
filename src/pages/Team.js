@@ -9,7 +9,9 @@ import {
   SHADOW_MD,
   pageStyles,
   MOBILE_BREAKPOINT,
-  FW_LIGHT, FW_REGULAR, FW_SEMIBOLD} from '../utils/hqConstants';
+  FW_LIGHT, FW_REGULAR, FW_SEMIBOLD,
+  COLOR_ERROR, COLOR_WARNING,
+} from '../utils/hqConstants';
 import { useTokens } from '../context/ThemeContext';
 import useWindowWidth from '../hooks/useWindowWidth';
 
@@ -35,24 +37,24 @@ export default function Team() {
     if (!orgLoading && !isAdmin) navigate('/hq');
   }, [isAdmin, orgLoading, navigate]);
 
-  const [orgs, setOrgs]                     = useState([]);
-  const [selectedOrg, setSelectedOrg]       = useState(null);
+  const [orgs, setOrgs]                       = useState([]);
+  const [selectedOrg, setSelectedOrg]         = useState(null);
   const [selectedOrgName, setSelectedOrgName] = useState('');
-  const [orgSearch, setOrgSearch]           = useState('');
+  const [orgSearch, setOrgSearch]             = useState('');
   const [orgDropdownOpen, setOrgDropdownOpen] = useState(false);
-  const [members, setMembers]               = useState([]);
-  const [loading, setLoading]               = useState(true);
-  const [saving, setSaving]                 = useState(null);
-  const [editingRole, setEditingRole]       = useState(null);
-  const [pendingRole, setPendingRole]       = useState('');
-  const [inviteEmail, setInviteEmail]       = useState('');
-  const [inviteRole, setInviteRole]         = useState('advisor');
+  const [members, setMembers]                 = useState([]);
+  const [loading, setLoading]                 = useState(true);
+  const [saving, setSaving]                   = useState(null);
+  const [editingRole, setEditingRole]         = useState(null);
+  const [pendingRole, setPendingRole]         = useState('');
+  const [inviteEmail, setInviteEmail]         = useState('');
+  const [inviteRole, setInviteRole]           = useState('advisor');
   const [inviteFirstName, setInviteFirstName] = useState('');
-  const [inviteLastName, setInviteLastName] = useState('');
-  const [showInvite, setShowInvite]         = useState(false);
-  const [inviteError, setInviteError]       = useState('');
-  const [resending, setResending]           = useState(null);
-  const [toast, setToast]                   = useState(null);
+  const [inviteLastName, setInviteLastName]   = useState('');
+  const [showInvite, setShowInvite]           = useState(false);
+  const [inviteError, setInviteError]         = useState('');
+  const [resending, setResending]             = useState(null);
+  const [toast, setToast]                     = useState(null);
 
   function showToast(message, type = 'success') {
     setToast({ message, type });
@@ -109,13 +111,22 @@ export default function Team() {
 
   async function handleRoleChange(userId) {
     setSaving(userId);
-    await supabase.from('org_members')
+    const { error } = await supabase
+      .from('org_members')
       .update({ role: pendingRole })
-      .eq('user_id', userId).eq('org_id', selectedOrg);
-    setEditingRole(null);
-    setPendingRole('');
+      .eq('user_id', userId)
+      .eq('org_id', selectedOrg);
+
+    if (error) {
+      console.error('Role update error:', error);
+      showToast('Failed to update role — check permissions', 'error');
+    } else {
+      showToast('Role updated successfully');
+      setEditingRole(null);
+      setPendingRole('');
+      fetchMembers(selectedOrg);
+    }
     setSaving(null);
-    fetchMembers(selectedOrg);
   }
 
   async function handleResendInvite(m) {
@@ -271,9 +282,9 @@ export default function Team() {
         {toast && (
           <div style={{
             position: 'fixed', bottom: '32px', right: '32px',
-            background: toast.type === 'success' ? t.ACCENT_MUTED : 'rgba(248,113,113,0.15)',
-            border: `1px solid ${toast.type === 'success' ? t.ACCENT_BORDER : '#f87171'}`,
-            color: toast.type === 'success' ? t.ACCENT : '#f87171',
+            background: toast.type === 'success' ? t.ACCENT_MUTED : `rgba(248,113,113,0.15)`,
+            border: `1px solid ${toast.type === 'success' ? t.ACCENT_BORDER : COLOR_ERROR}`,
+            color: toast.type === 'success' ? t.ACCENT : COLOR_ERROR,
             borderRadius: RADIUS_LG, padding: '14px 20px',
             fontSize: '14px', fontFamily: FONT_BODY,
             zIndex: 1000, animation: 'fadeIn 0.2s ease'
@@ -421,7 +432,7 @@ export default function Team() {
                   </button>
                 </div>
               </div>
-              {inviteError && <p style={{ color: '#f87171', fontSize: '13px', margin: 0 }}>{inviteError}</p>}
+              {inviteError && <p style={{ color: COLOR_ERROR, fontSize: '13px', margin: 0 }}>{inviteError}</p>}
             </div>
           </div>
         )}
@@ -475,7 +486,7 @@ export default function Team() {
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <span style={{
                         width: '7px', height: '7px', borderRadius: '50%', flexShrink: 0,
-                        background: isPending ? '#fbbf24' : t.ACCENT
+                        background: isPending ? COLOR_WARNING : t.ACCENT
                       }} />
                     </div>
                   )}
@@ -515,7 +526,7 @@ export default function Team() {
                   {!isMobile && (
                     <div style={s.tableCellMuted}>
                       {isPending ? (
-                        <span style={{ color: '#fbbf24', fontSize: '12px', fontWeight: FW_LIGHT }}>Pending setup</span>
+                        <span style={{ color: COLOR_WARNING, fontSize: '12px', fontWeight: FW_LIGHT }}>Pending setup</span>
                       ) : (
                         <span style={{ color: t.ACCENT, fontSize: '12px', fontWeight: FW_LIGHT }}>Active</span>
                       )}
