@@ -106,50 +106,6 @@ function stripAUMFormat(str) {
 
 
 
-function MeetingRow({ meeting, i, total, isMobile, t, canWrite, openEditMeeting, handleMeetingDelete, COL }) {
-  const [expanded, setExpanded] = useState(false);
-  const isPast    = new Date(meeting.scheduled_at) < new Date();
-  const isCancelled = meeting.status === 'cancelled';
-  const meetingDate = new Date(meeting.scheduled_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-  const meetingTime = new Date(meeting.scheduled_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-  const typeLabel = MEETING_TYPES.find(mt => mt.value === meeting.meeting_type)?.label || meeting.meeting_type;
-  const recurrenceLabel = meeting.recurrence !== 'none' ? MEETING_RECURRENCES.find(r => r.value === meeting.recurrence)?.label || '—' : '—';
-  const mutedColor = isCancelled ? t.TEXT_SUBTLE : t.TEXT_MUTED;
-  const linkStyle  = { background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontSize: '12px', textDecoration: 'underline', textUnderlineOffset: '2px' };
-  return (
-    <div style={{ display: 'grid', gridTemplateColumns: COL, padding: '11px 16px', borderBottom: i < total - 1 ? `1px solid ${t.BORDER}` : 'none', alignItems: 'start', background: t.SURFACE }}>
-      <div style={{ minWidth: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
-          <span style={{ fontSize: '13px', fontWeight: '400', color: isCancelled ? t.TEXT_SUBTLE : t.TEXT, textDecoration: isCancelled ? 'line-through' : 'none', whiteSpace: 'nowrap' }}>
-            {meeting.category}
-          </span>
-          {meeting.description && (
-            <>
-              <span style={{ fontSize: '12px', fontWeight: '300', color: t.TEXT_MUTED, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: expanded ? 'normal' : 'nowrap', flex: 1, minWidth: 0 }}>
-                — {meeting.description}
-              </span>
-              <button onClick={() => setExpanded(v => !v)} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: t.TEXT_SUBTLE, fontSize: '10px', flexShrink: 0 }} aria-label={expanded ? 'Collapse' : 'Expand'}>
-                <span style={{ display: 'inline-block', width: 0, height: 0, borderLeft: '4px solid transparent', borderRight: '4px solid transparent', ...(expanded ? { borderBottom: `5px solid ${t.TEXT_SUBTLE}` } : { borderTop: `5px solid ${t.TEXT_SUBTLE}` }) }} />
-              </button>
-            </>
-          )}
-        </div>
-        <p style={{ fontSize: '11px', fontWeight: '300', color: isPast && !isCancelled ? t.TEXT_MUTED : t.TEXT_SUBTLE, margin: '2px 0 0' }}>
-          {meetingDate} · {meetingTime}
-        </p>
-      </div>
-      {!isMobile && <span style={{ fontSize: '12px', fontWeight: '300', color: mutedColor, paddingTop: '1px' }}>{typeLabel}</span>}
-      {!isMobile && <span style={{ fontSize: '12px', fontWeight: '300', color: mutedColor, paddingTop: '1px' }}>{recurrenceLabel}</span>}
-      {canWrite ? (
-        <div style={{ display: 'flex', gap: '12px', paddingTop: '1px' }}>
-          <button style={{ ...linkStyle, color: t.ACCENT }} onClick={() => openEditMeeting(meeting)}>Edit</button>
-          <button style={{ ...linkStyle, color: COLOR_ERROR }} onClick={() => handleMeetingDelete(meeting.id)}>Delete</button>
-        </div>
-      ) : <span />}
-    </div>
-  );
-}
-
 export default function ClientDetail() {
   const t = useTokens();
   const windowWidth = useWindowWidth();
@@ -739,11 +695,6 @@ export default function ClientDetail() {
     setMeetings(prev => prev.filter(m => m.id !== meetingId));
   }
 
-  async function handleMeetingStatus(meetingId, newStatus) {
-    await supabase.from('meetings').update({ status: newStatus }).eq('id', meetingId);
-    setMeetings(prev => prev.map(m => m.id === meetingId ? { ...m, status: newStatus } : m));
-  }
-
   async function fetchNotes() {
     const { data } = await supabase
       .from('notes').select('*')
@@ -1109,7 +1060,6 @@ export default function ClientDetail() {
                   ))}
                 </div>
                 {meetings.map((meeting, i) => {
-                  const isPast = new Date(meeting.scheduled_at) < new Date();
                   const isCancelled = meeting.status === 'cancelled';
                   const meetingDate = new Date(meeting.scheduled_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
                   const meetingTime = new Date(meeting.scheduled_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
