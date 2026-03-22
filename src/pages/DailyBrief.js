@@ -60,9 +60,11 @@ export default function DailyBrief() {
 
     const today      = todayStr();
 
-    // Today bounds for meetings query
-    const todayStart = `${today}T00:00:00`;
-    const todayEnd   = `${today}T23:59:59`;
+    // Broad window so CalendarView can navigate days freely
+    const windowStart = new Date(); windowStart.setDate(windowStart.getDate() - 30);
+    const windowEnd   = new Date(); windowEnd.setDate(windowEnd.getDate() + 60);
+    const fetchStart  = `${windowStart.getFullYear()}-${String(windowStart.getMonth()+1).padStart(2,'0')}-${String(windowStart.getDate()).padStart(2,'0')}T00:00:00`;
+    const fetchEnd    = `${windowEnd.getFullYear()}-${String(windowEnd.getMonth()+1).padStart(2,'0')}-${String(windowEnd.getDate()).padStart(2,'0')}T23:59:59`;
 
     // ── Fetch org name ────────────────────────────────────────────────────
     const { data: orgData } = await supabase
@@ -80,8 +82,8 @@ export default function DailyBrief() {
           .select('id, client_id, category, meeting_type, status, scheduled_at, duration_mins, description')
           .eq('org_id', orgId)
           .is('deleted_at', null)
-          .gte('scheduled_at', todayStart)
-          .lte('scheduled_at', todayEnd)
+          .gte('scheduled_at', fetchStart)
+          .lte('scheduled_at', fetchEnd)
           .order('scheduled_at', { ascending: true }),
         supabase
           .from('clients')
@@ -130,8 +132,8 @@ export default function DailyBrief() {
           .eq('org_id', orgId)
           .is('deleted_at', null)
           .in('client_id', myClientIds)
-          .gte('scheduled_at', todayStart)
-          .lte('scheduled_at', todayEnd)
+          .gte('scheduled_at', fetchStart)
+          .lte('scheduled_at', fetchEnd)
           .order('scheduled_at', { ascending: true }),
         supabase
           .from('clients')
@@ -268,20 +270,16 @@ export default function DailyBrief() {
             {/* ── Schedule ───────────────────────────────────────────── */}
             <div>
               <p style={s.sectionLabel}>Today's Schedule</p>
-              {meetings.length === 0 ? (
-                <p style={s.emptyState}>No meetings scheduled for today.</p>
-              ) : (
-                <CalendarView
-                  meetings={meetings}
-                  clients={clients}
-                  navigate={navigate}
-                  defaultView="day"
-                  defaultDate={new Date()}
-                  hideViewToggle={true}
-                  hourHeight={48}
-                  maxHours={14}
-                />
-              )}
+              <CalendarView
+                meetings={meetings}
+                clients={clients}
+                navigate={navigate}
+                defaultView="day"
+                defaultDate={new Date()}
+                hideViewToggle={true}
+                hourHeight={48}
+                maxHours={14}
+              />
             </div>
 
             {/* ── Tasks ──────────────────────────────────────────────── */}
