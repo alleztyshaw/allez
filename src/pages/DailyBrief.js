@@ -1,11 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
+import CalendarView from '../components/CalendarView';
 import {
   FONT_DISPLAY, FONT_BODY,
   FW_LIGHT, FW_REGULAR, FW_MEDIUM, FW_SEMIBOLD,
-  RADIUS_MD, RADIUS_LG,
-  SHADOW_SM,
+  RADIUS_MD,
   FULL_ACCESS_ROLES,
   COLOR_ERROR,
   pageStyles,
@@ -33,11 +33,6 @@ function formatDate(d) {
     weekday: 'long', month: 'long', day: 'numeric', year: 'numeric',
   });
 }
-function reviewLabel(dateStr) {
-  if (dateStr === todayStr()) return 'Today';
-  if (dateStr === tomorrowStr()) return 'Tomorrow';
-  return dateStr;
-}
 function isOverdue(dateStr) {
   return dateStr < todayStr();
 }
@@ -55,6 +50,7 @@ export default function DailyBrief() {
 
   const [orgName,    setOrgName]    = useState('');
   const [meetings,   setMeetings]   = useState([]);
+  const [clients,    setClients]    = useState([]);
   const [tasks,      setTasks]      = useState([]);
   const [loading,    setLoading]    = useState(true);
   const [completing, setCompleting] = useState(null); // task id being completed
@@ -66,6 +62,10 @@ export default function DailyBrief() {
     const today    = todayStr();
     const tomorrow = tomorrowStr();
 
+    // Today bounds for meetings query
+    const todayStart = `${today}T00:00:00`;
+    const todayEnd   = `${today}T23:59:59`;
+
     // ── Fetch org name ────────────────────────────────────────────────────
     const { data: orgData } = await supabase
       .from('organizations')
@@ -76,14 +76,20 @@ export default function DailyBrief() {
 
     if (isFullAccess) {
       // ── Admin / Manager / Compliance / Demo — org-wide ────────────────
-      const [{ data: clientsData }, { data: tasksData }] = await Promise.all([
+      const [{ data: meetingsData }, { data: clientsData }, { data: tasksData }] = await Promise.all([
         supabase
-          .from('clients')
-          .select('id, first_name, last_name, next_review_date')
+          .from('meetings')
+          .select('id, client_id, category, meeting_type, status, scheduled_at, duration_mins, description')
           .eq('org_id', orgId)
           .is('deleted_at', null)
-          .in('next_review_date', [today, tomorrow])
-          .order('next_review_date', { ascending: true }),
+          .gte('scheduled_at', todayStart)
+          .lte('scheduled_at', todayEnd)
+          .order('scheduled_at', { ascending: true }),
+        supabase
+          .from('clients')
+          .select('id, first_name, last_name')
+          .eq('org_id', orgId)
+          .is('deleted_at', null),
         supabase
           .from('client_tasks')
           .select('id, title, due_date, client_id, completed')
@@ -93,18 +99,13 @@ export default function DailyBrief() {
           .lte('due_date', today)
           .order('due_date', { ascending: true }),
       ]);
-      setMeetings(clientsData || []);
+
+      setMeetings(meetingsData || []);
+      setClients(clientsData || []);
 
       // Attach client names to tasks
-      const allClientIds = [...new Set((tasksData || []).map(t => t.client_id))];
-      let clientNameMap = {};
-      if (allClientIds.length > 0) {
-        const { data: names } = await supabase
-          .from('clients')
-          .select('id, first_name, last_name')
-          .in('id', allClientIds);
-        (names || []).forEach(c => { clientNameMap[c.id] = `${c.first_name} ${c.last_name}`; });
-      }
+      const clientNameMap = {};
+      (clientsData || []).forEach(c => { clientNameMap[c.id] = `${c.first_name} ${c.last_name}`; });
       setTasks((tasksData || []).map(t => ({ ...t, clientName: clientNameMap[t.client_id] || '—' })));
 
     } else {
@@ -118,20 +119,28 @@ export default function DailyBrief() {
 
       if (myClientIds.length === 0) {
         setMeetings([]);
+        setClients([]);
         setTasks([]);
         setLoading(false);
         return;
       }
 
-      const [{ data: clientsData }, { data: tasksData }] = await Promise.all([
+      const [{ data: meetingsData }, { data: clientsData }, { data: tasksData }] = await Promise.all([
         supabase
-          .from('clients')
-          .select('id, first_name, last_name, next_review_date')
+          .from('meetings')
+          .select('id, client_id, category, meeting_type, status, scheduled_at, duration_mins, description')
           .eq('org_id', orgId)
           .is('deleted_at', null)
-          .in('id', myClientIds)
-          .in('next_review_date', [today, tomorrow])
-          .order('next_review_date', { ascending: true }),
+          .in('client_id', myClientIds)
+          .gte('scheduled_at', todayStart)
+          .lte('scheduled_at', todayEnd)
+          .order('scheduled_at', { ascending: true }),
+        supabase
+          .from('clients')
+          .select('id, first_name, last_name')
+          .eq('org_id', orgId)
+          .is('deleted_at', null)
+          .in('id', myClientIds),
         supabase
           .from('client_tasks')
           .select('id, title, due_date, client_id, completed')
@@ -142,12 +151,14 @@ export default function DailyBrief() {
           .lte('due_date', today)
           .order('due_date', { ascending: true }),
       ]);
-      setMeetings(clientsData || []);
+
+      setMeetings(meetingsData || []);
+      setClients(clientsData || []);
 
       // Attach client names to tasks
       const clientNameMap = {};
       (clientsData || []).forEach(c => { clientNameMap[c.id] = `${c.first_name} ${c.last_name}`; });
-      // Some tasks may belong to clients not in meeting list — fetch those too
+      // Some tasks may belong to clients not in clients list — fetch those too
       const extraIds = [...new Set((tasksData || []).map(t => t.client_id).filter(id => !clientNameMap[id]))];
       if (extraIds.length > 0) {
         const { data: extra } = await supabase
@@ -205,33 +216,6 @@ export default function DailyBrief() {
       textTransform: 'uppercase', color: t.ACCENT, marginBottom: '12px',
     },
 
-    // Cards
-    card: {
-      background: t.SURFACE, border: `1px solid ${t.BORDER}`,
-      borderRadius: RADIUS_LG, padding: '16px 20px',
-      boxShadow: SHADOW_SM, marginBottom: '10px',
-      display: 'flex', flexDirection: 'column', gap: '6px',
-    },
-    cardRow: {
-      display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px',
-    },
-    clientName: {
-      fontSize: '15px', fontWeight: FW_REGULAR, color: t.TEXT,
-      fontFamily: FONT_BODY, margin: 0,
-    },
-    reviewLabel: {
-      fontSize: '11px', fontWeight: FW_MEDIUM, color: t.ACCENT,
-      letterSpacing: '0.05em',
-    },
-    logBtn: {
-      background: 'none', border: `1px solid ${t.BORDER}`,
-      borderRadius: RADIUS_MD, padding: '5px 12px',
-      fontSize: '12px', fontWeight: FW_MEDIUM,
-      color: t.TEXT_MUTED, cursor: 'pointer',
-      fontFamily: FONT_BODY, flexShrink: 0,
-      transition: 'border-color 0.15s, color 0.15s',
-    },
-
     // Tasks
     taskTitle: {
       fontSize: '14px', fontWeight: FW_REGULAR, color: t.TEXT, margin: 0,
@@ -266,7 +250,6 @@ export default function DailyBrief() {
     <div style={s.pageWrapper}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=DM+Sans:wght@300;400;500;600&display=swap');
-        .brief-log-btn:hover { border-color: ${t.ACCENT} !important; color: ${t.ACCENT} !important; }
         .brief-complete-btn:hover { border-color: ${t.ACCENT} !important; color: ${t.ACCENT} !important; }
       `}</style>
 
@@ -286,27 +269,20 @@ export default function DailyBrief() {
 
             {/* ── Schedule ───────────────────────────────────────────── */}
             <div>
-              <p style={s.sectionLabel}>Schedule</p>
+              <p style={s.sectionLabel}>Today's Schedule</p>
               {meetings.length === 0 ? (
-                <p style={s.emptyState}>No reviews scheduled for today or tomorrow.</p>
+                <p style={s.emptyState}>No meetings scheduled for today.</p>
               ) : (
-                meetings.map(client => (
-                  <div key={client.id} style={s.card}>
-                    <div style={s.cardRow}>
-                      <div>
-                        <p style={s.clientName}>{client.first_name} {client.last_name}</p>
-                        <p style={s.reviewLabel}>{reviewLabel(client.next_review_date)} — Review</p>
-                      </div>
-                      <button
-                        className="brief-log-btn"
-                        style={s.logBtn}
-                        onClick={() => navigate(`/hq/notes?client_id=${client.id}`, { state: { from: '/hq/brief' } })}
-                      >
-                        Log note
-                      </button>
-                    </div>
-                  </div>
-                ))
+                <CalendarView
+                  meetings={meetings}
+                  clients={clients}
+                  navigate={navigate}
+                  defaultView="day"
+                  defaultDate={new Date()}
+                  hideViewToggle={true}
+                  hourHeight={48}
+                  maxHours={14}
+                />
               )}
             </div>
 

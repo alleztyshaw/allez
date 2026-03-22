@@ -1,11 +1,14 @@
 // src/components/CalendarView.js
 // Reusable calendar component used by CRM and Daily Brief.
 // Props:
-//   meetings    — array of meeting objects (with scheduled_at, duration_mins, etc.)
-//   clients     — array of client objects (for name lookup)
-//   navigate    — react-router navigate function
-//   hourHeight  — px per hour row (default 56)
-//   maxHours    — how many hours to show in the scrollable window (default 12)
+//   meetings     — array of meeting objects (with scheduled_at, duration_mins, etc.)
+//   clients      — array of client objects (for name lookup)
+//   navigate     — react-router navigate function
+//   hourHeight   — px per hour row (default 56)
+//   maxHours     — how many hours to show in the scrollable window (default 12)
+//   defaultView  — 'day' | 'week' | 'month' — initial view (default 'week')
+//   defaultDate  — Date object — initial anchor date (default today)
+//   hideControls — boolean — hide the controls bar entirely (default false)
 
 import React, { useState } from 'react';
 import { useTokens } from '../context/ThemeContext';
@@ -65,31 +68,35 @@ function clientName(clients, id) {
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function CalendarView({
-  meetings = [],
-  clients  = [],
+  meetings        = [],
+  clients         = [],
   navigate,
-  hourHeight = 56,
-  maxHours   = 12,
+  hourHeight      = 56,
+  maxHours        = 12,
+  defaultView     = 'week',
+  defaultDate     = null,
+  hideControls    = false,
+  hideViewToggle  = false,
 }) {
   const t = useTokens();
   const windowWidth = useWindowWidth();
   const isMobile = windowWidth < MOBILE_BREAKPOINT;
 
-  const [view,   setView]   = useState('week');
-  const [anchor, setAnchor] = useState(new Date());
+  const [view,   setView]   = useState(defaultView);
+  const [anchor, setAnchor] = useState(defaultDate ?? new Date());
 
-  const HOURS   = Array.from({ length: 24 }, (_, i) => i);
+  const HOURS    = Array.from({ length: 24 }, (_, i) => i);
   const HEADER_H = 52; // px — sticky day header row height
-  const calDays = getDays(view, anchor);
-  const tz      = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  const tzLabel = new Date().toLocaleTimeString('en-US', { timeZoneName: 'short' }).split(' ').pop();
+  const calDays  = getDays(view, anchor);
+  const tz       = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const tzLabel  = new Date().toLocaleTimeString('en-US', { timeZoneName: 'short' }).split(' ').pop();
 
   function nav(dir) {
     setAnchor(prev => {
       const d = new Date(prev);
-      if (view === 'day')   d.setDate(d.getDate() + dir);
+      if (view === 'day')       d.setDate(d.getDate() + dir);
       else if (view === 'week') d.setDate(d.getDate() + dir * 7);
-      else d.setMonth(d.getMonth() + dir);
+      else                      d.setMonth(d.getMonth() + dir);
       return d;
     });
   }
@@ -116,9 +123,9 @@ export default function CalendarView({
 
   // ── Month view ─────────────────────────────────────────────────────────────
   function renderMonth() {
-    const firstDay  = startOf('month', anchor).getDay();
-    const blanks    = Array.from({ length: firstDay }, (_, i) => i);
-    const allCells  = [...blanks.map(() => null), ...calDays];
+    const firstDay = startOf('month', anchor).getDay();
+    const blanks   = Array.from({ length: firstDay }, (_, i) => i);
+    const allCells = [...blanks.map(() => null), ...calDays];
     while (allCells.length % 7 !== 0) allCells.push(null);
 
     return (
@@ -207,7 +214,7 @@ export default function CalendarView({
               </React.Fragment>
             ))}
 
-            {/* Meeting tiles — absolutely positioned, span freely across hour lines */}
+            {/* Meeting tiles — absolutely positioned */}
             {calDays.map((day, colIdx) =>
               meetingsForDay(meetings, day).map(m => {
                 const dt = new Date(m.scheduled_at);
@@ -221,20 +228,20 @@ export default function CalendarView({
                     onClick={() => m.client_id && navigate(`/hq/clients/${m.client_id}`)}
                     title={`${m.category}${cName ? ' · ' + cName : ''}\n${dt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`}
                     style={{
-                      position:    'absolute',
-                      top:         topPx,
-                      left:        `calc(52px + ${colIdx} * ((100% - 52px) / ${calDays.length}) + 2px)`,
-                      width:       `calc((100% - 52px) / ${calDays.length} - 4px)`,
-                      height:      blockHeight,
-                      background:  t.CALENDAR_TILE,
-                      borderLeft:  `3px solid ${statusColor}`,
+                      position:     'absolute',
+                      top:          topPx,
+                      left:         `calc(52px + ${colIdx} * ((100% - 52px) / ${calDays.length}) + 2px)`,
+                      width:        `calc((100% - 52px) / ${calDays.length} - 4px)`,
+                      height:       blockHeight,
+                      background:   t.CALENDAR_TILE,
+                      borderLeft:   `3px solid ${statusColor}`,
                       borderRadius: '3px',
-                      padding:     '3px 6px',
-                      cursor:      m.client_id ? 'pointer' : 'default',
-                      overflow:    'hidden',
-                      zIndex:      2,
-                      boxSizing:   'border-box',
-                      boxShadow:   '0 1px 4px rgba(0,0,0,0.15)',
+                      padding:      '3px 6px',
+                      cursor:       m.client_id ? 'pointer' : 'default',
+                      overflow:     'hidden',
+                      zIndex:       2,
+                      boxSizing:    'border-box',
+                      boxShadow:    '0 1px 4px rgba(0,0,0,0.15)',
                     }}
                   >
                     <p style={{ fontSize: '11px', fontWeight: FW_SEMIBOLD, color: statusColor, margin: 0, lineHeight: 1.4, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
@@ -259,46 +266,50 @@ export default function CalendarView({
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <div>
-      {/* Controls */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', flexWrap: 'wrap', gap: '10px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <button onClick={() => nav(-1)} style={navBtn}>‹</button>
-          <span style={{ fontSize: '15px', fontWeight: FW_MEDIUM, color: t.TEXT, fontFamily: FONT_BODY, minWidth: isMobile ? 'auto' : '220px', textAlign: 'center' }}>{title()}</span>
-          <button onClick={() => nav(1)}  style={navBtn}>›</button>
-          {/* Jump to date */}
-          <label style={{ position: 'relative', cursor: 'pointer' }} title={`Jump to ${view}`}>
-            <span style={{ display: 'flex', alignItems: 'center', background: 'none', border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_MD, padding: '5px 9px', color: t.TEXT_MUTED, userSelect: 'none' }}>
-              <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect x="1" y="3" width="13" height="11" rx="1.5" stroke="currentColor" strokeWidth="1.2" fill="none" />
-                <line x1="1" y1="6.5" x2="14" y2="6.5" stroke="currentColor" strokeWidth="1.1" />
-                <line x1="4.5" y1="1.5" x2="4.5" y2="4.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-                <line x1="10.5" y1="1.5" x2="10.5" y2="4.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-              </svg>
-            </span>
-            <input
-              type={view === 'month' ? 'month' : 'date'}
-              style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%', top: 0, left: 0, cursor: 'pointer' }}
-              onChange={e => {
-                if (!e.target.value) return;
-                const d = new Date(e.target.value + (view === 'month' ? '-01' : '') + 'T12:00:00');
-                if (!isNaN(d)) setAnchor(d);
-              }}
-            />
-          </label>
+      {/* Controls — hidden when hideControls=true (e.g. Daily Brief embed) */}
+      {!hideControls && (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', flexWrap: 'wrap', gap: '10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <button onClick={() => nav(-1)} style={navBtn}>‹</button>
+            <span style={{ fontSize: '15px', fontWeight: FW_MEDIUM, color: t.TEXT, fontFamily: FONT_BODY, minWidth: isMobile ? 'auto' : '220px', textAlign: 'center' }}>{title()}</span>
+            <button onClick={() => nav(1)}  style={navBtn}>›</button>
+            {/* Jump to date */}
+            <label style={{ position: 'relative', cursor: 'pointer' }} title={`Jump to ${view}`}>
+              <span style={{ display: 'flex', alignItems: 'center', background: 'none', border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_MD, padding: '5px 9px', color: t.TEXT_MUTED, userSelect: 'none' }}>
+                <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="1" y="3" width="13" height="11" rx="1.5" stroke="currentColor" strokeWidth="1.2" fill="none" />
+                  <line x1="1" y1="6.5" x2="14" y2="6.5" stroke="currentColor" strokeWidth="1.1" />
+                  <line x1="4.5" y1="1.5" x2="4.5" y2="4.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+                  <line x1="10.5" y1="1.5" x2="10.5" y2="4.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+                </svg>
+              </span>
+              <input
+                type={view === 'month' ? 'month' : 'date'}
+                style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%', top: 0, left: 0, cursor: 'pointer' }}
+                onChange={e => {
+                  if (!e.target.value) return;
+                  const d = new Date(e.target.value + (view === 'month' ? '-01' : '') + 'T12:00:00');
+                  if (!isNaN(d)) setAnchor(d);
+                }}
+              />
+            </label>
+          </div>
+          {/* View toggle — hidden when hideViewToggle=true (e.g. Daily Brief) */}
+          {!hideViewToggle && (
+            <div style={{ display: 'flex', gap: '4px' }}>
+              {['Day', 'Week', 'Month'].map(v => (
+                <button
+                  key={v}
+                  onClick={() => setView(v.toLowerCase())}
+                  style={{ padding: '5px 14px', borderRadius: RADIUS_MD, border: `1px solid ${view === v.toLowerCase() ? t.ACCENT_BORDER : t.BORDER}`, background: view === v.toLowerCase() ? t.ACCENT_MUTED : 'none', color: view === v.toLowerCase() ? t.ACCENT : t.TEXT_MUTED, fontSize: '12px', fontWeight: FW_MEDIUM, fontFamily: FONT_BODY, cursor: 'pointer' }}
+                >
+                  {v}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
-        {/* View toggle */}
-        <div style={{ display: 'flex', gap: '4px' }}>
-          {['Day', 'Week', 'Month'].map(v => (
-            <button
-              key={v}
-              onClick={() => setView(v.toLowerCase())}
-              style={{ padding: '5px 14px', borderRadius: RADIUS_MD, border: `1px solid ${view === v.toLowerCase() ? t.ACCENT_BORDER : t.BORDER}`, background: view === v.toLowerCase() ? t.ACCENT_MUTED : 'none', color: view === v.toLowerCase() ? t.ACCENT : t.TEXT_MUTED, fontSize: '12px', fontWeight: FW_MEDIUM, fontFamily: FONT_BODY, cursor: 'pointer' }}
-            >
-              {v}
-            </button>
-          ))}
-        </div>
-      </div>
+      )}
 
       {view === 'month' ? renderMonth() : renderTimeGrid()}
     </div>
