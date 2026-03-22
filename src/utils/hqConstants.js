@@ -62,11 +62,10 @@ export const FONT_DISPLAY = "'Cormorant Garamond', Georgia, serif"; // Hero, cli
 export const FONT_BODY    = "'DM Sans', 'Segoe UI', sans-serif";    // All UI text, data, labels
 
 // ── Font weights ──────────────────────────────────────────────────────────────
-// Use these instead of hardcoding numbers — keeps weight consistent everywhere.
-export const FW_LIGHT    = '300'; // muted text, meta, subtitles, large numbers
-export const FW_REGULAR  = '400'; // body text, card content, names
-export const FW_MEDIUM   = '500'; // tabs, interactive elements
-export const FW_SEMIBOLD = '600'; // labels, badges, buttons, column headers
+export const FW_LIGHT    = '300';
+export const FW_REGULAR  = '400';
+export const FW_MEDIUM   = '500';
+export const FW_SEMIBOLD = '600';
 
 // --- BORDER RADIUS ---
 export const RADIUS_SM   = '6px';
@@ -97,10 +96,32 @@ export const MOBILE_BREAKPOINT       = 900;  // px — single source of truth fo
 
 // --- CLIENT STATUS BADGES ---
 export const STATUS_COLORS = {
-  Active:   { bg: ACCENT_MUTED,                 color: ACCENT    },
-  Prospect: { bg: 'rgba(96,  165, 250, 0.15)',  color: '#60a5fa' },
-  Inactive: { bg: 'rgba(251, 191, 36,  0.15)',  color: '#fbbf24' },
+  Active:   { bg: ACCENT_MUTED,                color: ACCENT    },
+  Prospect: { bg: 'rgba(96,  165, 250, 0.15)', color: '#60a5fa' },
+  Inactive: { bg: 'rgba(251, 191, 36,  0.15)', color: COLOR_WARNING },
 };
+
+// --- CLIENT STATUS TEXT COLORS (no background — for table column use) ---
+export const STATUS_TEXT_COLORS = {
+  Active:   ACCENT,
+  Prospect: '#60a5fa',
+  Inactive: COLOR_WARNING,
+};
+
+// --- CADENCE HEALTH SIGNAL ---
+// Maps communication_frequency to days between reviews.
+// null = "As Needed" — never flagged as overdue.
+export const COMMUNICATION_FREQUENCY_DAYS = {
+  'Monthly':     30,
+  'Quarterly':   90,
+  'Semi-Annual': 180,
+  'Annual':      365,
+  'As Needed':   null,
+};
+
+// Thresholds for cadence dot colour (days until next_review_date)
+export const CADENCE_AMBER_DAYS = 30; // within 30 days — amber
+export const CADENCE_RED_DAYS   = 0;  // past due — red
 
 // --- DROPDOWN / FORM OPTIONS ---
 export const STATUS_OPTIONS = ['Prospect', 'Active', 'Inactive'];
@@ -116,7 +137,6 @@ export const ASSET_LEVEL_OPTIONS = [
 ];
 
 // Maps a raw AUM number to the corresponding asset_level bucket.
-// Used to keep asset_level in sync whenever AUM is manually entered or API-synced.
 export function aumToAssetLevel(aum) {
   if (!aum || isNaN(aum)) return '';
   const n = Number(aum);
@@ -130,54 +150,30 @@ export function aumToAssetLevel(aum) {
 }
 
 export const CUSTODIAN_OPTIONS = [
-  'Schwab',
-  'Fidelity',
-  'Pershing',
-  'TD Ameritrade',
-  'Vanguard',
-  'Interactive Brokers',
-  'Apex Clearing',
-  'Other',
+  'Schwab', 'Fidelity', 'Pershing', 'TD Ameritrade',
+  'Vanguard', 'Interactive Brokers', 'Apex Clearing', 'Other',
 ];
 
 export const RISK_TOLERANCE_OPTIONS = [
-  'Conservative',
-  'Moderately Conservative',
-  'Moderate',
-  'Moderately Aggressive',
-  'Aggressive',
+  'Conservative', 'Moderately Conservative', 'Moderate',
+  'Moderately Aggressive', 'Aggressive',
 ];
 
-export const INVESTMENT_OBJECTIVE_OPTIONS = [
-  'Growth',
-  'Income',
-  'Preservation',
-  'Balanced',
-];
+export const INVESTMENT_OBJECTIVE_OPTIONS = ['Growth', 'Income', 'Preservation', 'Balanced'];
+export const TIME_HORIZON_OPTIONS         = ['Short (0–3yr)', 'Medium (3–10yr)', 'Long (10yr+)'];
+export const CONTACT_METHOD_OPTIONS       = ['Email', 'Phone', 'In-person'];
 
-export const TIME_HORIZON_OPTIONS = [
-  'Short (0–3yr)',
-  'Medium (3–10yr)',
-  'Long (10yr+)',
-];
+// Updated to match COMMUNICATION_FREQUENCY_DAYS keys exactly
+export const COMMUNICATION_FREQUENCY_OPTIONS = ['Monthly', 'Quarterly', 'Semi-Annual', 'Annual', 'As Needed'];
 
-export const CONTACT_METHOD_OPTIONS          = ['Email', 'Phone', 'In-person'];
-export const COMMUNICATION_FREQUENCY_OPTIONS = ['Monthly', 'Quarterly', 'Annually'];
-export const LIQUIDITY_NEEDS_OPTIONS         = ['Low', 'Medium', 'High'];
-export const TAX_BRACKET_OPTIONS             = ['10%', '12%', '22%', '24%', '32%', '35%', '37%'];
-export const REFERRAL_SOURCE_OPTIONS         = [
-  'Existing Client',
-  'LinkedIn',
-  'Event',
-  'Cold Outreach',
-  'Website',
-  'Other',
+export const LIQUIDITY_NEEDS_OPTIONS = ['Low', 'Medium', 'High'];
+export const TAX_BRACKET_OPTIONS     = ['10%', '12%', '22%', '24%', '32%', '35%', '37%'];
+export const REFERRAL_SOURCE_OPTIONS = [
+  'Existing Client', 'LinkedIn', 'Event', 'Cold Outreach', 'Website', 'Other',
 ];
 
 // ============================================================
 // MEETINGS
-// Single source of truth for meeting categories, types, and
-// recurrence options. Used by UI dropdowns and DB validation.
 // ============================================================
 
 export const MEETING_CATEGORIES = [
@@ -192,24 +188,24 @@ export const MEETING_CATEGORIES = [
 ];
 
 export const MEETING_TYPES = [
-  { value: 'video',      label: 'Video Call'  },
-  { value: 'phone',      label: 'Phone Call'  },
-  { value: 'in_person',  label: 'In Person'   },
-  { value: 'other',      label: 'Other'       },
+  { value: 'video',     label: 'Video Call' },
+  { value: 'phone',     label: 'Phone Call' },
+  { value: 'in_person', label: 'In Person'  },
+  { value: 'other',     label: 'Other'      },
 ];
 
 export const MEETING_STATUSES = [
-  { value: 'scheduled',  label: 'Scheduled'  },
-  { value: 'completed',  label: 'Completed'  },
-  { value: 'cancelled',  label: 'Cancelled'  },
+  { value: 'scheduled', label: 'Scheduled' },
+  { value: 'completed', label: 'Completed' },
+  { value: 'cancelled', label: 'Cancelled' },
 ];
 
 export const MEETING_RECURRENCES = [
-  { value: 'none',       label: 'Does not repeat' },
-  { value: 'weekly',     label: 'Weekly'           },
-  { value: 'monthly',    label: 'Monthly'          },
-  { value: 'quarterly',  label: 'Quarterly'        },
-  { value: 'annually',   label: 'Annually'         },
+  { value: 'none',      label: 'Does not repeat' },
+  { value: 'weekly',    label: 'Weekly'           },
+  { value: 'monthly',   label: 'Monthly'          },
+  { value: 'quarterly', label: 'Quarterly'        },
+  { value: 'annually',  label: 'Annually'         },
 ];
 
 export const MEETING_DURATION_OPTIONS = [
@@ -221,20 +217,11 @@ export const MEETING_DURATION_OPTIONS = [
   { value: 120, label: '2 hours'    },
 ];
 
-// Prompt template mirrored here for reference and tuning.
-// The authoritative copy used at runtime lives in api/process-note.js.
-// Update both if you change the prompt.
-// ============================================================
 export const AI_NOTE_PROMPT_FIELDS = ['title', 'summary', 'decisions', 'action_items', 'follow_ups'];
 
 // ============================================================
 // ROLE TIERS
-// Single source of truth for role-based access control.
-// Update these arrays when adding new roles — changes cascade
-// automatically to every page that imports them.
 // ============================================================
-
-// ── Pipeline ──────────────────────────────────────────────────────────────────
 
 export const PIPELINE_STAGES = [
   { key: 'Lead',       label: 'Lead'       },
@@ -245,47 +232,28 @@ export const PIPELINE_STAGES = [
 ];
 
 export const PIPELINE_STAGE_COLORS = {
-  Lead:       { bg: 'rgba(96,165,250,0.12)',   color: '#60a5fa' },
-  Proposal:   { bg: 'rgba(167,139,250,0.12)',  color: '#a78bfa' },
-  Agreement:  { bg: 'rgba(251,191,36,0.12)',   color: '#fbbf24' },
-  Onboarding: { bg: 'rgba(52,211,153,0.12)',   color: '#34d399' },
-  Active:     { bg: 'rgba(46,139,110,0.12)',   color: '#2E8B6E' },
+  Lead:       { bg: 'rgba(96,165,250,0.12)',  color: '#60a5fa' },
+  Proposal:   { bg: 'rgba(167,139,250,0.12)', color: '#a78bfa' },
+  Agreement:  { bg: 'rgba(251,191,36,0.12)',  color: '#fbbf24' },
+  Onboarding: { bg: 'rgba(52,211,153,0.12)',  color: '#34d399' },
+  Active:     { bg: 'rgba(46,139,110,0.12)',  color: '#2E8B6E' },
 };
 
-// ── Role tiers ────────────────────────────────────────────────────────────────
-
-// Roles that can see ALL clients in the org (not just assigned ones)
 export const FULL_ACCESS_ROLES = ['admin', 'manager', 'compliance'];
+export const WRITE_ROLES       = ['admin', 'manager', 'advisor', 'associate'];
+export const BRIEF_ROLES       = ['admin', 'manager', 'advisor'];
+export const ORG_ADMIN_ROLES   = ['admin'];
+export const ROLE_OPTIONS      = ['admin', 'manager', 'advisor', 'associate', 'compliance'];
 
-// Roles that can write — create notes, tasks, edit client data
-// compliance is excluded (read-only)
-export const WRITE_ROLES = ['admin', 'manager', 'advisor', 'associate'];
-
-// Roles that can generate and update AI briefs
-export const BRIEF_ROLES = ['admin', 'manager', 'advisor'];
-
-// Roles that can manage the org — invite members, assign/remove advisors, set primary
-export const ORG_ADMIN_ROLES = ['admin'];
-
-// All valid org member roles — single source of truth for dropdowns and validation
-export const ROLE_OPTIONS = ['admin', 'manager', 'advisor', 'associate', 'compliance'];
-
-// Footer copy — single source of truth so it never drifts between layouts
 export const FOOTER_TEXT = '© 2026 Allez HQ · All rights reserved · Built for wealth management professionals';
 
 // ============================================================
 // AI MODEL
-// Single source of truth for the Claude model used across all
-// serverless functions. Update here to upgrade everywhere.
 // ============================================================
 export const CLAUDE_MODEL = 'claude-haiku-4-5-20251001';
 
 // ============================================================
 // BACKWARD-COMPATIBLE ALIASES
-// These map old token names to the new brand system so that
-// Clients.js, ClientDetail.js, Notes.js, and Team.js continue
-// to compile without changes. Migrate pages to D_* names over
-// time and remove these aliases once all pages are updated.
 // ============================================================
 export const GOLD         = ACCENT;
 export const GREEN        = ACCENT;
@@ -298,45 +266,41 @@ export const INPUT_BG     = D_SURFACE_ALT;
 export const PAGE_PADDING = '48px 40px 80px';
 export const PAGE_FONT    = FONT_BODY;
 
-
 // ── Standard page layout styles ───────────────────────────────────────────────
-// Use in every page: const s = { ...pageStyles(t, isMobile), myCustomStyle: {...} }
-// This ensures consistent padding, typography, and structure across all pages.
-
 export function pageStyles(t, isMobile) {
   return {
     pageWrapper: {
-      background:  t.BG,
-      minHeight:   '100vh',
-      width:       '100%',
+      background: t.BG,
+      minHeight:  '100vh',
+      width:      '100%',
     },
     page: {
-      maxWidth:    '1200px',
-      margin:      '0 auto',
-      padding:     isMobile ? '28px 16px 60px' : '40px 40px 80px',
-      fontFamily:  FONT_BODY,
-      color:       t.TEXT,
+      maxWidth:   '1200px',
+      margin:     '0 auto',
+      padding:    isMobile ? '28px 16px 60px' : '40px 40px 80px',
+      fontFamily: FONT_BODY,
+      color:      t.TEXT,
     },
     header: {
-      display:         'flex',
-      justifyContent:  'space-between',
-      alignItems:      'flex-start',
-      marginBottom:    '32px',
+      display:        'flex',
+      justifyContent: 'space-between',
+      alignItems:     'flex-start',
+      marginBottom:   '32px',
     },
     title: {
-      fontFamily:     FONT_DISPLAY,
-      fontSize:       isMobile ? '32px' : '44px',
-      fontWeight:     '300',
-      color:          t.TEXT,
-      margin:         '0 0 6px',
-      letterSpacing:  '0.01em',
-      lineHeight:     1.1,
+      fontFamily:    FONT_DISPLAY,
+      fontSize:      isMobile ? '32px' : '44px',
+      fontWeight:    '300',
+      color:         t.TEXT,
+      margin:        '0 0 6px',
+      letterSpacing: '0.01em',
+      lineHeight:    1.1,
     },
     subtitle: {
-      fontSize:    '13px',
-      color:       t.TEXT_MUTED,
-      margin:      0,
-      fontWeight:  '300',
+      fontSize:   '13px',
+      color:      t.TEXT_MUTED,
+      margin:     0,
+      fontWeight: '300',
     },
   };
 }

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { useOrg } from '../context/OrgContext';
+import MeetingModal from '../components/MeetingModal';
 import {
   ASSET_LEVEL_OPTIONS,
   COMMUNICATION_FREQUENCY_OPTIONS,
@@ -27,11 +28,8 @@ import {
   BRIEF_ROLES,
   CUSTODIAN_OPTIONS,
   aumToAssetLevel,
-  MEETING_CATEGORIES,
   MEETING_TYPES,
-  MEETING_STATUSES,
   MEETING_RECURRENCES,
-  MEETING_DURATION_OPTIONS,
   COLOR_ERROR,
   MOBILE_BREAKPOINT,
   FW_LIGHT, FW_REGULAR, FW_MEDIUM, FW_SEMIBOLD,
@@ -112,445 +110,118 @@ export default function ClientDetail() {
   const isMobile = windowWidth < MOBILE_BREAKPOINT;
 
   const s = {
-    pageWrapper: {
-      background: t.BG,
-      minHeight: '100vh',
-      width: '100%',
-    },
-    page: {
-      maxWidth: '1200px',
-      margin: '0 auto',
-      padding: '120px 40px 80px',
-      fontFamily: FONT_BODY,
-      color: t.TEXT,
-    },
-    loading: {
-      background: t.BG,
-      minHeight: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      color: t.TEXT_MUTED,
-      fontFamily: FONT_BODY,
-    },
-    topRow: {
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: '32px',
-    },
-    backLink: {
-      color: t.TEXT_MUTED,
-      textDecoration: 'none',
-      fontSize: '14px',
-      fontWeight: FW_LIGHT,
-      transition: 'color 0.15s',
-    },
-    actionButtons: {
-      display: 'flex',
-      gap: '10px',
-    },
-    editButton: {
-      background: t.ACCENT_MUTED,
-      color: t.ACCENT,
-      border: `1px solid ${t.ACCENT_BORDER}`,
-      borderRadius: RADIUS_MD,
-      padding: '8px 18px',
-      fontSize: '13px',
-      fontWeight: FW_SEMIBOLD,
-      cursor: 'pointer',
-      fontFamily: FONT_BODY,
-    },
-    deleteButton: {
-      background: 'transparent',
-      color: t.TEXT_MUTED,
-      border: `1px solid ${t.BORDER}`,
-      borderRadius: RADIUS_MD,
-      padding: '8px 18px',
-      fontSize: '13px',
-      fontWeight: FW_MEDIUM,
-      cursor: 'pointer',
-      fontFamily: FONT_BODY,
-    },
-    header: {
-      display: 'flex',
-      alignItems: 'center',
-      gap: '20px',
-      marginBottom: '28px',
-    },
+    pageWrapper: { background: t.BG, minHeight: '100vh', width: '100%' },
+    page: { maxWidth: '1200px', margin: '0 auto', padding: '120px 40px 80px', fontFamily: FONT_BODY, color: t.TEXT },
+    loading: { background: t.BG, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: t.TEXT_MUTED, fontFamily: FONT_BODY },
+    topRow: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' },
+    backLink: { color: t.TEXT_MUTED, textDecoration: 'none', fontSize: '14px', fontWeight: FW_LIGHT },
+    actionButtons: { display: 'flex', gap: '10px' },
+    editButton: { background: t.ACCENT_MUTED, color: t.ACCENT, border: `1px solid ${t.ACCENT_BORDER}`, borderRadius: RADIUS_MD, padding: '8px 18px', fontSize: '13px', fontWeight: FW_SEMIBOLD, cursor: 'pointer', fontFamily: FONT_BODY },
+    deleteButton: { background: 'transparent', color: t.TEXT_MUTED, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_MD, padding: '8px 18px', fontSize: '13px', fontWeight: FW_MEDIUM, cursor: 'pointer', fontFamily: FONT_BODY },
+    header: { display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '28px' },
     headerText: { flex: 1 },
-    name: {
-      fontFamily: FONT_DISPLAY,
-      fontSize: '40px',
-      fontWeight: FW_LIGHT,
-      margin: '0 0 4px',
-      color: t.TEXT,
-      letterSpacing: '0.01em',
-      lineHeight: 1.1,
-    },
-    email: {
-      fontSize: '14px',
-      color: t.TEXT_MUTED,
-      margin: '0 0 2px',
-      fontWeight: FW_LIGHT,
-    },
-    badge: {
-      display: 'inline-block',
-      padding: '4px 14px',
-      borderRadius: RADIUS_PILL,
-      fontSize: '11px',
-      fontWeight: FW_SEMIBOLD,
-      letterSpacing: '0.06em',
-      textTransform: 'uppercase',
-      marginLeft: 'auto',
-    },
-    divider: {
-      height: '1px',
-      background: `linear-gradient(to right, ${t.BORDER}, transparent)`,
-      marginBottom: '36px',
-    },
-    grid: {
-      display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-      gap: '16px',
-      marginBottom: '20px',
-    },
-    tabRow: {
-      display: 'flex', gap: '4px', marginBottom: '28px',
-      borderBottom: `1px solid ${t.BORDER}`, paddingBottom: '0',
-    },
-    tab: {
-      padding: '8px 20px', fontSize: '13px', fontWeight: FW_MEDIUM,
-      fontFamily: FONT_BODY, cursor: 'pointer', background: 'none',
-      border: 'none', borderBottom: '2px solid transparent',
-      color: t.TEXT_MUTED, marginBottom: '-1px', transition: 'color 0.15s',
-    },
-    tabActive: {
-      color: t.TEXT, borderBottom: `2px solid ${t.ACCENT}`,
-    },
-    section: {
-      background: t.SURFACE,
-      border: `1px solid ${t.BORDER}`,
-      borderRadius: RADIUS_LG,
-      padding: '24px',
-      boxShadow: SHADOW_MD,
-    },
-    sectionLabel: {
-      fontSize: '10px',
-      fontWeight: FW_SEMIBOLD,
-      textTransform: 'uppercase',
-      letterSpacing: '0.12em',
-      color: t.ACCENT,
-      margin: '0 0 16px',
-    },
-    fieldGrid: {
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '12px',
-    },
-    field: {
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      gap: '12px',
-    },
-    fieldLabel: {
-      fontSize: '13px',
-      color: t.TEXT_MUTED,
-      fontWeight: FW_REGULAR,
-    },
-    fieldValue: {
-      fontSize: '13px',
-      color: t.TEXT,
-      textAlign: 'right',
-      fontWeight: FW_REGULAR,
-    },
-    notesCard: {
-      background: t.SURFACE,
-      border: `1px solid ${t.BORDER}`,
-      borderRadius: RADIUS_LG,
-      padding: '24px',
-      marginTop: '4px',
-      boxShadow: SHADOW_MD,
-    },
-    notesText: {
-      fontSize: '14px',
-      color: t.TEXT,
-      lineHeight: '1.7',
-      margin: 0,
-      fontWeight: FW_LIGHT,
-    },
-    overlay: {
-      position: isMobile ? 'absolute' : 'fixed',
-      inset: 0,
-      background: OVERLAY_BG,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      zIndex: 1000,
-      padding: '20px',
-    },
-    modal: {
-      background: t.SURFACE,
-      border: `1px solid ${t.BORDER}`,
-      borderRadius: RADIUS_LG,
-      width: '100%',
-      maxWidth: '680px',
-      maxHeight: '90vh',
-      display: 'flex',
-      flexDirection: 'column',
-      boxShadow: SHADOW_LG,
-    },
-    modalHeader: {
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      padding: '20px 24px',
-      borderBottom: `1px solid ${t.BORDER}`,
-    },
-    modalTitle: {
-      margin: 0,
-      fontFamily: FONT_DISPLAY,
-      fontSize: '24px',
-      fontWeight: FW_REGULAR,
-      color: t.TEXT,
-      letterSpacing: '0.01em',
-    },
-    closeButton: {
-      background: 'none',
-      border: 'none',
-      fontSize: '18px',
-      cursor: 'pointer',
-      color: t.TEXT_MUTED,
-      padding: '4px 8px',
-    },
-    modalBody: {
-      overflowY: 'auto',
-      padding: '24px',
-      flex: 1,
-      background: t.SURFACE,
-    },
-    formSectionLabel: {
-      fontSize: '10px',
-      fontWeight: FW_SEMIBOLD,
-      textTransform: 'uppercase',
-      letterSpacing: '0.12em',
-      color: t.ACCENT,
-      margin: '20px 0 12px',
-    },
-    formGrid: {
-      display: 'grid',
-      gridTemplateColumns: '1fr 1fr',
-      gap: '12px',
-    },
-    formField: {
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '4px',
-    },
-    label: {
-      display: 'block',
-      fontSize: '12px',
-      fontWeight: FW_MEDIUM,
-      color: t.TEXT_MUTED,
-      letterSpacing: '0.02em',
-      marginBottom: '6px',
-    },
-    input: {
-      width: '100%',
-      boxSizing: 'border-box',
-      border: `1px solid ${t.BORDER}`,
-      borderRadius: RADIUS_MD,
-      padding: '8px 12px',
-      fontSize: '14px',
-      outline: 'none',
-      color: t.TEXT,
-      background: t.SURFACE_ALT,
-      fontFamily: FONT_BODY,
-    },
-    textarea: {
-      width: '100%',
-      border: `1px solid ${t.BORDER}`,
-      borderRadius: RADIUS_MD,
-      padding: '10px 12px',
-      fontSize: '14px',
-      minHeight: '80px',
-      resize: 'vertical',
-      outline: 'none',
-      color: t.TEXT,
-      background: t.SURFACE_ALT,
-      fontFamily: FONT_BODY,
-      boxSizing: 'border-box',
-    },
-    errorText: {
-      color: COLOR_ERROR,
-      fontSize: '13px',
-      marginTop: '12px',
-    },
-    modalFooter: {
-      padding: '16px 24px',
-      borderTop: `1px solid ${t.BORDER}`,
-      display: 'flex',
-      justifyContent: 'flex-end',
-      gap: '10px',
-      background: t.SURFACE,
-    },
-    cancelButton: {
-      padding: '9px 20px',
-      borderRadius: RADIUS_MD,
-      border: `1px solid ${t.BORDER}`,
-      background: 'transparent',
-      fontSize: '14px',
-      cursor: 'pointer',
-      color: t.TEXT_MUTED,
-      fontFamily: FONT_BODY,
-    },
-    noteAction: {
-      background: 'none',
-      border: 'none',
-      cursor: 'pointer',
-      fontSize: '12px',
-      color: t.TEXT_MUTED,
-      padding: 0,
-      fontFamily: FONT_BODY,
-      textDecoration: 'underline',
-      textUnderlineOffset: '2px',
-    },
-    saveButton: {
-      padding: '9px 20px',
-      borderRadius: RADIUS_MD,
-      border: `1px solid ${t.ACCENT_BORDER}`,
-      background: t.ACCENT_MUTED,
-      color: t.ACCENT,
-      fontSize: '14px',
-      fontWeight: FW_SEMIBOLD,
-      cursor: 'pointer',
-      fontFamily: FONT_BODY,
-    },
-    confirmModal: {
-      background: t.SURFACE,
-      border: `1px solid ${t.BORDER}`,
-      borderRadius: RADIUS_LG,
-      width: '100%',
-      maxWidth: '420px',
-      padding: '32px',
-      boxShadow: SHADOW_LG,
-    },
-    confirmTitle: {
-      fontFamily: FONT_DISPLAY,
-      fontSize: '24px',
-      fontWeight: FW_REGULAR,
-      color: t.TEXT,
-      margin: '0 0 10px',
-      letterSpacing: '0.01em',
-    },
-    confirmText: {
-      fontSize: '14px',
-      color: t.TEXT_MUTED,
-      margin: '0 0 24px',
-      lineHeight: '1.6',
-      fontWeight: FW_LIGHT,
-    },
-    confirmButtons: {
-      display: 'flex',
-      justifyContent: 'flex-end',
-      gap: '10px',
-    },
-    confirmDeleteButton: {
-      padding: '9px 20px',
-      borderRadius: RADIUS_MD,
-      border: `1px solid ${COLOR_ERROR}44`,
-      background: 'transparent',
-      color: COLOR_ERROR,
-      fontSize: '14px',
-      fontWeight: FW_SEMIBOLD,
-      cursor: 'pointer',
-      fontFamily: FONT_BODY,
-    },
+    name: { fontFamily: FONT_DISPLAY, fontSize: '40px', fontWeight: FW_LIGHT, margin: '0 0 4px', color: t.TEXT, letterSpacing: '0.01em', lineHeight: 1.1 },
+    email: { fontSize: '14px', color: t.TEXT_MUTED, margin: '0 0 2px', fontWeight: FW_LIGHT },
+    badge: { display: 'inline-block', padding: '4px 14px', borderRadius: RADIUS_PILL, fontSize: '11px', fontWeight: FW_SEMIBOLD, letterSpacing: '0.06em', textTransform: 'uppercase', marginLeft: 'auto' },
+    divider: { height: '1px', background: `linear-gradient(to right, ${t.BORDER}, transparent)`, marginBottom: '36px' },
+    grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px', marginBottom: '20px' },
+    tabRow: { display: 'flex', gap: '4px', marginBottom: '28px', borderBottom: `1px solid ${t.BORDER}` },
+    tab: { padding: '8px 20px', fontSize: '13px', fontWeight: FW_MEDIUM, fontFamily: FONT_BODY, cursor: 'pointer', background: 'none', border: 'none', borderBottom: '2px solid transparent', color: t.TEXT_MUTED, marginBottom: '-1px' },
+    tabActive: { color: t.TEXT, borderBottom: `2px solid ${t.ACCENT}` },
+    section: { background: t.SURFACE, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_LG, padding: '24px', boxShadow: SHADOW_MD },
+    sectionLabel: { fontSize: '10px', fontWeight: FW_SEMIBOLD, textTransform: 'uppercase', letterSpacing: '0.12em', color: t.ACCENT, margin: '0 0 16px' },
+    fieldGrid: { display: 'flex', flexDirection: 'column', gap: '12px' },
+    field: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' },
+    fieldLabel: { fontSize: '13px', color: t.TEXT_MUTED, fontWeight: FW_REGULAR },
+    fieldValue: { fontSize: '13px', color: t.TEXT, textAlign: 'right', fontWeight: FW_REGULAR },
+    notesCard: { background: t.SURFACE, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_LG, padding: '24px', marginTop: '4px', boxShadow: SHADOW_MD },
+    notesText: { fontSize: '14px', color: t.TEXT, lineHeight: '1.7', margin: 0, fontWeight: FW_LIGHT },
+    overlay: { position: isMobile ? 'absolute' : 'fixed', inset: 0, background: OVERLAY_BG, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' },
+    modal: { background: t.SURFACE, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_LG, width: '100%', maxWidth: '680px', maxHeight: '90vh', display: 'flex', flexDirection: 'column', boxShadow: SHADOW_LG },
+    modalHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 24px', borderBottom: `1px solid ${t.BORDER}` },
+    modalTitle: { margin: 0, fontFamily: FONT_DISPLAY, fontSize: '24px', fontWeight: FW_REGULAR, color: t.TEXT, letterSpacing: '0.01em' },
+    closeButton: { background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: t.TEXT_MUTED, padding: '4px 8px' },
+    modalBody: { overflowY: 'auto', padding: '24px', flex: 1, background: t.SURFACE },
+    formSectionLabel: { fontSize: '10px', fontWeight: FW_SEMIBOLD, textTransform: 'uppercase', letterSpacing: '0.12em', color: t.ACCENT, margin: '20px 0 12px' },
+    formGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' },
+    formField: { display: 'flex', flexDirection: 'column', gap: '4px' },
+    label: { display: 'block', fontSize: '12px', fontWeight: FW_MEDIUM, color: t.TEXT_MUTED, letterSpacing: '0.02em', marginBottom: '6px' },
+    input: { width: '100%', boxSizing: 'border-box', border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_MD, padding: '8px 12px', fontSize: '14px', outline: 'none', color: t.TEXT, background: t.SURFACE_ALT, fontFamily: FONT_BODY },
+    textarea: { width: '100%', border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_MD, padding: '10px 12px', fontSize: '14px', minHeight: '80px', resize: 'vertical', outline: 'none', color: t.TEXT, background: t.SURFACE_ALT, fontFamily: FONT_BODY, boxSizing: 'border-box' },
+    errorText: { color: COLOR_ERROR, fontSize: '13px', marginTop: '12px' },
+    modalFooter: { padding: '16px 24px', borderTop: `1px solid ${t.BORDER}`, display: 'flex', justifyContent: 'flex-end', gap: '10px', background: t.SURFACE },
+    cancelButton: { padding: '9px 20px', borderRadius: RADIUS_MD, border: `1px solid ${t.BORDER}`, background: 'transparent', fontSize: '14px', cursor: 'pointer', color: t.TEXT_MUTED, fontFamily: FONT_BODY },
+    noteAction: { background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px', color: t.TEXT_MUTED, padding: 0, fontFamily: FONT_BODY, textDecoration: 'underline', textUnderlineOffset: '2px' },
+    saveButton: { padding: '9px 20px', borderRadius: RADIUS_MD, border: `1px solid ${t.ACCENT_BORDER}`, background: t.ACCENT_MUTED, color: t.ACCENT, fontSize: '14px', fontWeight: FW_SEMIBOLD, cursor: 'pointer', fontFamily: FONT_BODY },
+    confirmModal: { background: t.SURFACE, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_LG, width: '100%', maxWidth: '420px', padding: '32px', boxShadow: SHADOW_LG },
+    confirmTitle: { fontFamily: FONT_DISPLAY, fontSize: '24px', fontWeight: FW_REGULAR, color: t.TEXT, margin: '0 0 10px', letterSpacing: '0.01em' },
+    confirmText: { fontSize: '14px', color: t.TEXT_MUTED, margin: '0 0 24px', lineHeight: '1.6', fontWeight: FW_LIGHT },
+    confirmButtons: { display: 'flex', justifyContent: 'flex-end', gap: '10px' },
+    confirmDeleteButton: { padding: '9px 20px', borderRadius: RADIUS_MD, border: `1px solid ${COLOR_ERROR}44`, background: 'transparent', color: COLOR_ERROR, fontSize: '14px', fontWeight: FW_SEMIBOLD, cursor: 'pointer', fontFamily: FONT_BODY },
   };
 
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
   const { orgId, userId, userRole } = useOrg();
-  const canWrite         = WRITE_ROLES.includes(userRole);
+  const canWrite          = WRITE_ROLES.includes(userRole);
   const canManageAdvisors = FULL_ACCESS_ROLES.includes(userRole);
   const canGenerateBrief  = BRIEF_ROLES.includes(userRole);
   const backPath  = location.state?.from || '/hq/clients';
   const backLabel = backPath === '/hq/notes' ? '← Back to Notes' : backPath === '/hq/crm' ? '← Back to CRM' : '← Back to Clients';
 
-  const [activeTab, setActiveTab] = useState('overview');
-
-  const [brief, setBrief]                     = useState(null);
-  const [briefGenerating, setBriefGenerating] = useState(false);
-  const [briefError, setBriefError]           = useState('');
-  const [client, setClient]                   = useState(null);
-  const [loading, setLoading]                 = useState(true);
-  const [showEdit, setShowEdit]               = useState(false);
+  const [activeTab, setActiveTab]               = useState('overview');
+  const [brief, setBrief]                       = useState(null);
+  const [briefGenerating, setBriefGenerating]   = useState(false);
+  const [briefError, setBriefError]             = useState('');
+  const [client, setClient]                     = useState(null);
+  const [loading, setLoading]                   = useState(true);
+  const [showEdit, setShowEdit]                 = useState(false);
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
-  const [formData, setFormData]               = useState({});
-  const [saving, setSaving]                   = useState(false);
-  const [deleting, setDeleting]               = useState(false);
-  const [error, setError]                     = useState('');
-  const [clientNotes, setClientNotes]         = useState([]);
-  const [clientTasks, setClientTasks]         = useState([]);
-  const [meetings, setMeetings]               = useState([]);
-  const [meetingModal, setMeetingModal]       = useState(false);
-  const [editingMeeting, setEditingMeeting]   = useState(null);
-  const [meetingSaving, setMeetingSaving]     = useState(false);
-  const [meetingError, setMeetingError]       = useState('');
-
-  const BLANK_MEETING = {
-    category:       MEETING_CATEGORIES[0],
-    meeting_type:   MEETING_TYPES[0].value,
-    status:         'scheduled',
-    scheduled_date: '',
-    scheduled_time: '',
-    duration_mins:  60,
-    description:    '',
-    recurrence:     'none',
-    meeting_link:   '',
-  };
-  const [meetingForm, setMeetingForm]   = useState(BLANK_MEETING);
-  const [editingNote, setEditingNote]   = useState(null);
-  const [editNoteForm, setEditNoteForm] = useState({});
-  const [advisors, setAdvisors]         = useState([]);
-  const [orgMembers, setOrgMembers]     = useState([]);
+  const [formData, setFormData]                 = useState({});
+  const [saving, setSaving]                     = useState(false);
+  const [deleting, setDeleting]                 = useState(false);
+  const [error, setError]                       = useState('');
+  const [clientNotes, setClientNotes]           = useState([]);
+  const [clientTasks, setClientTasks]           = useState([]);
+  const [meetings, setMeetings]                 = useState([]);
+  const [meetingModal, setMeetingModal]         = useState(false);
+  const [editingMeeting, setEditingMeeting]     = useState(null);
+  const [editingNote, setEditingNote]           = useState(null);
+  const [editNoteForm, setEditNoteForm]         = useState({});
+  const [advisors, setAdvisors]                 = useState([]);
+  const [orgMembers, setOrgMembers]             = useState([]);
   const [showAdvisorModal, setShowAdvisorModal] = useState(false);
 
   useEffect(() => {
     async function fetchClient() {
-      const { data, error } = await supabase
+      const { data, error: fetchErr } = await supabase
         .from('clients').select('*')
         .eq('id', id).eq('org_id', orgId).is('deleted_at', null).single();
-      if (error) console.error(error);
+      if (fetchErr) console.error(fetchErr);
       else setClient(data);
       setLoading(false);
     }
     async function loadNotes() {
-      const { data } = await supabase
-        .from('notes').select('*')
+      const { data } = await supabase.from('notes').select('*')
         .eq('client_id', id).eq('org_id', orgId).is('deleted_at', null)
         .order('created_at', { ascending: false });
       setClientNotes(data || []);
     }
     async function loadTasks() {
-      const { data } = await supabase
-        .from('client_tasks').select('*')
+      const { data } = await supabase.from('client_tasks').select('*')
         .eq('client_id', id).eq('org_id', orgId).is('deleted_at', null)
         .order('due_date', { ascending: true });
       setClientTasks(data || []);
     }
     async function loadMeetings() {
-      const { data } = await supabase
-        .from('meetings').select('*')
+      const { data } = await supabase.from('meetings').select('*')
         .eq('client_id', id).eq('org_id', orgId).is('deleted_at', null)
         .order('scheduled_at', { ascending: true });
       setMeetings(data || []);
     }
     async function loadAdvisors() {
-      const { data } = await supabase
-        .from('client_advisors').select('id, user_id, is_primary')
+      const { data } = await supabase.from('client_advisors').select('id, user_id, is_primary')
         .eq('client_id', id).eq('org_id', orgId);
       if (!data) { setAdvisors([]); return; }
       const { data: members } = await supabase.rpc('get_org_members', { target_org_id: orgId });
@@ -568,9 +239,30 @@ export default function ClientDetail() {
   }, [id, orgId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function fetchBrief() {
-    const { data } = await supabase
-      .from('client_briefs').select('*').eq('client_id', id).single();
+    const { data } = await supabase.from('client_briefs').select('*').eq('client_id', id).single();
     if (data) setBrief(data);
+  }
+
+  async function refreshMeetings() {
+    const { data } = await supabase.from('meetings').select('*')
+      .eq('client_id', id).eq('org_id', orgId).is('deleted_at', null)
+      .order('scheduled_at', { ascending: true });
+    setMeetings(data || []);
+  }
+
+  function openNewMeeting() {
+    setEditingMeeting(null);
+    setMeetingModal(true);
+  }
+
+  function openEditMeeting(meeting) {
+    setEditingMeeting(meeting);
+    setMeetingModal(true);
+  }
+
+  async function handleMeetingDelete(meetingId) {
+    await supabase.from('meetings').update({ deleted_at: new Date().toISOString() }).eq('id', meetingId);
+    setMeetings(prev => prev.filter(m => m.id !== meetingId));
   }
 
   async function handleGenerateBrief() {
@@ -578,12 +270,9 @@ export default function ClientDetail() {
     setBriefGenerating(true);
     setBriefError('');
     try {
-      const memberNames = orgMembers.map(m => ({
-        user_id: m.user_id, first_name: m.first_name, last_name: m.last_name,
-      }));
+      const memberNames = orgMembers.map(m => ({ user_id: m.user_id, first_name: m.first_name, last_name: m.last_name }));
       const res = await fetch('/api/prep-brief', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ client, notes: clientNotes, tasks: clientTasks, org_member_names: memberNames }),
       });
       const data = await res.json();
@@ -591,18 +280,12 @@ export default function ClientDetail() {
         setBriefError(data.error || 'Brief generation failed. Please try again.');
       } else {
         const now = new Date().toISOString();
-        const { error: upsertError } = await supabase
-          .from('client_briefs')
-          .upsert({
-            client_id: id, org_id: orgId, body: data,
-            generated_at: now, generated_by: userId,
-            previous_generated_at: brief?.generated_at || null,
-          }, { onConflict: 'client_id' });
-        if (upsertError) {
-          setBriefError('Brief generated but could not be saved. Please try again.');
-        } else {
-          setBrief({ body: data, generated_at: now });
-        }
+        const { error: upsertError } = await supabase.from('client_briefs').upsert(
+          { client_id: id, org_id: orgId, body: data, generated_at: now, generated_by: userId, previous_generated_at: brief?.generated_at || null },
+          { onConflict: 'client_id' }
+        );
+        if (upsertError) setBriefError('Brief generated but could not be saved. Please try again.');
+        else setBrief({ body: data, generated_at: now });
       }
     } catch {
       setBriefError('Could not reach the processing service. Please try again.');
@@ -610,82 +293,15 @@ export default function ClientDetail() {
     setBriefGenerating(false);
   }
 
-  async function handleMeetingSave() {
-    if (!meetingForm.scheduled_date || !meetingForm.scheduled_time) {
-      setMeetingError('Please set a date and time.');
-      return;
-    }
-    setMeetingSaving(true);
-    setMeetingError('');
-    const scheduled_at = new Date(`${meetingForm.scheduled_date}T${meetingForm.scheduled_time}`).toISOString();
-    const { scheduled_date, scheduled_time, ...rest } = meetingForm;
-    const payload = {
-      ...rest, scheduled_at, org_id: orgId, user_id: userId,
-      client_id: id, duration_mins: Number(meetingForm.duration_mins),
-      meeting_link: meetingForm.meeting_link || null,
-    };
-    const { error } = editingMeeting
-      ? await supabase.from('meetings').update(payload).eq('id', editingMeeting.id)
-      : await supabase.from('meetings').insert([payload]);
-    if (error) {
-      setMeetingError('Could not save meeting. Please try again.');
-      console.error(error);
-    } else {
-      setMeetingModal(false);
-      setEditingMeeting(null);
-      setMeetingForm(BLANK_MEETING);
-      const { data } = await supabase
-        .from('meetings').select('*')
-        .eq('client_id', id).eq('org_id', orgId).is('deleted_at', null)
-        .order('scheduled_at', { ascending: false });
-      setMeetings(data || []);
-    }
-    setMeetingSaving(false);
-  }
-
-  function openNewMeeting() {
-    setEditingMeeting(null);
-    setMeetingForm(BLANK_MEETING);
-    setMeetingError('');
-    setMeetingModal(true);
-  }
-
-  function openEditMeeting(meeting) {
-    setEditingMeeting(meeting);
-    const dt = meeting.scheduled_at ? new Date(meeting.scheduled_at) : null;
-    const pad = n => String(n).padStart(2, '0');
-    setMeetingForm({
-      category:       meeting.category,
-      meeting_type:   meeting.meeting_type,
-      status:         meeting.status,
-      scheduled_date: dt ? `${dt.getFullYear()}-${pad(dt.getMonth()+1)}-${pad(dt.getDate())}` : '',
-      scheduled_time: dt ? `${pad(dt.getHours())}:${pad(dt.getMinutes())}` : '',
-      duration_mins:  meeting.duration_mins,
-      description:    meeting.description || '',
-      recurrence:     meeting.recurrence,
-      meeting_link:   meeting.meeting_link || '',
-    });
-    setMeetingError('');
-    setMeetingModal(true);
-  }
-
-  async function handleMeetingDelete(meetingId) {
-    await supabase.from('meetings')
-      .update({ deleted_at: new Date().toISOString() }).eq('id', meetingId);
-    setMeetings(prev => prev.filter(m => m.id !== meetingId));
-  }
-
   async function fetchNotes() {
-    const { data } = await supabase
-      .from('notes').select('*')
+    const { data } = await supabase.from('notes').select('*')
       .eq('client_id', id).eq('org_id', orgId).is('deleted_at', null)
       .order('created_at', { ascending: false });
     setClientNotes(data || []);
   }
 
   async function fetchAdvisors() {
-    const { data } = await supabase
-      .from('client_advisors').select('id, user_id, is_primary')
+    const { data } = await supabase.from('client_advisors').select('id, user_id, is_primary')
       .eq('client_id', id).eq('org_id', orgId);
     if (!data) { setAdvisors([]); return; }
     const { data: members } = await supabase.rpc('get_org_members', { target_org_id: orgId });
@@ -697,9 +313,7 @@ export default function ClientDetail() {
     const already = advisors.find(a => a.user_id === advisorUserId);
     if (already) return;
     const isPrimary = advisors.length === 0;
-    await supabase.from('client_advisors').insert([{
-      org_id: orgId, client_id: id, user_id: advisorUserId, is_primary: isPrimary,
-    }]);
+    await supabase.from('client_advisors').insert([{ org_id: orgId, client_id: id, user_id: advisorUserId, is_primary: isPrimary }]);
     fetchAdvisors();
   }
 
@@ -711,15 +325,13 @@ export default function ClientDetail() {
   async function handleSetPrimary(advisorId) {
     setAdvisors(prev => prev.map(a => ({ ...a, is_primary: a.id === advisorId })));
     const current = advisors.find(a => a.id !== advisorId && a.is_primary);
-    if (current) {
-      await supabase.from('client_advisors').update({ is_primary: false }).eq('id', current.id);
-    }
+    if (current) await supabase.from('client_advisors').update({ is_primary: false }).eq('id', current.id);
     await supabase.from('client_advisors').update({ is_primary: true }).eq('id', advisorId);
   }
 
   function groupNotesByDate(notes) {
     const groups = {};
-    notes.forEach((note) => {
+    notes.forEach(note => {
       const date = note.created_at.slice(0, 10);
       if (!groups[date]) groups[date] = [];
       groups[date].push(note);
@@ -732,14 +344,11 @@ export default function ClientDetail() {
     const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
     if (dateStr === today)     return 'Today';
     if (dateStr === yesterday) return 'Yesterday';
-    return new Date(dateStr + 'T12:00:00').toLocaleDateString('en-US', {
-      weekday: 'long', month: 'long', day: 'numeric', year: 'numeric',
-    });
+    return new Date(dateStr + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
   }
 
   async function handleDeleteNote(noteId) {
-    await supabase.from('notes')
-      .update({ deleted_at: new Date().toISOString() }).eq('id', noteId);
+    await supabase.from('notes').update({ deleted_at: new Date().toISOString() }).eq('id', noteId);
     fetchNotes();
   }
 
@@ -764,8 +373,7 @@ export default function ClientDetail() {
   function openEdit() {
     setFormData({ ...client });
     setAumInput(client.aum ? Number(client.aum).toLocaleString('en-US') : '');
-    setFeeRateInput(client.fee_rate !== null && client.fee_rate !== undefined
-      ? (Number(client.fee_rate) * 100).toFixed(2) : '');
+    setFeeRateInput(client.fee_rate !== null && client.fee_rate !== undefined ? (Number(client.fee_rate) * 100).toFixed(2) : '');
     setError('');
     setShowEdit(true);
   }
@@ -807,17 +415,11 @@ export default function ClientDetail() {
     }
     setSaving(true);
     setError('');
-
-    // Strip non-editable columns before sending — Supabase returns 400 if these are included
-    const {
-      id: _id, created_at, updated_at, org_id, deleted_at,
-      ...payload
-    } = formData;
-
-    const { error } = await supabase.from('clients').update(payload).eq('id', id);
-    if (error) {
+    const { id: _id, created_at, updated_at, org_id, deleted_at, ...payload } = formData;
+    const { error: saveErr } = await supabase.from('clients').update(payload).eq('id', id);
+    if (saveErr) {
       setError('Something went wrong. Please try again.');
-      console.error(error);
+      console.error(saveErr);
     } else {
       setClient({ ...formData });
       setShowEdit(false);
@@ -827,14 +429,9 @@ export default function ClientDetail() {
 
   async function handleDelete() {
     setDeleting(true);
-    const { error } = await supabase
-      .from('clients').update({ deleted_at: new Date().toISOString() }).eq('id', id);
-    if (error) {
-      console.error(error);
-      setDeleting(false);
-    } else {
-      navigate('/hq/clients');
-    }
+    const { error: delErr } = await supabase.from('clients').update({ deleted_at: new Date().toISOString() }).eq('id', id);
+    if (delErr) { console.error(delErr); setDeleting(false); }
+    else navigate('/hq/clients');
   }
 
   if (loading) return <div style={s.loading}>Loading client...</div>;
@@ -846,7 +443,6 @@ export default function ClientDetail() {
     <div style={s.pageWrapper}>
       <div style={s.page}>
 
-        {/* Top row */}
         <div style={s.topRow}>
           <Link to={backPath} style={s.backLink}>{backLabel}</Link>
           <div style={s.actionButtons}>
@@ -854,7 +450,6 @@ export default function ClientDetail() {
           </div>
         </div>
 
-        {/* Header */}
         <div style={s.header}>
           <div style={s.headerText}>
             <h1 style={s.name}>{fullName}</h1>
@@ -862,11 +457,7 @@ export default function ClientDetail() {
             {client.phone && <p style={s.email}>{client.phone}</p>}
           </div>
           {client.status && (
-            <span style={{
-              ...s.badge,
-              backgroundColor: STATUS_COLORS?.[client.status]?.bg || t.ACCENT_MUTED,
-              color:           STATUS_COLORS?.[client.status]?.color || t.ACCENT,
-            }}>
+            <span style={{ ...s.badge, backgroundColor: STATUS_COLORS?.[client.status]?.bg || t.ACCENT_MUTED, color: STATUS_COLORS?.[client.status]?.color || t.ACCENT }}>
               {client.status}
             </span>
           )}
@@ -879,12 +470,7 @@ export default function ClientDetail() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
             <p style={{ ...s.sectionLabel, margin: 0 }}>Assigned Advisors</p>
             {canManageAdvisors && (
-              <button
-                onClick={() => setShowAdvisorModal(true)}
-                style={{ background: 'none', border: `1px solid ${t.ACCENT_BORDER}`, borderRadius: RADIUS_MD, padding: '3px 10px', fontSize: '12px', color: t.ACCENT, cursor: 'pointer', fontFamily: FONT_BODY }}
-              >
-                + Assign
-              </button>
+              <button onClick={() => setShowAdvisorModal(true)} style={{ background: 'none', border: `1px solid ${t.ACCENT_BORDER}`, borderRadius: RADIUS_MD, padding: '3px 10px', fontSize: '12px', color: t.ACCENT, cursor: 'pointer', fontFamily: FONT_BODY }}>+ Assign</button>
             )}
           </div>
           {advisors.length === 0 ? (
@@ -892,30 +478,11 @@ export default function ClientDetail() {
           ) : (
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', transition: 'all 0.3s ease' }}>
               {[...advisors].sort((a, b) => b.is_primary - a.is_primary).map(a => (
-                <div
-                  key={a.id}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: '8px',
-                    background: a.is_primary ? t.ACCENT_MUTED : t.SURFACE,
-                    border: `1px solid ${a.is_primary ? t.ACCENT_BORDER : t.BORDER}`,
-                    borderRadius: RADIUS_MD, padding: '6px 12px',
-                    transition: 'all 0.3s ease',
-                  }}
-                >
-                  <span style={{ fontSize: '13px', color: t.TEXT }}>
-                    {a.first_name && a.last_name
-                      ? `${a.first_name} ${a.last_name}`
-                      : a.user_id.slice(0, 8) + '…'}
-                  </span>
-                  {a.is_primary && (
-                    <span style={{ fontSize: '10px', color: t.ACCENT, letterSpacing: '0.06em', fontWeight: FW_SEMIBOLD }}>Primary</span>
-                  )}
-                  {canManageAdvisors && !a.is_primary && (
-                    <button onClick={() => handleSetPrimary(a.id)} style={{ background: 'none', border: 'none', fontSize: '11px', color: t.TEXT_MUTED, cursor: 'pointer', padding: 0 }}>Set primary</button>
-                  )}
-                  {canManageAdvisors && (
-                    <button onClick={() => handleRemoveAdvisor(a.id)} style={{ background: 'none', border: 'none', fontSize: '11px', color: COLOR_ERROR, cursor: 'pointer', padding: 0 }}>✕</button>
-                  )}
+                <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: a.is_primary ? t.ACCENT_MUTED : t.SURFACE, border: `1px solid ${a.is_primary ? t.ACCENT_BORDER : t.BORDER}`, borderRadius: RADIUS_MD, padding: '6px 12px', transition: 'all 0.3s ease' }}>
+                  <span style={{ fontSize: '13px', color: t.TEXT }}>{a.first_name && a.last_name ? `${a.first_name} ${a.last_name}` : a.user_id.slice(0, 8) + '…'}</span>
+                  {a.is_primary && <span style={{ fontSize: '10px', color: t.ACCENT, letterSpacing: '0.06em', fontWeight: FW_SEMIBOLD }}>Primary</span>}
+                  {canManageAdvisors && !a.is_primary && <button onClick={() => handleSetPrimary(a.id)} style={{ background: 'none', border: 'none', fontSize: '11px', color: t.TEXT_MUTED, cursor: 'pointer', padding: 0 }}>Set primary</button>}
+                  {canManageAdvisors && <button onClick={() => handleRemoveAdvisor(a.id)} style={{ background: 'none', border: 'none', fontSize: '11px', color: COLOR_ERROR, cursor: 'pointer', padding: 0 }}>✕</button>}
                 </div>
               ))}
             </div>
@@ -953,30 +520,26 @@ export default function ClientDetail() {
         {/* Tabs */}
         <div style={s.tabRow}>
           {['overview', 'meetings', 'brief', 'notes'].map(tab => (
-            <button
-              key={tab}
-              style={{ ...s.tab, ...(activeTab === tab ? s.tabActive : {}) }}
-              onClick={() => setActiveTab(tab)}
-            >
+            <button key={tab} style={{ ...s.tab, ...(activeTab === tab ? s.tabActive : {}) }} onClick={() => setActiveTab(tab)}>
               {tab.charAt(0).toUpperCase() + tab.slice(1)}
             </button>
           ))}
         </div>
 
-        {/* ── Overview tab ─────────────────────────────────────────────── */}
+        {/* ── Overview ──────────────────────────────────────────────────── */}
         {activeTab === 'overview' && (
           <>
             <div style={s.grid}>
               <Section title="Core Identity" s={s}>
-                <Field label="Date of Birth"            value={client.date_of_birth}            s={s} />
-                <Field label="Preferred Contact"        value={client.preferred_contact_method}  s={s} />
-                <Field label="Communication Frequency"  value={client.communication_frequency}   s={s} />
+                <Field label="Date of Birth"           value={client.date_of_birth}           s={s} />
+                <Field label="Preferred Contact"       value={client.preferred_contact_method} s={s} />
+                <Field label="Communication Frequency" value={client.communication_frequency}  s={s} />
               </Section>
               <Section title="Account Details" s={s}>
-                <Field label="AUM"                value={formatAUM(client.aum)}                             s={s} />
-                <Field label="Fee Rate"           value={formatFeeRate(client.fee_rate)}                    s={s} />
-                <Field label="Est. Annual Revenue" value={formatEstRevenue(client.aum, client.fee_rate)}    s={s} />
-                <Field label="Custodian"          value={client.custodian || '—'}                           s={s} />
+                <Field label="AUM"               value={formatAUM(client.aum)}                          s={s} />
+                <Field label="Fee Rate"          value={formatFeeRate(client.fee_rate)}                 s={s} />
+                <Field label="Est. Annual Revenue" value={formatEstRevenue(client.aum, client.fee_rate)} s={s} />
+                <Field label="Custodian"         value={client.custodian || '—'}                        s={s} />
                 {client.aum_source === 'api' && client.aum_synced_at && (
                   <div style={{ fontSize: '11px', color: t.TEXT_SUBTLE, fontWeight: FW_LIGHT, marginTop: '2px' }}>
                     Synced {new Date(client.aum_synced_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
@@ -984,24 +547,20 @@ export default function ClientDetail() {
                 )}
               </Section>
               <Section title="Financial Profile" s={s}>
-                <Field label="Asset Level"           value={client.asset_level}          s={s} />
-                <Field label="Risk Tolerance"        value={client.risk_tolerance}        s={s} />
-                <Field label="Investment Objective"  value={client.investment_objective}  s={s} />
-                <Field label="Time Horizon"          value={client.time_horizon}          s={s} />
-                <Field label="Tax Bracket"           value={client.tax_bracket}           s={s} />
-                <Field label="Liquidity Needs"       value={client.liquidity_needs}       s={s} />
+                <Field label="Asset Level"          value={client.asset_level}          s={s} />
+                <Field label="Risk Tolerance"       value={client.risk_tolerance}        s={s} />
+                <Field label="Investment Objective" value={client.investment_objective}  s={s} />
+                <Field label="Time Horizon"         value={client.time_horizon}          s={s} />
+                <Field label="Tax Bracket"          value={client.tax_bracket}           s={s} />
+                <Field label="Liquidity Needs"      value={client.liquidity_needs}       s={s} />
               </Section>
               <Section title="Relationship" s={s}>
                 {client.status === 'Prospect' && client.pipeline_stage && (
-                  <Field
-                    label="Pipeline Stage"
-                    value={client.is_reactivation ? `${client.pipeline_stage} *` : client.pipeline_stage}
-                    s={s}
-                  />
+                  <Field label="Pipeline Stage" value={client.is_reactivation ? `${client.pipeline_stage} *` : client.pipeline_stage} s={s} />
                 )}
-                <Field label="Client Since"      value={client.client_since}      s={s} />
-                <Field label="Referral Source"   value={client.referral_source}   s={s} />
-                <Field label="Next Review Date"  value={client.next_review_date}  s={s} />
+                <Field label="Client Since"     value={client.client_since}     s={s} />
+                <Field label="Referral Source"  value={client.referral_source}  s={s} />
+                <Field label="Next Review Date" value={client.next_review_date} s={s} />
               </Section>
             </div>
             {client.notes && (
@@ -1013,16 +572,13 @@ export default function ClientDetail() {
           </>
         )}
 
-        {/* ── Meetings tab ──────────────────────────────────────────────── */}
+        {/* ── Meetings ──────────────────────────────────────────────────── */}
         {activeTab === 'meetings' && (
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
               <p style={{ ...s.sectionLabel, margin: 0 }}>Meetings ({meetings.length})</p>
               {canWrite && (
-                <button
-                  style={{ padding: '7px 16px', borderRadius: RADIUS_MD, border: `1px solid ${t.ACCENT_BORDER}`, background: t.ACCENT_MUTED, color: t.ACCENT, fontSize: '12px', fontWeight: FW_SEMIBOLD, cursor: 'pointer', fontFamily: FONT_BODY }}
-                  onClick={openNewMeeting}
-                >
+                <button style={{ padding: '7px 16px', borderRadius: RADIUS_MD, border: `1px solid ${t.ACCENT_BORDER}`, background: t.ACCENT_MUTED, color: t.ACCENT, fontSize: '12px', fontWeight: FW_SEMIBOLD, cursor: 'pointer', fontFamily: FONT_BODY }} onClick={openNewMeeting}>
                   + Schedule Meeting
                 </button>
               )}
@@ -1041,10 +597,10 @@ export default function ClientDetail() {
                   ))}
                 </div>
                 {meetings.map((meeting, i) => {
-                  const isCancelled    = meeting.status === 'cancelled';
-                  const meetingDate    = new Date(meeting.scheduled_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-                  const meetingTime    = new Date(meeting.scheduled_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-                  const typeLabel      = MEETING_TYPES.find(mt => mt.value === meeting.meeting_type)?.label || meeting.meeting_type;
+                  const isCancelled     = meeting.status === 'cancelled';
+                  const meetingDate     = new Date(meeting.scheduled_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                  const meetingTime     = new Date(meeting.scheduled_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+                  const typeLabel       = MEETING_TYPES.find(mt => mt.value === meeting.meeting_type)?.label || meeting.meeting_type;
                   const recurrenceLabel = meeting.recurrence !== 'none' ? MEETING_RECURRENCES.find(r => r.value === meeting.recurrence)?.label || '—' : '—';
                   return (
                     <div key={meeting.id} style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 90px' : '1fr 100px 120px 90px', padding: '12px 16px', borderBottom: i < meetings.length - 1 ? `1px solid ${t.BORDER}` : 'none', alignItems: 'center', background: t.SURFACE }}>
@@ -1064,99 +620,10 @@ export default function ClientDetail() {
                 })}
               </div>
             )}
-
-            {/* Meeting modal */}
-            {meetingModal && (
-              <div style={s.overlay}>
-                <div style={{ ...s.modal, maxWidth: isMobile ? '100%' : '520px' }}>
-                  <div style={s.modalHeader}>
-                    <h2 style={s.modalTitle}>{editingMeeting ? 'Edit Meeting' : 'Schedule Meeting'}</h2>
-                    <button style={s.closeButton} onClick={() => { setMeetingModal(false); setEditingMeeting(null); }}>✕</button>
-                  </div>
-                  <div style={s.modalBody}>
-                    {meetingError && <p style={{ color: COLOR_ERROR, fontSize: '13px', margin: '0 0 16px' }}>{meetingError}</p>}
-                    <div style={{ marginBottom: '16px' }}>
-                      <label style={s.label}>Category</label>
-                      <select style={s.input} value={meetingForm.category} onChange={e => setMeetingForm(f => ({ ...f, category: e.target.value }))}>
-                        {MEETING_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-                      </select>
-                    </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : '1fr 1fr 1fr', gap: '12px', marginBottom: '16px' }}>
-                      <div style={isMobile ? { gridColumn: '1 / -1' } : {}}>
-                        <label style={s.label}>Date</label>
-                        <input style={s.input} type="date" value={meetingForm.scheduled_date} onChange={e => setMeetingForm(f => ({ ...f, scheduled_date: e.target.value }))} />
-                      </div>
-                      <div>
-                        <label style={s.label}>Time</label>
-                        <input style={s.input} type="time" value={meetingForm.scheduled_time} onChange={e => setMeetingForm(f => ({ ...f, scheduled_time: e.target.value }))} />
-                      </div>
-                      <div>
-                        <label style={s.label}>Duration</label>
-                        <select style={s.input} value={meetingForm.duration_mins} onChange={e => setMeetingForm(f => ({ ...f, duration_mins: e.target.value }))}>
-                          {MEETING_DURATION_OPTIONS.map(d => <option key={d.value} value={d.value}>{d.label}</option>)}
-                        </select>
-                      </div>
-                    </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : editingMeeting ? '1fr 1fr 1fr' : '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
-                      <div>
-                        <label style={s.label}>Type</label>
-                        <select style={s.input} value={meetingForm.meeting_type} onChange={e => setMeetingForm(f => ({ ...f, meeting_type: e.target.value }))}>
-                          {MEETING_TYPES.map(mt => <option key={mt.value} value={mt.value}>{mt.label}</option>)}
-                        </select>
-                      </div>
-                      <div>
-                        <label style={s.label}>Recurrence</label>
-                        <select style={s.input} value={meetingForm.recurrence} onChange={e => setMeetingForm(f => ({ ...f, recurrence: e.target.value }))}>
-                          {MEETING_RECURRENCES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
-                        </select>
-                      </div>
-                      {editingMeeting && (
-                        <div>
-                          <label style={s.label}>Status</label>
-                          <select style={s.input} value={meetingForm.status} onChange={e => setMeetingForm(f => ({ ...f, status: e.target.value }))}>
-                            {MEETING_STATUSES.map(ms => <option key={ms.value} value={ms.value}>{ms.label}</option>)}
-                          </select>
-                        </div>
-                      )}
-                    </div>
-                    {['video', 'phone'].includes(meetingForm.meeting_type) && (
-                      <div style={{ marginBottom: '16px' }}>
-                        <label style={s.label}>
-                          {meetingForm.meeting_type === 'video' ? 'Video Link' : 'Phone Number'}
-                          <span style={{ fontWeight: FW_LIGHT, opacity: 0.6 }}> — optional</span>
-                        </label>
-                        <input
-                          style={s.input}
-                          type={meetingForm.meeting_type === 'phone' ? 'tel' : 'url'}
-                          placeholder={meetingForm.meeting_type === 'video' ? 'https://zoom.us/j/...' : '+1 (555) 000-0000'}
-                          value={meetingForm.meeting_link}
-                          onChange={e => setMeetingForm(f => ({ ...f, meeting_link: e.target.value }))}
-                        />
-                      </div>
-                    )}
-                    <div>
-                      <label style={s.label}>Agenda <span style={{ fontWeight: FW_LIGHT, opacity: 0.6 }}>— optional</span></label>
-                      <textarea
-                        style={{ ...s.textarea, minHeight: '72px', marginBottom: 0 }}
-                        value={meetingForm.description}
-                        onChange={e => setMeetingForm(f => ({ ...f, description: e.target.value }))}
-                        placeholder="What needs to be covered..."
-                      />
-                    </div>
-                  </div>
-                  <div style={s.modalFooter}>
-                    <button style={s.cancelButton} onClick={() => { setMeetingModal(false); setEditingMeeting(null); }}>Cancel</button>
-                    <button style={s.saveButton} onClick={handleMeetingSave} disabled={meetingSaving}>
-                      {meetingSaving ? 'Saving…' : editingMeeting ? 'Save Changes' : 'Schedule'}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
         )}
 
-        {/* ── Brief tab ────────────────────────────────────────────────── */}
+        {/* ── Brief ─────────────────────────────────────────────────────── */}
         {activeTab === 'brief' && (
           <div>
             {!brief && !briefGenerating && (
@@ -1166,10 +633,7 @@ export default function ClientDetail() {
                   Generate an AI-powered summary of this client's relationship — drawing from recent meeting notes, open tasks, and key account details.
                 </p>
                 {canGenerateBrief ? (
-                  <button
-                    style={{ padding: '10px 24px', borderRadius: RADIUS_MD, border: `1px solid ${t.ACCENT_BORDER}`, background: t.ACCENT_MUTED, color: t.ACCENT, fontSize: '13px', fontWeight: FW_SEMIBOLD, cursor: 'pointer', fontFamily: FONT_BODY }}
-                    onClick={handleGenerateBrief}
-                  >
+                  <button style={{ padding: '10px 24px', borderRadius: RADIUS_MD, border: `1px solid ${t.ACCENT_BORDER}`, background: t.ACCENT_MUTED, color: t.ACCENT, fontSize: '13px', fontWeight: FW_SEMIBOLD, cursor: 'pointer', fontFamily: FONT_BODY }} onClick={handleGenerateBrief}>
                     Generate Brief
                   </button>
                 ) : (
@@ -1177,37 +641,16 @@ export default function ClientDetail() {
                 )}
               </div>
             )}
-
-            {briefGenerating && (
-              <div style={{ textAlign: 'center', padding: '48px 0' }}>
-                <p style={{ color: t.TEXT_MUTED, fontSize: '13px', fontWeight: FW_LIGHT }}>Generating brief…</p>
-              </div>
-            )}
-
-            {briefError && (
-              <p style={{ color: COLOR_ERROR, fontSize: '13px', margin: '0 0 16px' }}>{briefError}</p>
-            )}
-
+            {briefGenerating && <div style={{ textAlign: 'center', padding: '48px 0' }}><p style={{ color: t.TEXT_MUTED, fontSize: '13px', fontWeight: FW_LIGHT }}>Generating brief…</p></div>}
+            {briefError && <p style={{ color: COLOR_ERROR, fontSize: '13px', margin: '0 0 16px' }}>{briefError}</p>}
             {brief && !briefGenerating && (() => {
               const b = brief.body;
-              const generatedDate = brief.generated_at
-                ? new Date(brief.generated_at).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })
-                : null;
+              const generatedDate = brief.generated_at ? new Date(brief.generated_at).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' }) : null;
               return (
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                    {generatedDate && (
-                      <span style={{ fontSize: '11px', color: t.TEXT_MUTED, fontWeight: FW_LIGHT }}>Last updated {generatedDate}</span>
-                    )}
-                    {canGenerateBrief && (
-                      <button
-                        style={{ background: 'none', border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_MD, padding: '6px 14px', fontSize: '12px', color: t.TEXT_MUTED, cursor: 'pointer', fontFamily: FONT_BODY }}
-                        onClick={handleGenerateBrief}
-                        disabled={briefGenerating}
-                      >
-                        Update Brief
-                      </button>
-                    )}
+                    {generatedDate && <span style={{ fontSize: '11px', color: t.TEXT_MUTED, fontWeight: FW_LIGHT }}>Last updated {generatedDate}</span>}
+                    {canGenerateBrief && <button style={{ background: 'none', border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_MD, padding: '6px 14px', fontSize: '12px', color: t.TEXT_MUTED, cursor: 'pointer', fontFamily: FONT_BODY }} onClick={handleGenerateBrief} disabled={briefGenerating}>Update Brief</button>}
                   </div>
                   <div style={s.notesCard}>
                     {b.snapshot && (
@@ -1220,36 +663,21 @@ export default function ClientDetail() {
                       <div style={{ marginBottom: (b.open_commitments?.length || b.relationship_notes?.length) ? '20px' : 0 }}>
                         {b.snapshot && <div style={{ borderTop: `1px solid ${t.BORDER}`, marginBottom: '20px' }} />}
                         <p style={{ ...s.sectionLabel, marginBottom: '10px' }}>Recent Meetings</p>
-                        {b.recent_meetings.map((m, i) => (
-                          <div key={i} style={{ display: 'flex', gap: '10px', marginBottom: i < b.recent_meetings.length - 1 ? '8px' : 0 }}>
-                            <span style={{ color: t.TEXT, flexShrink: 0, fontSize: '13px' }}>·</span>
-                            <span style={{ fontSize: '13px', color: t.TEXT, fontWeight: FW_LIGHT, lineHeight: '1.6' }}>{m}</span>
-                          </div>
-                        ))}
+                        {b.recent_meetings.map((m, i) => <div key={i} style={{ display: 'flex', gap: '10px', marginBottom: i < b.recent_meetings.length - 1 ? '8px' : 0 }}><span style={{ color: t.TEXT, flexShrink: 0, fontSize: '13px' }}>·</span><span style={{ fontSize: '13px', color: t.TEXT, fontWeight: FW_LIGHT, lineHeight: '1.6' }}>{m}</span></div>)}
                       </div>
                     )}
                     {b.open_commitments?.length > 0 && (
                       <div style={{ marginBottom: b.relationship_notes?.length ? '20px' : 0 }}>
                         {(b.snapshot || b.recent_meetings?.length) && <div style={{ borderTop: `1px solid ${t.BORDER}`, marginBottom: '20px' }} />}
                         <p style={{ ...s.sectionLabel, marginBottom: '10px' }}>Open Commitments</p>
-                        {b.open_commitments.map((c, i) => (
-                          <div key={i} style={{ display: 'flex', gap: '10px', marginBottom: i < b.open_commitments.length - 1 ? '8px' : 0 }}>
-                            <span style={{ color: t.TEXT, flexShrink: 0, fontSize: '13px' }}>·</span>
-                            <span style={{ fontSize: '13px', color: t.TEXT, fontWeight: FW_LIGHT, lineHeight: '1.6' }}>{c}</span>
-                          </div>
-                        ))}
+                        {b.open_commitments.map((c, i) => <div key={i} style={{ display: 'flex', gap: '10px', marginBottom: i < b.open_commitments.length - 1 ? '8px' : 0 }}><span style={{ color: t.TEXT, flexShrink: 0, fontSize: '13px' }}>·</span><span style={{ fontSize: '13px', color: t.TEXT, fontWeight: FW_LIGHT, lineHeight: '1.6' }}>{c}</span></div>)}
                       </div>
                     )}
                     {b.relationship_notes?.length > 0 && (
                       <div>
                         {(b.snapshot || b.recent_meetings?.length || b.open_commitments?.length) && <div style={{ borderTop: `1px solid ${t.BORDER}`, marginBottom: '20px' }} />}
                         <p style={{ ...s.sectionLabel, marginBottom: '10px' }}>Relationship Notes</p>
-                        {b.relationship_notes.map((r, i) => (
-                          <div key={i} style={{ display: 'flex', gap: '10px', marginBottom: i < b.relationship_notes.length - 1 ? '8px' : 0 }}>
-                            <span style={{ color: t.TEXT, flexShrink: 0, fontSize: '13px' }}>·</span>
-                            <span style={{ fontSize: '13px', color: t.TEXT, fontWeight: FW_LIGHT, lineHeight: '1.6' }}>{r}</span>
-                          </div>
-                        ))}
+                        {b.relationship_notes.map((r, i) => <div key={i} style={{ display: 'flex', gap: '10px', marginBottom: i < b.relationship_notes.length - 1 ? '8px' : 0 }}><span style={{ color: t.TEXT, flexShrink: 0, fontSize: '13px' }}>·</span><span style={{ fontSize: '13px', color: t.TEXT, fontWeight: FW_LIGHT, lineHeight: '1.6' }}>{r}</span></div>)}
                       </div>
                     )}
                   </div>
@@ -1259,41 +687,27 @@ export default function ClientDetail() {
           </div>
         )}
 
-        {/* ── Notes tab ────────────────────────────────────────────────── */}
+        {/* ── Notes ─────────────────────────────────────────────────────── */}
         {activeTab === 'notes' && (
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <p style={{ ...s.sectionLabel, margin: 0 }}>Notes ({clientNotes.length})</p>
-              {canWrite && (
-                <button style={s.editButton} onClick={() => navigate(`/hq/notes?client_id=${id}`, { state: { from: `/hq/clients/${id}` } })}>
-                  + Record Note
-                </button>
-              )}
+              {canWrite && <button style={s.editButton} onClick={() => navigate(`/hq/notes?client_id=${id}`, { state: { from: `/hq/clients/${id}` } })}>+ Record Note</button>}
             </div>
             {clientNotes.length === 0 ? (
               <div style={{ ...s.notesCard, textAlign: 'center', color: t.TEXT_MUTED, fontSize: '14px' }}>
                 No notes yet.{' '}
-                {canWrite && (
-                  <span style={{ color: t.ACCENT, cursor: 'pointer' }} onClick={() => navigate(`/hq/notes?client_id=${id}`, { state: { from: `/hq/clients/${id}` } })}>
-                    Add the first note →
-                  </span>
-                )}
+                {canWrite && <span style={{ color: t.ACCENT, cursor: 'pointer' }} onClick={() => navigate(`/hq/notes?client_id=${id}`, { state: { from: `/hq/clients/${id}` } })}>Add the first note →</span>}
               </div>
             ) : (
               groupNotesByDate(clientNotes).map(([date, dateNotes]) => (
                 <div key={date} style={{ marginBottom: '20px' }}>
-                  <p style={{ fontSize: '11px', fontWeight: FW_SEMIBOLD, textTransform: 'uppercase', letterSpacing: '0.08em', color: t.TEXT_MUTED, marginBottom: '8px' }}>
-                    {formatDateLabel(date)}
-                  </p>
-                  {dateNotes.map((note) => (
+                  <p style={{ fontSize: '11px', fontWeight: FW_SEMIBOLD, textTransform: 'uppercase', letterSpacing: '0.08em', color: t.TEXT_MUTED, marginBottom: '8px' }}>{formatDateLabel(date)}</p>
+                  {dateNotes.map(note => (
                     <div key={note.id} style={{ ...s.notesCard, marginBottom: '10px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: note.body ? '8px' : '0', flexWrap: 'wrap' }}>
                         <span style={{ fontFamily: FONT_DISPLAY, fontSize: '17px', fontWeight: FW_REGULAR, color: t.TEXT, flex: 1, letterSpacing: '0.01em' }}>{note.title}</span>
-                        {note.note_type && (
-                          <span style={{ fontSize: '10px', fontWeight: FW_SEMIBOLD, padding: '2px 10px', borderRadius: RADIUS_PILL, background: t.ACCENT_MUTED, color: t.ACCENT, border: `1px solid ${t.ACCENT_BORDER}`, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
-                            {note.note_type}
-                          </span>
-                        )}
+                        {note.note_type && <span style={{ fontSize: '10px', fontWeight: FW_SEMIBOLD, padding: '2px 10px', borderRadius: RADIUS_PILL, background: t.ACCENT_MUTED, color: t.ACCENT, border: `1px solid ${t.ACCENT_BORDER}`, letterSpacing: '0.06em', textTransform: 'uppercase' }}>{note.note_type}</span>}
                       </div>
                       {note.body && <p style={{ ...s.notesText, marginBottom: '10px' }}>{note.body}</p>}
                       <div style={{ display: 'flex', gap: '12px' }}>
@@ -1319,21 +733,17 @@ export default function ClientDetail() {
               <div style={s.modalBody}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '12px' }}>
                   <label style={s.label}>Type</label>
-                  <select value={editNoteForm.note_type} onChange={(e) => setEditNoteForm({ ...editNoteForm, note_type: e.target.value })} style={s.input}>
-                    {['Meeting', 'Call', 'Email', 'General'].map((tp) => <option key={tp} value={tp}>{tp}</option>)}
+                  <select value={editNoteForm.note_type} onChange={e => setEditNoteForm({ ...editNoteForm, note_type: e.target.value })} style={s.input}>
+                    {['Meeting', 'Call', 'Email', 'General'].map(tp => <option key={tp} value={tp}>{tp}</option>)}
                   </select>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '12px' }}>
                   <label style={s.label}>Title</label>
-                  <input value={editNoteForm.title} onChange={(e) => setEditNoteForm({ ...editNoteForm, title: e.target.value })} style={s.input} />
+                  <input value={editNoteForm.title} onChange={e => setEditNoteForm({ ...editNoteForm, title: e.target.value })} style={s.input} />
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <label style={s.label}>Body</label>
-                  <textarea
-                    value={editNoteForm.body || ''}
-                    onChange={(e) => setEditNoteForm({ ...editNoteForm, body: e.target.value })}
-                    style={{ ...s.input, minHeight: '100px', resize: 'vertical', fontFamily: FONT_BODY }}
-                  />
+                  <textarea value={editNoteForm.body || ''} onChange={e => setEditNoteForm({ ...editNoteForm, body: e.target.value })} style={{ ...s.input, minHeight: '100px', resize: 'vertical', fontFamily: FONT_BODY }} />
                 </div>
               </div>
               <div style={s.modalFooter}>
@@ -1349,7 +759,7 @@ export default function ClientDetail() {
           <button style={s.deleteButton} onClick={() => setShowConfirmDelete(true)}>Delete Client</button>
         </div>
 
-        {/* Edit Modal */}
+        {/* Edit Client Modal */}
         {showEdit && (
           <div style={s.overlay}>
             <div style={s.modal}>
@@ -1375,9 +785,7 @@ export default function ClientDetail() {
                       <span style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: t.TEXT_MUTED, fontSize: '13px', pointerEvents: 'none' }}>$</span>
                       <input name="aum" value={aumInput} onChange={handleChange} onBlur={handleAumBlur} placeholder="0" inputMode="numeric" style={{ ...s.input, paddingLeft: '22px' }} />
                     </div>
-                    {formData.aum && (
-                      <span style={{ fontSize: '11px', color: t.TEXT_SUBTLE, fontWeight: FW_LIGHT }}>Asset level: {aumToAssetLevel(formData.aum)}</span>
-                    )}
+                    {formData.aum && <span style={{ fontSize: '11px', color: t.TEXT_SUBTLE, fontWeight: FW_LIGHT }}>Asset level: {aumToAssetLevel(formData.aum)}</span>}
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                     <label style={{ fontSize: '11px', fontWeight: FW_SEMIBOLD, textTransform: 'uppercase', letterSpacing: '0.08em', color: t.TEXT_MUTED }}>Fee Rate</label>
@@ -1392,18 +800,18 @@ export default function ClientDetail() {
                 <div style={s.formGrid}>
                   <SelectField label="Asset Level"          name="asset_level"         value={formData.asset_level          || ''} onChange={handleChange} options={ASSET_LEVEL_OPTIONS}          s={s} />
                   <SelectField label="Risk Tolerance"       name="risk_tolerance"       value={formData.risk_tolerance       || ''} onChange={handleChange} options={RISK_TOLERANCE_OPTIONS}       s={s} />
-                  <SelectField label="Investment Objective" name="investment_objective" value={formData.investment_objective  || ''} onChange={handleChange} options={INVESTMENT_OBJECTIVE_OPTIONS} s={s} />
+                  <SelectField label="Investment Objective" name="investment_objective" value={formData.investment_objective || ''} onChange={handleChange} options={INVESTMENT_OBJECTIVE_OPTIONS} s={s} />
                   <SelectField label="Time Horizon"         name="time_horizon"         value={formData.time_horizon         || ''} onChange={handleChange} options={TIME_HORIZON_OPTIONS}         s={s} />
                   <SelectField label="Tax Bracket"          name="tax_bracket"          value={formData.tax_bracket          || ''} onChange={handleChange} options={TAX_BRACKET_OPTIONS}          s={s} />
                   <SelectField label="Liquidity Needs"      name="liquidity_needs"      value={formData.liquidity_needs      || ''} onChange={handleChange} options={LIQUIDITY_NEEDS_OPTIONS}      s={s} />
                 </div>
                 <p style={s.formSectionLabel}>Relationship</p>
                 <div style={s.formGrid}>
-                  <SelectField label="Referral Source"           name="referral_source"           value={formData.referral_source           || ''} onChange={handleChange} options={REFERRAL_SOURCE_OPTIONS}          s={s} />
-                  <FormField   label="Client Since"              name="client_since"              type="date" value={formData.client_since || ''} onChange={handleChange} s={s} />
-                  <FormField   label="Next Review Date"          name="next_review_date"          type="date" value={formData.next_review_date || ''} onChange={handleChange} s={s} />
-                  <SelectField label="Preferred Contact"         name="preferred_contact_method"  value={formData.preferred_contact_method  || ''} onChange={handleChange} options={CONTACT_METHOD_OPTIONS}           s={s} />
-                  <SelectField label="Communication Frequency"   name="communication_frequency"   value={formData.communication_frequency   || ''} onChange={handleChange} options={COMMUNICATION_FREQUENCY_OPTIONS}  s={s} />
+                  <SelectField label="Referral Source"         name="referral_source"          value={formData.referral_source          || ''} onChange={handleChange} options={REFERRAL_SOURCE_OPTIONS}          s={s} />
+                  <FormField   label="Client Since"            name="client_since"             type="date" value={formData.client_since || ''} onChange={handleChange} s={s} />
+                  <FormField   label="Next Review Date"        name="next_review_date"         type="date" value={formData.next_review_date || ''} onChange={handleChange} s={s} />
+                  <SelectField label="Preferred Contact"       name="preferred_contact_method" value={formData.preferred_contact_method || ''} onChange={handleChange} options={CONTACT_METHOD_OPTIONS}           s={s} />
+                  <SelectField label="Communication Frequency" name="communication_frequency"  value={formData.communication_frequency  || ''} onChange={handleChange} options={COMMUNICATION_FREQUENCY_OPTIONS}  s={s} />
                 </div>
                 <p style={s.formSectionLabel}>Notes</p>
                 <textarea name="notes" value={formData.notes || ''} onChange={handleChange} placeholder="Any additional context about this client..." style={s.textarea} />
@@ -1411,9 +819,7 @@ export default function ClientDetail() {
               </div>
               <div style={s.modalFooter}>
                 <button style={s.cancelButton} onClick={() => setShowEdit(false)}>Cancel</button>
-                <button style={s.saveButton} onClick={handleSave} disabled={saving}>
-                  {saving ? 'Saving...' : 'Save Changes'}
-                </button>
+                <button style={s.saveButton} onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : 'Save Changes'}</button>
               </div>
             </div>
           </div>
@@ -1427,13 +833,23 @@ export default function ClientDetail() {
               <p style={s.confirmText}>This will permanently remove this client and all their data. This cannot be undone.</p>
               <div style={s.confirmButtons}>
                 <button style={s.cancelButton} onClick={() => setShowConfirmDelete(false)}>Cancel</button>
-                <button style={s.confirmDeleteButton} onClick={handleDelete} disabled={deleting}>
-                  {deleting ? 'Deleting...' : 'Yes, Delete'}
-                </button>
+                <button style={s.confirmDeleteButton} onClick={handleDelete} disabled={deleting}>{deleting ? 'Deleting...' : 'Yes, Delete'}</button>
               </div>
             </div>
           </div>
         )}
+
+        {/* ── Meeting Modal (shared component) ──────────────────────────── */}
+        <MeetingModal
+          isOpen={meetingModal}
+          onClose={() => { setMeetingModal(false); setEditingMeeting(null); }}
+          onSaved={refreshMeetings}
+          editingMeeting={editingMeeting}
+          orgId={orgId}
+          userId={userId}
+          clientId={id}
+          isMobile={isMobile}
+        />
 
       </div>
     </div>
