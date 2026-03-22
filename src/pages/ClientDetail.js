@@ -10,12 +10,14 @@ import {
   FONT_DISPLAY,
   INVESTMENT_OBJECTIVE_OPTIONS,
   LIQUIDITY_NEEDS_OPTIONS,
+  OVERLAY_BG,
   RADIUS_LG,
   RADIUS_MD,
   RADIUS_PILL,
   REFERRAL_SOURCE_OPTIONS,
   RISK_TOLERANCE_OPTIONS,
   SHADOW_MD,
+  SHADOW_LG,
   STATUS_COLORS,
   STATUS_OPTIONS,
   TAX_BRACKET_OPTIONS,
@@ -32,7 +34,8 @@ import {
   MEETING_DURATION_OPTIONS,
   COLOR_ERROR,
   MOBILE_BREAKPOINT,
-  FW_LIGHT, FW_REGULAR, FW_MEDIUM, FW_SEMIBOLD} from '../utils/hqConstants';
+  FW_LIGHT, FW_REGULAR, FW_MEDIUM, FW_SEMIBOLD,
+} from '../utils/hqConstants';
 import { useTokens } from '../context/ThemeContext';
 import useWindowWidth from '../hooks/useWindowWidth';
 
@@ -99,12 +102,9 @@ function formatEstRevenue(aum, fee_rate) {
   return `$${rev.toLocaleString()}`;
 }
 
-// Strips formatting from a dollar string back to a plain number string
 function stripAUMFormat(str) {
   return str.replace(/[$,]/g, '');
 }
-
-
 
 export default function ClientDetail() {
   const t = useTokens();
@@ -164,7 +164,7 @@ export default function ClientDetail() {
     deleteButton: {
       background: 'transparent',
       color: t.TEXT_MUTED,
-      border: `1px solid rgba(122,125,138,0.25)`,
+      border: `1px solid ${t.BORDER}`,
       borderRadius: RADIUS_MD,
       padding: '8px 18px',
       fontSize: '13px',
@@ -280,11 +280,10 @@ export default function ClientDetail() {
       margin: 0,
       fontWeight: FW_LIGHT,
     },
-    // Modal
     overlay: {
       position: isMobile ? 'absolute' : 'fixed',
       inset: 0,
-      background: 'rgba(0,0,0,0.65)',
+      background: OVERLAY_BG,
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -300,7 +299,7 @@ export default function ClientDetail() {
       maxHeight: '90vh',
       display: 'flex',
       flexDirection: 'column',
-      boxShadow: '0 24px 64px rgba(0,0,0,0.5)',
+      boxShadow: SHADOW_LG,
     },
     modalHeader: {
       display: 'flex',
@@ -430,12 +429,12 @@ export default function ClientDetail() {
     },
     confirmModal: {
       background: t.SURFACE,
-      border: `1px solid rgba(248,113,113,0.3)`,
+      border: `1px solid ${t.BORDER}`,
       borderRadius: RADIUS_LG,
       width: '100%',
       maxWidth: '420px',
       padding: '32px',
-      boxShadow: '0 24px 64px rgba(0,0,0,0.5)',
+      boxShadow: SHADOW_LG,
     },
     confirmTitle: {
       fontFamily: FONT_DISPLAY,
@@ -460,7 +459,7 @@ export default function ClientDetail() {
     confirmDeleteButton: {
       padding: '9px 20px',
       borderRadius: RADIUS_MD,
-      border: '1px solid rgba(248,113,113,0.4)',
+      border: `1px solid ${COLOR_ERROR}44`,
       background: 'transparent',
       color: COLOR_ERROR,
       fontSize: '14px',
@@ -474,52 +473,49 @@ export default function ClientDetail() {
   const navigate = useNavigate();
   const location = useLocation();
   const { orgId, userId, userRole } = useOrg();
-  const canWrite = WRITE_ROLES.includes(userRole);
+  const canWrite         = WRITE_ROLES.includes(userRole);
   const canManageAdvisors = FULL_ACCESS_ROLES.includes(userRole);
   const canGenerateBrief  = BRIEF_ROLES.includes(userRole);
-  const backPath = location.state?.from || '/hq/clients';
+  const backPath  = location.state?.from || '/hq/clients';
   const backLabel = backPath === '/hq/notes' ? '← Back to Notes' : backPath === '/hq/crm' ? '← Back to CRM' : '← Back to Clients';
 
-  // Tab state
-  const [activeTab, setActiveTab] = useState('overview'); // 'overview' | 'meetings' | 'brief' | 'notes'
+  const [activeTab, setActiveTab] = useState('overview');
 
-  // Brief state
-  const [brief, setBrief]                   = useState(null);   // stored brief from DB
+  const [brief, setBrief]                     = useState(null);
   const [briefGenerating, setBriefGenerating] = useState(false);
-  const [briefError, setBriefError]         = useState('');
-  const [client, setClient] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [showEdit, setShowEdit] = useState(false);
+  const [briefError, setBriefError]           = useState('');
+  const [client, setClient]                   = useState(null);
+  const [loading, setLoading]                 = useState(true);
+  const [showEdit, setShowEdit]               = useState(false);
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
-  const [formData, setFormData] = useState({});
-  const [saving, setSaving] = useState(false);
-  const [deleting, setDeleting] = useState(false);
-  const [error, setError] = useState('');
-  const [clientNotes, setClientNotes] = useState([]);
-  const [clientTasks,    setClientTasks]    = useState([]);
-  const [meetings,       setMeetings]       = useState([]);
-  const [meetingModal,   setMeetingModal]   = useState(false);
-  const [editingMeeting, setEditingMeeting] = useState(null); // null = new, object = edit
-  const [meetingSaving,  setMeetingSaving]  = useState(false);
-  const [meetingError,   setMeetingError]   = useState('');
+  const [formData, setFormData]               = useState({});
+  const [saving, setSaving]                   = useState(false);
+  const [deleting, setDeleting]               = useState(false);
+  const [error, setError]                     = useState('');
+  const [clientNotes, setClientNotes]         = useState([]);
+  const [clientTasks, setClientTasks]         = useState([]);
+  const [meetings, setMeetings]               = useState([]);
+  const [meetingModal, setMeetingModal]       = useState(false);
+  const [editingMeeting, setEditingMeeting]   = useState(null);
+  const [meetingSaving, setMeetingSaving]     = useState(false);
+  const [meetingError, setMeetingError]       = useState('');
 
   const BLANK_MEETING = {
-    category:     MEETING_CATEGORIES[0],
-    meeting_type: MEETING_TYPES[0].value,
-    status:       'scheduled',
+    category:       MEETING_CATEGORIES[0],
+    meeting_type:   MEETING_TYPES[0].value,
+    status:         'scheduled',
     scheduled_date: '',
     scheduled_time: '',
-    duration_mins: 60,
-    description:  '',
-    recurrence:   'none',
-    meeting_link: '',
+    duration_mins:  60,
+    description:    '',
+    recurrence:     'none',
+    meeting_link:   '',
   };
-  const [meetingForm, setMeetingForm] = useState(BLANK_MEETING);
-  const [editingNote, setEditingNote] = useState(null);
-
+  const [meetingForm, setMeetingForm]   = useState(BLANK_MEETING);
+  const [editingNote, setEditingNote]   = useState(null);
   const [editNoteForm, setEditNoteForm] = useState({});
-  const [advisors, setAdvisors] = useState([]);
-  const [orgMembers, setOrgMembers] = useState([]);
+  const [advisors, setAdvisors]         = useState([]);
+  const [orgMembers, setOrgMembers]     = useState([]);
   const [showAdvisorModal, setShowAdvisorModal] = useState(false);
 
   useEffect(() => {
@@ -565,15 +561,15 @@ export default function ClientDetail() {
       const { data } = await supabase.rpc('get_org_members', { target_org_id: orgId });
       setOrgMembers(data || []);
     }
-    if (orgId) { fetchClient(); loadNotes(); loadTasks(); loadMeetings(); loadAdvisors(); loadOrgMembers(); fetchBrief(); }
+    if (orgId) {
+      fetchClient(); loadNotes(); loadTasks(); loadMeetings();
+      loadAdvisors(); loadOrgMembers(); fetchBrief();
+    }
   }, [id, orgId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function fetchBrief() {
     const { data } = await supabase
-      .from('client_briefs')
-      .select('*')
-      .eq('client_id', id)
-      .single();
+      .from('client_briefs').select('*').eq('client_id', id).single();
     if (data) setBrief(data);
   }
 
@@ -583,19 +579,12 @@ export default function ClientDetail() {
     setBriefError('');
     try {
       const memberNames = orgMembers.map(m => ({
-        user_id: m.user_id,
-        first_name: m.first_name,
-        last_name: m.last_name,
+        user_id: m.user_id, first_name: m.first_name, last_name: m.last_name,
       }));
       const res = await fetch('/api/prep-brief', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          client,
-          notes: clientNotes,
-          tasks: clientTasks,
-          org_member_names: memberNames,
-        }),
+        body: JSON.stringify({ client, notes: clientNotes, tasks: clientTasks, org_member_names: memberNames }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -605,15 +594,11 @@ export default function ClientDetail() {
         const { error: upsertError } = await supabase
           .from('client_briefs')
           .upsert({
-            client_id: id,
-            org_id: orgId,
-            body: data,
-            generated_at: now,
-            generated_by: userId,
+            client_id: id, org_id: orgId, body: data,
+            generated_at: now, generated_by: userId,
             previous_generated_at: brief?.generated_at || null,
           }, { onConflict: 'client_id' });
         if (upsertError) {
-          console.error('Brief upsert error:', upsertError);
           setBriefError('Brief generated but could not be saved. Please try again.');
         } else {
           setBrief({ body: data, generated_at: now });
@@ -635,12 +620,8 @@ export default function ClientDetail() {
     const scheduled_at = new Date(`${meetingForm.scheduled_date}T${meetingForm.scheduled_time}`).toISOString();
     const { scheduled_date, scheduled_time, ...rest } = meetingForm;
     const payload = {
-      ...rest,
-      scheduled_at,
-      org_id:       orgId,
-      user_id:      userId,
-      client_id:    id,
-      duration_mins: Number(meetingForm.duration_mins),
+      ...rest, scheduled_at, org_id: orgId, user_id: userId,
+      client_id: id, duration_mins: Number(meetingForm.duration_mins),
       meeting_link: meetingForm.meeting_link || null,
     };
     const { error } = editingMeeting
@@ -690,8 +671,7 @@ export default function ClientDetail() {
 
   async function handleMeetingDelete(meetingId) {
     await supabase.from('meetings')
-      .update({ deleted_at: new Date().toISOString() })
-      .eq('id', meetingId);
+      .update({ deleted_at: new Date().toISOString() }).eq('id', meetingId);
     setMeetings(prev => prev.filter(m => m.id !== meetingId));
   }
 
@@ -713,11 +693,13 @@ export default function ClientDetail() {
     setAdvisors(data.map(a => ({ ...a, ...memberMap[a.user_id] })));
   }
 
-  async function handleAssignAdvisor(userId) {
-    const already = advisors.find(a => a.user_id === userId);
+  async function handleAssignAdvisor(advisorUserId) {
+    const already = advisors.find(a => a.user_id === advisorUserId);
     if (already) return;
     const isPrimary = advisors.length === 0;
-    await supabase.from('client_advisors').insert([{ org_id: orgId, client_id: id, user_id: userId, is_primary: isPrimary }]);
+    await supabase.from('client_advisors').insert([{
+      org_id: orgId, client_id: id, user_id: advisorUserId, is_primary: isPrimary,
+    }]);
     fetchAdvisors();
   }
 
@@ -727,9 +709,7 @@ export default function ClientDetail() {
   }
 
   async function handleSetPrimary(advisorId) {
-    // Optimistically update state immediately so animation fires
     setAdvisors(prev => prev.map(a => ({ ...a, is_primary: a.id === advisorId })));
-    // Persist to DB
     const current = advisors.find(a => a.id !== advisorId && a.is_primary);
     if (current) {
       await supabase.from('client_advisors').update({ is_primary: false }).eq('id', current.id);
@@ -748,9 +728,9 @@ export default function ClientDetail() {
   }
 
   function formatDateLabel(dateStr) {
-    const today = new Date().toISOString().slice(0, 10);
+    const today     = new Date().toISOString().slice(0, 10);
     const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
-    if (dateStr === today) return 'Today';
+    if (dateStr === today)     return 'Today';
     if (dateStr === yesterday) return 'Yesterday';
     return new Date(dateStr + 'T12:00:00').toLocaleDateString('en-US', {
       weekday: 'long', month: 'long', day: 'numeric', year: 'numeric',
@@ -758,7 +738,8 @@ export default function ClientDetail() {
   }
 
   async function handleDeleteNote(noteId) {
-    await supabase.from('notes').update({ deleted_at: new Date().toISOString() }).eq('id', noteId);
+    await supabase.from('notes')
+      .update({ deleted_at: new Date().toISOString() }).eq('id', noteId);
     fetchNotes();
   }
 
@@ -770,23 +751,21 @@ export default function ClientDetail() {
   async function handleEditNoteSave() {
     if (!editNoteForm.title.trim()) return;
     await supabase.from('notes').update({
-      title: editNoteForm.title,
-      body: editNoteForm.body,
-      note_type: editNoteForm.note_type,
-      updated_at: new Date().toISOString(),
+      title: editNoteForm.title, body: editNoteForm.body,
+      note_type: editNoteForm.note_type, updated_at: new Date().toISOString(),
     }).eq('id', editingNote.id);
     setEditingNote(null);
     fetchNotes();
   }
 
-  const [aumInput, setAumInput] = useState('');
+  const [aumInput, setAumInput]         = useState('');
   const [feeRateInput, setFeeRateInput] = useState('');
 
   function openEdit() {
     setFormData({ ...client });
-    // Initialize AUM display value with commas
     setAumInput(client.aum ? Number(client.aum).toLocaleString('en-US') : '');
-    setFeeRateInput(client.fee_rate !== null && client.fee_rate !== undefined ? (Number(client.fee_rate) * 100).toFixed(2) : '');
+    setFeeRateInput(client.fee_rate !== null && client.fee_rate !== undefined
+      ? (Number(client.fee_rate) * 100).toFixed(2) : '');
     setError('');
     setShowEdit(true);
   }
@@ -794,13 +773,11 @@ export default function ClientDetail() {
   function handleChange(e) {
     const { name, value } = e.target;
     if (name === 'aum') {
-      // Keep formatted display in aumInput, store raw number in formData
       setAumInput(value);
       const raw = Number(stripAUMFormat(value));
       const derived = aumToAssetLevel(raw);
       setFormData(f => ({ ...f, aum: raw || null, asset_level: derived || f.asset_level }));
     } else if (name === 'fee_rate') {
-      // Just track the display string — convert to decimal on blur
       setFeeRateInput(value);
     } else {
       setFormData(f => ({ ...f, [name]: value }));
@@ -808,13 +785,11 @@ export default function ClientDetail() {
   }
 
   function handleAumBlur() {
-    // Reformat on blur so commas appear after user finishes typing
     const raw = Number(stripAUMFormat(aumInput));
     if (raw) setAumInput(raw.toLocaleString('en-US'));
   }
 
   function handleFeeRateBlur() {
-    // Convert display string to decimal and store in formData on blur
     const pct = parseFloat(feeRateInput);
     if (!isNaN(pct)) {
       setFeeRateInput(pct.toFixed(2));
@@ -832,12 +807,19 @@ export default function ClientDetail() {
     }
     setSaving(true);
     setError('');
-    const { error } = await supabase.from('clients').update(formData).eq('id', id);
+
+    // Strip non-editable columns before sending — Supabase returns 400 if these are included
+    const {
+      id: _id, created_at, updated_at, org_id, deleted_at,
+      ...payload
+    } = formData;
+
+    const { error } = await supabase.from('clients').update(payload).eq('id', id);
     if (error) {
       setError('Something went wrong. Please try again.');
       console.error(error);
     } else {
-      setClient(formData);
+      setClient({ ...formData });
       setShowEdit(false);
     }
     setSaving(false);
@@ -856,7 +838,7 @@ export default function ClientDetail() {
   }
 
   if (loading) return <div style={s.loading}>Loading client...</div>;
-  if (!client) return <div style={s.loading}>Client not found.</div>;
+  if (!client)  return <div style={s.loading}>Client not found.</div>;
 
   const fullName = `${client.first_name} ${client.last_name}`;
 
@@ -883,7 +865,7 @@ export default function ClientDetail() {
             <span style={{
               ...s.badge,
               backgroundColor: STATUS_COLORS?.[client.status]?.bg || t.ACCENT_MUTED,
-              color: STATUS_COLORS?.[client.status]?.color || t.ACCENT,
+              color:           STATUS_COLORS?.[client.status]?.color || t.ACCENT,
             }}>
               {client.status}
             </span>
@@ -921,7 +903,9 @@ export default function ClientDetail() {
                   }}
                 >
                   <span style={{ fontSize: '13px', color: t.TEXT }}>
-                    {a.first_name && a.last_name ? `${a.first_name} ${a.last_name}` : a.user_id.slice(0, 8) + '…'}
+                    {a.first_name && a.last_name
+                      ? `${a.first_name} ${a.last_name}`
+                      : a.user_id.slice(0, 8) + '…'}
                   </span>
                   {a.is_primary && (
                     <span style={{ fontSize: '10px', color: t.ACCENT, letterSpacing: '0.06em', fontWeight: FW_SEMIBOLD }}>Primary</span>
@@ -940,8 +924,8 @@ export default function ClientDetail() {
 
         {/* Assign Advisor Modal */}
         {showAdvisorModal && (
-          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.65)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }}>
-            <div style={{ background: t.SURFACE, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_LG, padding: '32px', width: '340px' }}>
+          <div style={{ position: 'fixed', inset: 0, background: OVERLAY_BG, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }}>
+            <div style={{ background: t.SURFACE, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_LG, padding: '32px', width: '340px', boxShadow: SHADOW_LG }}>
               <h3 style={{ fontFamily: FONT_DISPLAY, fontWeight: FW_REGULAR, color: t.TEXT, fontSize: '22px', marginBottom: '20px' }}>Assign Advisor</h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '24px' }}>
                 {orgMembers.map(m => {
@@ -984,15 +968,15 @@ export default function ClientDetail() {
           <>
             <div style={s.grid}>
               <Section title="Core Identity" s={s}>
-                <Field label="Date of Birth" value={client.date_of_birth} s={s} />
-                <Field label="Preferred Contact" value={client.preferred_contact_method} s={s} />
-                <Field label="Communication Frequency" value={client.communication_frequency} s={s} />
+                <Field label="Date of Birth"            value={client.date_of_birth}            s={s} />
+                <Field label="Preferred Contact"        value={client.preferred_contact_method}  s={s} />
+                <Field label="Communication Frequency"  value={client.communication_frequency}   s={s} />
               </Section>
               <Section title="Account Details" s={s}>
-                <Field label="AUM" value={formatAUM(client.aum)} s={s} />
-                <Field label="Fee Rate" value={formatFeeRate(client.fee_rate)} s={s} />
-                <Field label="Est. Annual Revenue" value={formatEstRevenue(client.aum, client.fee_rate)} s={s} />
-                <Field label="Custodian" value={client.custodian || '—'} s={s} />
+                <Field label="AUM"                value={formatAUM(client.aum)}                             s={s} />
+                <Field label="Fee Rate"           value={formatFeeRate(client.fee_rate)}                    s={s} />
+                <Field label="Est. Annual Revenue" value={formatEstRevenue(client.aum, client.fee_rate)}    s={s} />
+                <Field label="Custodian"          value={client.custodian || '—'}                           s={s} />
                 {client.aum_source === 'api' && client.aum_synced_at && (
                   <div style={{ fontSize: '11px', color: t.TEXT_SUBTLE, fontWeight: FW_LIGHT, marginTop: '2px' }}>
                     Synced {new Date(client.aum_synced_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
@@ -1000,12 +984,12 @@ export default function ClientDetail() {
                 )}
               </Section>
               <Section title="Financial Profile" s={s}>
-                <Field label="Asset Level" value={client.asset_level} s={s} />
-                <Field label="Risk Tolerance" value={client.risk_tolerance} s={s} />
-                <Field label="Investment Objective" value={client.investment_objective} s={s} />
-                <Field label="Time Horizon" value={client.time_horizon} s={s} />
-                <Field label="Tax Bracket" value={client.tax_bracket} s={s} />
-                <Field label="Liquidity Needs" value={client.liquidity_needs} s={s} />
+                <Field label="Asset Level"           value={client.asset_level}          s={s} />
+                <Field label="Risk Tolerance"        value={client.risk_tolerance}        s={s} />
+                <Field label="Investment Objective"  value={client.investment_objective}  s={s} />
+                <Field label="Time Horizon"          value={client.time_horizon}          s={s} />
+                <Field label="Tax Bracket"           value={client.tax_bracket}           s={s} />
+                <Field label="Liquidity Needs"       value={client.liquidity_needs}       s={s} />
               </Section>
               <Section title="Relationship" s={s}>
                 {client.status === 'Prospect' && client.pipeline_stage && (
@@ -1015,9 +999,9 @@ export default function ClientDetail() {
                     s={s}
                   />
                 )}
-                <Field label="Client Since" value={client.client_since} s={s} />
-                <Field label="Referral Source" value={client.referral_source} s={s} />
-                <Field label="Next Review Date" value={client.next_review_date} s={s} />
+                <Field label="Client Since"      value={client.client_since}      s={s} />
+                <Field label="Referral Source"   value={client.referral_source}   s={s} />
+                <Field label="Next Review Date"  value={client.next_review_date}  s={s} />
               </Section>
             </div>
             {client.notes && (
@@ -1032,11 +1016,8 @@ export default function ClientDetail() {
         {/* ── Meetings tab ──────────────────────────────────────────────── */}
         {activeTab === 'meetings' && (
           <div>
-            {/* Header row */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <p style={{ ...s.sectionLabel, margin: 0 }}>
-                Meetings ({meetings.length})
-              </p>
+              <p style={{ ...s.sectionLabel, margin: 0 }}>Meetings ({meetings.length})</p>
               {canWrite && (
                 <button
                   style={{ padding: '7px 16px', borderRadius: RADIUS_MD, border: `1px solid ${t.ACCENT_BORDER}`, background: t.ACCENT_MUTED, color: t.ACCENT, fontSize: '12px', fontWeight: FW_SEMIBOLD, cursor: 'pointer', fontFamily: FONT_BODY }}
@@ -1060,10 +1041,10 @@ export default function ClientDetail() {
                   ))}
                 </div>
                 {meetings.map((meeting, i) => {
-                  const isCancelled = meeting.status === 'cancelled';
-                  const meetingDate = new Date(meeting.scheduled_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-                  const meetingTime = new Date(meeting.scheduled_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-                  const typeLabel = MEETING_TYPES.find(mt => mt.value === meeting.meeting_type)?.label || meeting.meeting_type;
+                  const isCancelled    = meeting.status === 'cancelled';
+                  const meetingDate    = new Date(meeting.scheduled_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                  const meetingTime    = new Date(meeting.scheduled_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+                  const typeLabel      = MEETING_TYPES.find(mt => mt.value === meeting.meeting_type)?.label || meeting.meeting_type;
                   const recurrenceLabel = meeting.recurrence !== 'none' ? MEETING_RECURRENCES.find(r => r.value === meeting.recurrence)?.label || '—' : '—';
                   return (
                     <div key={meeting.id} style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 90px' : '1fr 100px 120px 90px', padding: '12px 16px', borderBottom: i < meetings.length - 1 ? `1px solid ${t.BORDER}` : 'none', alignItems: 'center', background: t.SURFACE }}>
@@ -1094,34 +1075,20 @@ export default function ClientDetail() {
                   </div>
                   <div style={s.modalBody}>
                     {meetingError && <p style={{ color: COLOR_ERROR, fontSize: '13px', margin: '0 0 16px' }}>{meetingError}</p>}
-
-                    {/* Row 1 — Category (full width) */}
                     <div style={{ marginBottom: '16px' }}>
                       <label style={s.label}>Category</label>
                       <select style={s.input} value={meetingForm.category} onChange={e => setMeetingForm(f => ({ ...f, category: e.target.value }))}>
                         {MEETING_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
                       </select>
                     </div>
-
-                    {/* Row 2 — Date · Time · Duration */}
                     <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : '1fr 1fr 1fr', gap: '12px', marginBottom: '16px' }}>
                       <div style={isMobile ? { gridColumn: '1 / -1' } : {}}>
                         <label style={s.label}>Date</label>
-                        <input
-                          style={s.input}
-                          type="date"
-                          value={meetingForm.scheduled_date}
-                          onChange={e => setMeetingForm(f => ({ ...f, scheduled_date: e.target.value }))}
-                        />
+                        <input style={s.input} type="date" value={meetingForm.scheduled_date} onChange={e => setMeetingForm(f => ({ ...f, scheduled_date: e.target.value }))} />
                       </div>
                       <div>
                         <label style={s.label}>Time</label>
-                        <input
-                          style={s.input}
-                          type="time"
-                          value={meetingForm.scheduled_time}
-                          onChange={e => setMeetingForm(f => ({ ...f, scheduled_time: e.target.value }))}
-                        />
+                        <input style={s.input} type="time" value={meetingForm.scheduled_time} onChange={e => setMeetingForm(f => ({ ...f, scheduled_time: e.target.value }))} />
                       </div>
                       <div>
                         <label style={s.label}>Duration</label>
@@ -1130,8 +1097,6 @@ export default function ClientDetail() {
                         </select>
                       </div>
                     </div>
-
-                    {/* Row 3 — Meeting Type · Recurrence (· Status if editing) */}
                     <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : editingMeeting ? '1fr 1fr 1fr' : '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
                       <div>
                         <label style={s.label}>Type</label>
@@ -1154,8 +1119,6 @@ export default function ClientDetail() {
                         </div>
                       )}
                     </div>
-
-                    {/* Row 4 — Meeting link (video/phone only) */}
                     {['video', 'phone'].includes(meetingForm.meeting_type) && (
                       <div style={{ marginBottom: '16px' }}>
                         <label style={s.label}>
@@ -1171,8 +1134,6 @@ export default function ClientDetail() {
                         />
                       </div>
                     )}
-
-                    {/* Row 5 — Agenda (full width) */}
                     <div>
                       <label style={s.label}>Agenda <span style={{ fontWeight: FW_LIGHT, opacity: 0.6 }}>— optional</span></label>
                       <textarea
@@ -1200,9 +1161,7 @@ export default function ClientDetail() {
           <div>
             {!brief && !briefGenerating && (
               <div style={{ ...s.notesCard, textAlign: 'center', padding: '40px 32px' }}>
-                <p style={{ fontSize: '14px', color: t.TEXT, fontWeight: FW_REGULAR, margin: '0 0 8px' }}>
-                  No brief yet
-                </p>
+                <p style={{ fontSize: '14px', color: t.TEXT, fontWeight: FW_REGULAR, margin: '0 0 8px' }}>No brief yet</p>
                 <p style={{ fontSize: '13px', color: t.TEXT_MUTED, fontWeight: FW_LIGHT, margin: '0 0 24px', lineHeight: '1.6', maxWidth: '420px', marginLeft: 'auto', marginRight: 'auto' }}>
                   Generate an AI-powered summary of this client's relationship — drawing from recent meeting notes, open tasks, and key account details.
                 </p>
@@ -1236,12 +1195,9 @@ export default function ClientDetail() {
                 : null;
               return (
                 <div>
-                  {/* Brief header row */}
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                     {generatedDate && (
-                      <span style={{ fontSize: '11px', color: t.TEXT_MUTED, fontWeight: FW_LIGHT }}>
-                        Last updated {generatedDate}
-                      </span>
+                      <span style={{ fontSize: '11px', color: t.TEXT_MUTED, fontWeight: FW_LIGHT }}>Last updated {generatedDate}</span>
                     )}
                     {canGenerateBrief && (
                       <button
@@ -1253,17 +1209,13 @@ export default function ClientDetail() {
                       </button>
                     )}
                   </div>
-
-                  {/* Single card containing all sections */}
                   <div style={s.notesCard}>
-
                     {b.snapshot && (
                       <div style={{ marginBottom: (b.recent_meetings?.length || b.open_commitments?.length || b.relationship_notes?.length) ? '20px' : 0 }}>
                         <p style={{ ...s.sectionLabel, marginBottom: '8px' }}>Snapshot</p>
                         <p style={{ fontSize: '13px', color: t.TEXT, fontWeight: FW_LIGHT, lineHeight: '1.7', margin: 0 }}>{b.snapshot}</p>
                       </div>
                     )}
-
                     {b.recent_meetings?.length > 0 && (
                       <div style={{ marginBottom: (b.open_commitments?.length || b.relationship_notes?.length) ? '20px' : 0 }}>
                         {b.snapshot && <div style={{ borderTop: `1px solid ${t.BORDER}`, marginBottom: '20px' }} />}
@@ -1276,7 +1228,6 @@ export default function ClientDetail() {
                         ))}
                       </div>
                     )}
-
                     {b.open_commitments?.length > 0 && (
                       <div style={{ marginBottom: b.relationship_notes?.length ? '20px' : 0 }}>
                         {(b.snapshot || b.recent_meetings?.length) && <div style={{ borderTop: `1px solid ${t.BORDER}`, marginBottom: '20px' }} />}
@@ -1289,7 +1240,6 @@ export default function ClientDetail() {
                         ))}
                       </div>
                     )}
-
                     {b.relationship_notes?.length > 0 && (
                       <div>
                         {(b.snapshot || b.recent_meetings?.length || b.open_commitments?.length) && <div style={{ borderTop: `1px solid ${t.BORDER}`, marginBottom: '20px' }} />}
@@ -1302,7 +1252,6 @@ export default function ClientDetail() {
                         ))}
                       </div>
                     )}
-
                   </div>
                 </div>
               );
@@ -1371,7 +1320,7 @@ export default function ClientDetail() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '12px' }}>
                   <label style={s.label}>Type</label>
                   <select value={editNoteForm.note_type} onChange={(e) => setEditNoteForm({ ...editNoteForm, note_type: e.target.value })} style={s.input}>
-                    {['Meeting', 'Call', 'Email', 'General'].map((t) => <option key={t} value={t}>{t}</option>)}
+                    {['Meeting', 'Call', 'Email', 'General'].map((tp) => <option key={tp} value={tp}>{tp}</option>)}
                   </select>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '12px' }}>
@@ -1397,9 +1346,7 @@ export default function ClientDetail() {
 
         {/* Delete Client */}
         <div style={{ textAlign: 'center', marginTop: '60px' }}>
-          <button style={s.deleteButton} onClick={() => setShowConfirmDelete(true)}>
-            Delete Client
-          </button>
+          <button style={s.deleteButton} onClick={() => setShowConfirmDelete(true)}>Delete Client</button>
         </div>
 
         {/* Edit Modal */}
@@ -1422,40 +1369,20 @@ export default function ClientDetail() {
                 </div>
                 <p style={s.formSectionLabel}>Account Details</p>
                 <div style={s.formGrid}>
-                  {/* AUM — formatted input, auto-derives asset_level */}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                     <label style={{ fontSize: '11px', fontWeight: FW_SEMIBOLD, textTransform: 'uppercase', letterSpacing: '0.08em', color: t.TEXT_MUTED }}>AUM</label>
                     <div style={{ position: 'relative' }}>
                       <span style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: t.TEXT_MUTED, fontSize: '13px', pointerEvents: 'none' }}>$</span>
-                      <input
-                        name="aum"
-                        value={aumInput}
-                        onChange={handleChange}
-                        onBlur={handleAumBlur}
-                        placeholder="0"
-                        inputMode="numeric"
-                        style={{ ...s.input, paddingLeft: '22px' }}
-                      />
+                      <input name="aum" value={aumInput} onChange={handleChange} onBlur={handleAumBlur} placeholder="0" inputMode="numeric" style={{ ...s.input, paddingLeft: '22px' }} />
                     </div>
                     {formData.aum && (
-                      <span style={{ fontSize: '11px', color: t.TEXT_SUBTLE, fontWeight: FW_LIGHT }}>
-                        Asset level: {aumToAssetLevel(formData.aum)}
-                      </span>
+                      <span style={{ fontSize: '11px', color: t.TEXT_SUBTLE, fontWeight: FW_LIGHT }}>Asset level: {aumToAssetLevel(formData.aum)}</span>
                     )}
                   </div>
-                  {/* Fee rate — user enters percentage, stored as decimal */}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                     <label style={{ fontSize: '11px', fontWeight: FW_SEMIBOLD, textTransform: 'uppercase', letterSpacing: '0.08em', color: t.TEXT_MUTED }}>Fee Rate</label>
                     <div style={{ position: 'relative' }}>
-                      <input
-                        name="fee_rate"
-                        value={feeRateInput}
-                        onChange={handleChange}
-                        onBlur={handleFeeRateBlur}
-                        placeholder="1.00"
-                        inputMode="decimal"
-                        style={{ ...s.input, paddingRight: '26px' }}
-                      />
+                      <input name="fee_rate" value={feeRateInput} onChange={handleChange} onBlur={handleFeeRateBlur} placeholder="1.00" inputMode="decimal" style={{ ...s.input, paddingRight: '26px' }} />
                       <span style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', color: t.TEXT_MUTED, fontSize: '13px', pointerEvents: 'none' }}>%</span>
                     </div>
                   </div>
@@ -1463,20 +1390,20 @@ export default function ClientDetail() {
                 </div>
                 <p style={s.formSectionLabel}>Financial Profile</p>
                 <div style={s.formGrid}>
-                  <SelectField label="Asset Level"          name="asset_level"          value={formData.asset_level          || ''} onChange={handleChange} options={ASSET_LEVEL_OPTIONS} s={s} />
-                  <SelectField label="Risk Tolerance"       name="risk_tolerance"        value={formData.risk_tolerance        || ''} onChange={handleChange} options={RISK_TOLERANCE_OPTIONS} s={s} />
-                  <SelectField label="Investment Objective" name="investment_objective"  value={formData.investment_objective  || ''} onChange={handleChange} options={INVESTMENT_OBJECTIVE_OPTIONS} s={s} />
-                  <SelectField label="Time Horizon"         name="time_horizon"          value={formData.time_horizon          || ''} onChange={handleChange} options={TIME_HORIZON_OPTIONS} s={s} />
-                  <SelectField label="Tax Bracket"          name="tax_bracket"           value={formData.tax_bracket           || ''} onChange={handleChange} options={TAX_BRACKET_OPTIONS} s={s} />
-                  <SelectField label="Liquidity Needs"      name="liquidity_needs"       value={formData.liquidity_needs       || ''} onChange={handleChange} options={LIQUIDITY_NEEDS_OPTIONS} s={s} />
+                  <SelectField label="Asset Level"          name="asset_level"         value={formData.asset_level          || ''} onChange={handleChange} options={ASSET_LEVEL_OPTIONS}          s={s} />
+                  <SelectField label="Risk Tolerance"       name="risk_tolerance"       value={formData.risk_tolerance       || ''} onChange={handleChange} options={RISK_TOLERANCE_OPTIONS}       s={s} />
+                  <SelectField label="Investment Objective" name="investment_objective" value={formData.investment_objective  || ''} onChange={handleChange} options={INVESTMENT_OBJECTIVE_OPTIONS} s={s} />
+                  <SelectField label="Time Horizon"         name="time_horizon"         value={formData.time_horizon         || ''} onChange={handleChange} options={TIME_HORIZON_OPTIONS}         s={s} />
+                  <SelectField label="Tax Bracket"          name="tax_bracket"          value={formData.tax_bracket          || ''} onChange={handleChange} options={TAX_BRACKET_OPTIONS}          s={s} />
+                  <SelectField label="Liquidity Needs"      name="liquidity_needs"      value={formData.liquidity_needs      || ''} onChange={handleChange} options={LIQUIDITY_NEEDS_OPTIONS}      s={s} />
                 </div>
                 <p style={s.formSectionLabel}>Relationship</p>
                 <div style={s.formGrid}>
-                  <SelectField label="Referral Source"    name="referral_source"      value={formData.referral_source      || ''} onChange={handleChange} options={REFERRAL_SOURCE_OPTIONS} s={s} />
-                  <FormField label="Client Since"         name="client_since"         type="date" value={formData.client_since || ''} onChange={handleChange} s={s} />
-                  <FormField label="Next Review Date"     name="next_review_date"     type="date" value={formData.next_review_date || ''} onChange={handleChange} s={s} />
-                  <SelectField label="Preferred Contact"         name="preferred_contact_method"  value={formData.preferred_contact_method  || ''} onChange={handleChange} options={CONTACT_METHOD_OPTIONS} s={s} />
-                  <SelectField label="Communication Frequency"   name="communication_frequency"   value={formData.communication_frequency   || ''} onChange={handleChange} options={COMMUNICATION_FREQUENCY_OPTIONS} s={s} />
+                  <SelectField label="Referral Source"           name="referral_source"           value={formData.referral_source           || ''} onChange={handleChange} options={REFERRAL_SOURCE_OPTIONS}          s={s} />
+                  <FormField   label="Client Since"              name="client_since"              type="date" value={formData.client_since || ''} onChange={handleChange} s={s} />
+                  <FormField   label="Next Review Date"          name="next_review_date"          type="date" value={formData.next_review_date || ''} onChange={handleChange} s={s} />
+                  <SelectField label="Preferred Contact"         name="preferred_contact_method"  value={formData.preferred_contact_method  || ''} onChange={handleChange} options={CONTACT_METHOD_OPTIONS}           s={s} />
+                  <SelectField label="Communication Frequency"   name="communication_frequency"   value={formData.communication_frequency   || ''} onChange={handleChange} options={COMMUNICATION_FREQUENCY_OPTIONS}  s={s} />
                 </div>
                 <p style={s.formSectionLabel}>Notes</p>
                 <textarea name="notes" value={formData.notes || ''} onChange={handleChange} placeholder="Any additional context about this client..." style={s.textarea} />
@@ -1497,9 +1424,7 @@ export default function ClientDetail() {
           <div style={s.overlay}>
             <div style={s.confirmModal}>
               <h2 style={s.confirmTitle}>Delete {fullName}?</h2>
-              <p style={s.confirmText}>
-                This will permanently remove this client and all their data. This cannot be undone.
-              </p>
+              <p style={s.confirmText}>This will permanently remove this client and all their data. This cannot be undone.</p>
               <div style={s.confirmButtons}>
                 <button style={s.cancelButton} onClick={() => setShowConfirmDelete(false)}>Cancel</button>
                 <button style={s.confirmDeleteButton} onClick={handleDelete} disabled={deleting}>

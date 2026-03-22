@@ -18,6 +18,7 @@ import Orgs from './pages/Orgs';
 import AuditLog from './pages/AuditLog';
 import StandardLayout from './components/StandardLayout';
 import MobilePreviewLayout from './components/MobilePreviewLayout';
+import SearchOverlay from './components/SearchOverlay';
 import { useOrg } from './context/OrgContext';
 import './App.css';
 
@@ -42,6 +43,7 @@ function App() {
       <OrgProvider>
         <Router>
           <ScrollReset />
+          <SearchOverlay />
           <div className="App">
             <Routes>
               <Route path="/"        element={<Login />} />
