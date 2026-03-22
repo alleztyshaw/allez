@@ -10,8 +10,8 @@ import { useTokens } from '../context/ThemeContext';
 import { useOrg } from '../context/OrgContext';
 import {
   FONT_BODY, FONT_DISPLAY,
-  RADIUS_LG, RADIUS_MD,
-  FW_LIGHT, FW_REGULAR, FW_MEDIUM, FW_SEMIBOLD,
+  RADIUS_LG,
+  FW_LIGHT, FW_REGULAR, FW_SEMIBOLD,
   OVERLAY_BG, SHADOW_LG,
 } from '../utils/hqConstants';
 
@@ -113,7 +113,6 @@ export default function SearchOverlay() {
   if (!open) return null;
 
   const grouped = groupResults(results);
-  const flatResults = TYPE_ORDER.flatMap(type => grouped[type]);
 
   const s = {
     overlay: {

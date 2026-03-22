@@ -26,7 +26,6 @@ function localDateStr(offsetDays = 0) {
   return `${yyyy}-${mm}-${dd}`;
 }
 function todayStr()    { return localDateStr(0); }
-function tomorrowStr() { return localDateStr(1); }
 function formatDate(d) {
   // Append T00:00:00 to force local time parsing — bare date strings parse as UTC
   return new Date(d + 'T00:00:00').toLocaleDateString('en-US', {
@@ -59,8 +58,7 @@ export default function DailyBrief() {
     if (!orgId || !userRole || !userId) return;
     setLoading(true);
 
-    const today    = todayStr();
-    const tomorrow = tomorrowStr();
+    const today      = todayStr();
 
     // Today bounds for meetings query
     const todayStart = `${today}T00:00:00`;
