@@ -131,7 +131,7 @@ function normalizeDate(raw) {
   // Already ISO
   if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
   // MM-DD-YYYY or MM/DD/YYYY
-  const match = s.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})$/);
+  const match = s.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/);
   if (match) {
     const [, mm, dd, yyyy] = match;
     return `${yyyy}-${mm.padStart(2,'0')}-${dd.padStart(2,'0')}`;
