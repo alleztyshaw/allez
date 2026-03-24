@@ -191,6 +191,12 @@ export default function ClientDetail() {
   const [editingMeeting, setEditingMeeting]     = useState(null);
   const [notePickerMeeting, setNotePickerMeeting] = useState(null); // meeting to link a note to
   const [viewNoteId, setViewNoteId]               = useState(null); // note id to preview in modal
+  const [expandedMeetings, setExpandedMeetings]   = useState(new Set());
+  const toggleMeeting = (id) => setExpandedMeetings(prev => {
+    const next = new Set(prev);
+    next.has(id) ? next.delete(id) : next.add(id);
+    return next;
+  });
   const [editingNote, setEditingNote]           = useState(null);
   const [editNoteForm, setEditNoteForm]         = useState({});
   const [advisors, setAdvisors]                 = useState([]);
@@ -611,7 +617,10 @@ export default function ClientDetail() {
               </div>
             ) : (
               <div style={{ border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_LG, overflow: 'hidden' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 90px' : '1fr 100px 120px 90px', padding: '9px 16px', background: t.SURFACE_ALT, borderBottom: `1px solid ${t.BORDER}` }}>
+                {(() => {
+                  const meetingCols = isMobile ? '1fr 190px' : '1fr 100px 120px 190px';
+                  return (<>
+                <div style={{ display: 'grid', gridTemplateColumns: meetingCols, padding: '9px 16px', background: t.SURFACE_ALT, borderBottom: `1px solid ${t.BORDER}` }}>
                   {['Meeting', ...(isMobile ? [] : ['Type', 'Recurrence']), 'Actions'].map(col => (
                     <span key={col} style={{ fontSize: '10px', fontWeight: FW_SEMIBOLD, textTransform: 'uppercase', letterSpacing: '0.08em', color: t.TEXT_MUTED }}>{col}</span>
                   ))}
@@ -622,11 +631,18 @@ export default function ClientDetail() {
                   const meetingTime     = new Date(meeting.scheduled_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
                   const typeLabel       = MEETING_TYPES.find(mt => mt.value === meeting.meeting_type)?.label || meeting.meeting_type;
                   const recurrenceLabel = meeting.recurrence !== 'none' ? MEETING_RECURRENCES.find(r => r.value === meeting.recurrence)?.label || '—' : '—';
+                  const isExpanded = expandedMeetings.has(meeting.id);
                   return (
-                    <div key={meeting.id} style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr auto' : '1fr 100px 120px auto', padding: '12px 16px', borderBottom: i < meetings.length - 1 ? `1px solid ${t.BORDER}` : 'none', alignItems: 'center', background: t.SURFACE }}>
-                      <p style={{ fontSize: '13px', fontWeight: FW_MEDIUM, color: isCancelled ? t.TEXT_SUBTLE : t.TEXT, margin: 0, textDecoration: isCancelled ? 'line-through' : 'none', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {meetingDate} · {meetingTime} · {meeting.category}{meeting.description ? ` · ${meeting.description}` : ''}
-                      </p>
+                    <div key={meeting.id} style={{ display: 'grid', gridTemplateColumns: meetingCols, padding: '12px 16px', borderBottom: i < meetings.length - 1 ? `1px solid ${t.BORDER}` : 'none', alignItems: isExpanded ? 'flex-start' : 'center', background: t.SURFACE }}>
+                      {/* Description col — click to expand */}
+                      <div onClick={() => toggleMeeting(meeting.id)} style={{ cursor: 'pointer', display: 'flex', alignItems: 'flex-start', gap: '8px', paddingRight: '24px', minWidth: 0 }}>
+                        <div style={{ overflow: 'hidden', maxHeight: isExpanded ? '200px' : '1.4em', transition: 'max-height 0.25s ease', flex: 1, minWidth: 0 }}>
+                          <p style={{ fontSize: '13px', fontWeight: FW_MEDIUM, color: isCancelled ? t.TEXT_SUBTLE : t.TEXT, margin: 0, textDecoration: isCancelled ? 'line-through' : 'none', whiteSpace: isExpanded ? 'normal' : 'nowrap', overflow: 'hidden', textOverflow: isExpanded ? 'unset' : 'ellipsis', lineHeight: 1.5 }}>
+                            {meetingDate} · {meetingTime} · {meeting.category}{meeting.description ? ` · ${meeting.description}` : ''}
+                          </p>
+                        </div>
+                        <span style={{ display: 'inline-block', width: 0, height: 0, flexShrink: 0, borderLeft: '4px solid transparent', borderRight: '4px solid transparent', borderTop: `5px solid ${t.TEXT_SUBTLE}`, transform: isExpanded ? 'rotate(0deg)' : 'rotate(90deg)', transition: 'transform 0.2s ease', marginTop: '5px' }} />
+                      </div>
                       {!isMobile && <span style={{ fontSize: '12px', fontWeight: FW_LIGHT, color: isCancelled ? t.TEXT_SUBTLE : t.TEXT_MUTED }}>{typeLabel}</span>}
                       {!isMobile && <span style={{ fontSize: '12px', fontWeight: FW_LIGHT, color: isCancelled ? t.TEXT_SUBTLE : t.TEXT_MUTED }}>{recurrenceLabel}</span>}
                       {canWrite ? (
@@ -651,6 +667,8 @@ export default function ClientDetail() {
                     </div>
                   );
                 })}
+                  </>);
+                })()}
               </div>
             )}
           </div>
