@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { useOrg } from '../context/OrgContext';
@@ -103,6 +103,61 @@ function formatEstRevenue(aum, fee_rate) {
 
 function stripAUMFormat(str) {
   return str.replace(/[$,]/g, '');
+}
+
+// ── MeetingRow ────────────────────────────────────────────────────────────────
+// Extracted so each row can measure its own text overflow via a ref.
+// Lives in this file to share all imported constants without prop-passing them.
+function MeetingRow({ meeting, index, total, meetingCols, isMobile, canWrite, expandedMeetings, toggleMeeting, openEditMeeting, handleMeetingDelete, setViewNoteId, setNotePickerMeeting, handleUnlinkNote, t, s }) {
+  const [overflows, setOverflows] = useState(false);
+  const textRef = useRef(null);
+
+  useEffect(() => {
+    if (textRef.current) setOverflows(textRef.current.scrollWidth > textRef.current.clientWidth);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const isCancelled     = meeting.status === 'cancelled';
+  const meetingDate     = new Date(meeting.scheduled_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  const meetingTime     = new Date(meeting.scheduled_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  const typeLabel       = MEETING_TYPES.find(mt => mt.value === meeting.meeting_type)?.label || meeting.meeting_type;
+  const recurrenceLabel = meeting.recurrence !== 'none' ? MEETING_RECURRENCES.find(r => r.value === meeting.recurrence)?.label || '—' : '—';
+  const isExpanded      = expandedMeetings.has(meeting.id);
+  const canExpand       = overflows || isExpanded;
+
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: meetingCols, padding: '12px 16px', borderBottom: index < total - 1 ? `1px solid ${t.BORDER}` : 'none', alignItems: 'flex-start', background: t.SURFACE }}>
+      {/* Description col */}
+      <div
+        onClick={canExpand ? () => toggleMeeting(meeting.id) : undefined}
+        style={{ cursor: canExpand ? 'pointer' : 'default', display: 'flex', alignItems: 'flex-start', gap: '8px', paddingRight: '24px', minWidth: 0 }}
+      >
+        <div style={{ overflow: 'hidden', maxHeight: isExpanded ? '200px' : '1.4em', transition: 'max-height 0.25s ease', flex: 1, minWidth: 0 }}>
+          <p ref={textRef} style={{ fontSize: '13px', fontWeight: FW_MEDIUM, color: isCancelled ? t.TEXT_SUBTLE : t.TEXT, margin: 0, textDecoration: isCancelled ? 'line-through' : 'none', whiteSpace: isExpanded ? 'normal' : 'nowrap', overflow: 'hidden', textOverflow: isExpanded ? 'unset' : 'ellipsis', lineHeight: 1.5 }}>
+            {meetingDate} · {meetingTime} · {meeting.category}{meeting.description ? ` · ${meeting.description}` : ''}
+          </p>
+        </div>
+        {canExpand && (
+          <span style={{ display: 'inline-block', width: 0, height: 0, flexShrink: 0, borderLeft: '4px solid transparent', borderRight: '4px solid transparent', borderTop: `5px solid ${t.TEXT_SUBTLE}`, transform: isExpanded ? 'rotate(0deg)' : 'rotate(90deg)', transition: 'transform 0.2s ease', marginTop: '5px' }} />
+        )}
+      </div>
+      {!isMobile && <span style={{ fontSize: '12px', fontWeight: FW_LIGHT, color: isCancelled ? t.TEXT_SUBTLE : t.TEXT_MUTED }}>{typeLabel}</span>}
+      {!isMobile && <span style={{ fontSize: '12px', fontWeight: FW_LIGHT, color: isCancelled ? t.TEXT_SUBTLE : t.TEXT_MUTED }}>{recurrenceLabel}</span>}
+      {canWrite ? (
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button style={s.noteAction} onClick={() => openEditMeeting(meeting)}>Edit</button>
+          <button style={{ ...s.noteAction, color: COLOR_ERROR }} onClick={() => handleMeetingDelete(meeting.id)}>Delete</button>
+          {meeting.note_id ? (
+            <>
+              <button style={{ ...s.noteAction, color: t.ACCENT }} onClick={() => setViewNoteId(meeting.note_id)}>View Note</button>
+              <button style={{ ...s.noteAction, color: t.TEXT_SUBTLE }} onClick={() => handleUnlinkNote(meeting.id)}>Unlink</button>
+            </>
+          ) : (
+            <button style={s.noteAction} onClick={() => setNotePickerMeeting(meeting)}>Link Note</button>
+          )}
+        </div>
+      ) : <span />}
+    </div>
+  );
 }
 
 export default function ClientDetail() {
@@ -625,48 +680,26 @@ export default function ClientDetail() {
                     <span key={col} style={{ fontSize: '10px', fontWeight: FW_SEMIBOLD, textTransform: 'uppercase', letterSpacing: '0.08em', color: t.TEXT_MUTED }}>{col}</span>
                   ))}
                 </div>
-                {meetings.map((meeting, i) => {
-                  const isCancelled     = meeting.status === 'cancelled';
-                  const meetingDate     = new Date(meeting.scheduled_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-                  const meetingTime     = new Date(meeting.scheduled_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-                  const typeLabel       = MEETING_TYPES.find(mt => mt.value === meeting.meeting_type)?.label || meeting.meeting_type;
-                  const recurrenceLabel = meeting.recurrence !== 'none' ? MEETING_RECURRENCES.find(r => r.value === meeting.recurrence)?.label || '—' : '—';
-                  const isExpanded = expandedMeetings.has(meeting.id);
-                  return (
-                    <div key={meeting.id} style={{ display: 'grid', gridTemplateColumns: meetingCols, padding: '12px 16px', borderBottom: i < meetings.length - 1 ? `1px solid ${t.BORDER}` : 'none', alignItems: isExpanded ? 'flex-start' : 'center', background: t.SURFACE }}>
-                      {/* Description col — click to expand */}
-                      <div onClick={() => toggleMeeting(meeting.id)} style={{ cursor: 'pointer', display: 'flex', alignItems: 'flex-start', gap: '8px', paddingRight: '24px', minWidth: 0 }}>
-                        <div style={{ overflow: 'hidden', maxHeight: isExpanded ? '200px' : '1.4em', transition: 'max-height 0.25s ease', flex: 1, minWidth: 0 }}>
-                          <p style={{ fontSize: '13px', fontWeight: FW_MEDIUM, color: isCancelled ? t.TEXT_SUBTLE : t.TEXT, margin: 0, textDecoration: isCancelled ? 'line-through' : 'none', whiteSpace: isExpanded ? 'normal' : 'nowrap', overflow: 'hidden', textOverflow: isExpanded ? 'unset' : 'ellipsis', lineHeight: 1.5 }}>
-                            {meetingDate} · {meetingTime} · {meeting.category}{meeting.description ? ` · ${meeting.description}` : ''}
-                          </p>
-                        </div>
-                        <span style={{ display: 'inline-block', width: 0, height: 0, flexShrink: 0, borderLeft: '4px solid transparent', borderRight: '4px solid transparent', borderTop: `5px solid ${t.TEXT_SUBTLE}`, transform: isExpanded ? 'rotate(0deg)' : 'rotate(90deg)', transition: 'transform 0.2s ease', marginTop: '5px' }} />
-                      </div>
-                      {!isMobile && <span style={{ fontSize: '12px', fontWeight: FW_LIGHT, color: isCancelled ? t.TEXT_SUBTLE : t.TEXT_MUTED }}>{typeLabel}</span>}
-                      {!isMobile && <span style={{ fontSize: '12px', fontWeight: FW_LIGHT, color: isCancelled ? t.TEXT_SUBTLE : t.TEXT_MUTED }}>{recurrenceLabel}</span>}
-                      {canWrite ? (
-                        <div style={{ display: 'flex', gap: '10px' }}>
-                          <button style={s.noteAction} onClick={() => openEditMeeting(meeting)}>Edit</button>
-                          <button style={{ ...s.noteAction, color: COLOR_ERROR }} onClick={() => handleMeetingDelete(meeting.id)}>Delete</button>
-                          {meeting.note_id ? (
-                            <>
-                              <button
-                                style={{ ...s.noteAction, color: t.ACCENT }}
-                                onClick={() => setViewNoteId(meeting.note_id)}
-                              >
-                                View Note
-                              </button>
-                              <button style={{ ...s.noteAction, color: t.TEXT_SUBTLE }} onClick={() => handleUnlinkNote(meeting.id)}>Unlink</button>
-                            </>
-                          ) : (
-                            <button style={s.noteAction} onClick={() => setNotePickerMeeting(meeting)}>Link Note</button>
-                          )}
-                        </div>
-                      ) : <span />}
-                    </div>
-                  );
-                })}
+                {meetings.map((meeting, i) => (
+                  <MeetingRow
+                    key={meeting.id}
+                    meeting={meeting}
+                    index={i}
+                    total={meetings.length}
+                    meetingCols={meetingCols}
+                    isMobile={isMobile}
+                    canWrite={canWrite}
+                    expandedMeetings={expandedMeetings}
+                    toggleMeeting={toggleMeeting}
+                    openEditMeeting={openEditMeeting}
+                    handleMeetingDelete={handleMeetingDelete}
+                    setViewNoteId={setViewNoteId}
+                    setNotePickerMeeting={setNotePickerMeeting}
+                    handleUnlinkNote={handleUnlinkNote}
+                    t={t}
+                    s={s}
+                  />
+                ))}
                   </>);
                 })()}
               </div>
