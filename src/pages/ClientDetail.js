@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { useOrg } from '../context/OrgContext';
 import MeetingModal from '../components/MeetingModal';
+import NotePicker from '../components/NotePicker';
 import {
   ASSET_LEVEL_OPTIONS,
   COMMUNICATION_FREQUENCY_OPTIONS,
@@ -170,7 +171,8 @@ export default function ClientDetail() {
   const backPath  = location.state?.from || '/hq/clients';
   const backLabel = backPath === '/hq/notes' ? '← Back to Notes' : backPath === '/hq/crm' ? '← Back to CRM' : '← Back to Clients';
 
-  const [activeTab, setActiveTab]               = useState('overview');
+  const initialTab = new URLSearchParams(location.search).get('tab') || 'overview';
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [brief, setBrief]                       = useState(null);
   const [briefGenerating, setBriefGenerating]   = useState(false);
   const [briefError, setBriefError]             = useState('');
@@ -187,6 +189,7 @@ export default function ClientDetail() {
   const [meetings, setMeetings]                 = useState([]);
   const [meetingModal, setMeetingModal]         = useState(false);
   const [editingMeeting, setEditingMeeting]     = useState(null);
+  const [notePickerMeeting, setNotePickerMeeting] = useState(null); // meeting to link a note to
   const [editingNote, setEditingNote]           = useState(null);
   const [editNoteForm, setEditNoteForm]         = useState({});
   const [advisors, setAdvisors]                 = useState([]);
@@ -264,6 +267,22 @@ export default function ClientDetail() {
     await supabase.from('meetings').update({ deleted_at: new Date().toISOString() }).eq('id', meetingId);
     setMeetings(prev => prev.filter(m => m.id !== meetingId));
   }
+
+  async function handleLinkNote(meetingId, noteId) {
+    await supabase.from('meetings').update({ note_id: noteId }).eq('id', meetingId);
+    setMeetings(prev => prev.map(m => m.id === meetingId ? { ...m, note_id: noteId } : m));
+    setNotePickerMeeting(null);
+  }
+
+  async function handleUnlinkNote(meetingId) {
+    await supabase.from('meetings').update({ note_id: null }).eq('id', meetingId);
+    setMeetings(prev => prev.map(m => m.id === meetingId ? { ...m, note_id: null } : m));
+  }
+
+  // Read highlight param from URL — used when navigating from "View Note" on a meeting
+  const [highlightNoteId, setHighlightNoteId] = useState(
+    () => new URLSearchParams(location.search).get('highlight')
+  );
 
   async function handleGenerateBrief() {
     if (!client) return;
@@ -610,9 +629,22 @@ export default function ClientDetail() {
                       {!isMobile && <span style={{ fontSize: '12px', fontWeight: FW_LIGHT, color: isCancelled ? t.TEXT_SUBTLE : t.TEXT_MUTED }}>{typeLabel}</span>}
                       {!isMobile && <span style={{ fontSize: '12px', fontWeight: FW_LIGHT, color: isCancelled ? t.TEXT_SUBTLE : t.TEXT_MUTED }}>{recurrenceLabel}</span>}
                       {canWrite ? (
-                        <div style={{ display: 'flex', gap: '10px' }}>
+                        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                           <button style={s.noteAction} onClick={() => openEditMeeting(meeting)}>Edit</button>
                           <button style={{ ...s.noteAction, color: COLOR_ERROR }} onClick={() => handleMeetingDelete(meeting.id)}>Delete</button>
+                          {meeting.note_id ? (
+                            <>
+                              <button
+                                style={{ ...s.noteAction, color: t.ACCENT }}
+                                onClick={() => { setActiveTab('notes'); setHighlightNoteId(meeting.note_id); }}
+                              >
+                                View Note
+                              </button>
+                              <button style={{ ...s.noteAction, color: t.TEXT_SUBTLE }} onClick={() => handleUnlinkNote(meeting.id)}>Unlink</button>
+                            </>
+                          ) : (
+                            <button style={s.noteAction} onClick={() => setNotePickerMeeting(meeting)}>Link Note</button>
+                          )}
                         </div>
                       ) : <span />}
                     </div>
@@ -704,7 +736,13 @@ export default function ClientDetail() {
                 <div key={date} style={{ marginBottom: '20px' }}>
                   <p style={{ fontSize: '11px', fontWeight: FW_SEMIBOLD, textTransform: 'uppercase', letterSpacing: '0.08em', color: t.TEXT_MUTED, marginBottom: '8px' }}>{formatDateLabel(date)}</p>
                   {dateNotes.map(note => (
-                    <div key={note.id} style={{ ...s.notesCard, marginBottom: '10px' }}>
+                    <div
+                      key={note.id}
+                      id={`note-${note.id}`}
+                      className={highlightNoteId === note.id ? 'note-highlight' : ''}
+                      ref={el => { if (highlightNoteId === note.id && el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); } }}
+                      style={{ ...s.notesCard, marginBottom: '10px', '--highlight-start': t.ACCENT_MUTED }}
+                    >
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: note.body ? '8px' : '0', flexWrap: 'wrap' }}>
                         <span style={{ fontFamily: FONT_DISPLAY, fontSize: '17px', fontWeight: FW_REGULAR, color: t.TEXT, flex: 1, letterSpacing: '0.01em' }}>{note.title}</span>
                         {note.note_type && <span style={{ fontSize: '10px', fontWeight: FW_SEMIBOLD, padding: '2px 10px', borderRadius: RADIUS_PILL, background: t.ACCENT_MUTED, color: t.ACCENT, border: `1px solid ${t.ACCENT_BORDER}`, letterSpacing: '0.06em', textTransform: 'uppercase' }}>{note.note_type}</span>}
@@ -839,7 +877,7 @@ export default function ClientDetail() {
           </div>
         )}
 
-        {/* ── Meeting Modal (shared component) ──────────────────────────── */}
+        {/* ── Meeting Modal ───────────────────────────────────────────── */}
         <MeetingModal
           isOpen={meetingModal}
           onClose={() => { setMeetingModal(false); setEditingMeeting(null); }}
@@ -850,6 +888,25 @@ export default function ClientDetail() {
           clientId={id}
           isMobile={isMobile}
         />
+
+        {/* ── Note Picker ─────────────────────────────────────────────── */}
+        <NotePicker
+          isOpen={!!notePickerMeeting}
+          onClose={() => setNotePickerMeeting(null)}
+          onSelect={(noteId) => handleLinkNote(notePickerMeeting.id, noteId)}
+          meeting={notePickerMeeting}
+          clientId={id}
+          orgId={orgId}
+          isMobile={isMobile}
+        />
+
+        <style>{`
+          @keyframes noteHighlight {
+            0%   { background: ${t.ACCENT_MUTED}; box-shadow: 0 0 0 2px ${t.ACCENT_BORDER}; }
+            100% { background: transparent; box-shadow: none; }
+          }
+          .note-highlight { animation: noteHighlight 2s ease forwards; }
+        `}</style>
 
       </div>
     </div>
