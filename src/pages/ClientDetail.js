@@ -269,47 +269,34 @@ export default function ClientDetail() {
   const [showAdvisorModal, setShowAdvisorModal] = useState(false);
 
   useEffect(() => {
-    async function fetchClient() {
-      const { data, error: fetchErr } = await supabase
-        .from('clients').select('*')
-        .eq('id', id).eq('org_id', orgId).is('deleted_at', null).single();
-      if (fetchErr) console.error(fetchErr);
-      else setClient(data);
+    // ── ARCH-01: Single RPC replaces fetchClient + loadNotes + loadTasks
+    // + loadMeetings + loadAdvisors (which itself had a sequential
+    // client_advisors → get_org_members chain inside it).
+    // get_org_members is still called separately for the advisor
+    // assignment modal, but only once instead of twice.
+    async function fetchClientDetail() {
+      const { data, error } = await supabase.rpc('get_client_detail', { p_client_id: id, p_org_id: orgId });
+      if (error) {
+        console.error('get_client_detail error:', error);
+        setLoading(false);
+        return;
+      }
+      if (!data) { setLoading(false); return; }
+      setClient(data.client      ?? null);
+      setClientNotes(data.notes  ?? []);
+      setClientTasks(data.tasks  ?? []);
+      setMeetings(data.meetings  ?? []);
+      setAdvisors(data.advisors  ?? []);
       setLoading(false);
-    }
-    async function loadNotes() {
-      const { data } = await supabase.from('notes').select('*')
-        .eq('client_id', id).eq('org_id', orgId).is('deleted_at', null)
-        .order('created_at', { ascending: false });
-      setClientNotes(data || []);
-    }
-    async function loadTasks() {
-      const { data } = await supabase.from('client_tasks').select('*')
-        .eq('client_id', id).eq('org_id', orgId).is('deleted_at', null)
-        .order('due_date', { ascending: true });
-      setClientTasks(data || []);
-    }
-    async function loadMeetings() {
-      const { data } = await supabase.from('meetings').select('*')
-        .eq('client_id', id).eq('org_id', orgId).is('deleted_at', null)
-        .order('scheduled_at', { ascending: true });
-      setMeetings(data || []);
-    }
-    async function loadAdvisors() {
-      const { data } = await supabase.from('client_advisors').select('id, user_id, is_primary')
-        .eq('client_id', id).eq('org_id', orgId);
-      if (!data) { setAdvisors([]); return; }
-      const { data: members } = await supabase.rpc('get_org_members', { target_org_id: orgId });
-      const memberMap = Object.fromEntries((members || []).map(m => [m.user_id, m]));
-      setAdvisors(data.map(a => ({ ...a, ...memberMap[a.user_id] })));
     }
     async function loadOrgMembers() {
       const { data } = await supabase.rpc('get_org_members', { target_org_id: orgId });
       setOrgMembers(data || []);
     }
     if (orgId) {
-      fetchClient(); loadNotes(); loadTasks(); loadMeetings();
-      loadAdvisors(); loadOrgMembers(); fetchBrief();
+      fetchClientDetail();
+      loadOrgMembers();
+      fetchBrief();
     }
   }, [id, orgId]); // eslint-disable-line react-hooks/exhaustive-deps
 
