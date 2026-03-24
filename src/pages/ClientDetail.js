@@ -190,6 +190,7 @@ export default function ClientDetail() {
   const [meetingModal, setMeetingModal]         = useState(false);
   const [editingMeeting, setEditingMeeting]     = useState(null);
   const [notePickerMeeting, setNotePickerMeeting] = useState(null); // meeting to link a note to
+  const [viewNoteId, setViewNoteId]               = useState(null); // note id to preview in modal
   const [editingNote, setEditingNote]           = useState(null);
   const [editNoteForm, setEditNoteForm]         = useState({});
   const [advisors, setAdvisors]                 = useState([]);
@@ -280,7 +281,7 @@ export default function ClientDetail() {
   }
 
   // Read highlight param from URL — used when navigating from "View Note" on a meeting
-  const [highlightNoteId, setHighlightNoteId] = useState(
+  const [highlightNoteId] = useState(
     () => new URLSearchParams(location.search).get('highlight')
   );
 
@@ -622,21 +623,21 @@ export default function ClientDetail() {
                   const typeLabel       = MEETING_TYPES.find(mt => mt.value === meeting.meeting_type)?.label || meeting.meeting_type;
                   const recurrenceLabel = meeting.recurrence !== 'none' ? MEETING_RECURRENCES.find(r => r.value === meeting.recurrence)?.label || '—' : '—';
                   return (
-                    <div key={meeting.id} style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 90px' : '1fr 100px 120px 90px', padding: '12px 16px', borderBottom: i < meetings.length - 1 ? `1px solid ${t.BORDER}` : 'none', alignItems: 'center', background: t.SURFACE }}>
+                    <div key={meeting.id} style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr auto' : '1fr 100px 120px auto', padding: '12px 16px', borderBottom: i < meetings.length - 1 ? `1px solid ${t.BORDER}` : 'none', alignItems: 'center', background: t.SURFACE }}>
                       <p style={{ fontSize: '13px', fontWeight: FW_MEDIUM, color: isCancelled ? t.TEXT_SUBTLE : t.TEXT, margin: 0, textDecoration: isCancelled ? 'line-through' : 'none', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                         {meetingDate} · {meetingTime} · {meeting.category}{meeting.description ? ` · ${meeting.description}` : ''}
                       </p>
                       {!isMobile && <span style={{ fontSize: '12px', fontWeight: FW_LIGHT, color: isCancelled ? t.TEXT_SUBTLE : t.TEXT_MUTED }}>{typeLabel}</span>}
                       {!isMobile && <span style={{ fontSize: '12px', fontWeight: FW_LIGHT, color: isCancelled ? t.TEXT_SUBTLE : t.TEXT_MUTED }}>{recurrenceLabel}</span>}
                       {canWrite ? (
-                        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                        <div style={{ display: 'flex', gap: '10px' }}>
                           <button style={s.noteAction} onClick={() => openEditMeeting(meeting)}>Edit</button>
                           <button style={{ ...s.noteAction, color: COLOR_ERROR }} onClick={() => handleMeetingDelete(meeting.id)}>Delete</button>
                           {meeting.note_id ? (
                             <>
                               <button
                                 style={{ ...s.noteAction, color: t.ACCENT }}
-                                onClick={() => { setActiveTab('notes'); setHighlightNoteId(meeting.note_id); }}
+                                onClick={() => setViewNoteId(meeting.note_id)}
                               >
                                 View Note
                               </button>
@@ -894,11 +895,50 @@ export default function ClientDetail() {
           isOpen={!!notePickerMeeting}
           onClose={() => setNotePickerMeeting(null)}
           onSelect={(noteId) => handleLinkNote(notePickerMeeting.id, noteId)}
-          meeting={notePickerMeeting}
-          clientId={id}
-          orgId={orgId}
-          isMobile={isMobile}
+          notes={clientNotes}
+          meetingDate={notePickerMeeting?.scheduled_at}
         />
+
+        {/* ── View Note Modal ──────────────────────────────────────────── */}
+        {(() => {
+          const viewNote = viewNoteId ? clientNotes.find(n => n.id === viewNoteId) : null;
+          if (!viewNote) return null;
+          return (
+            <div style={{ position: 'fixed', inset: 0, background: OVERLAY_BG, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', zIndex: 1100, padding: '340px 20px 20px' }}>
+              <div style={{ background: t.SURFACE, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_LG, width: 'min(600px, calc(100vw - 40px))', maxHeight: '80vh', display: 'flex', flexDirection: 'column', boxShadow: SHADOW_LG }}>
+                {/* Header */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', padding: '20px 24px', borderBottom: `1px solid ${t.BORDER}`, flexShrink: 0, gap: '12px' }}>
+                  <div style={{ minWidth: 0 }}>
+                    <p style={{ margin: '0 0 6px', fontFamily: FONT_DISPLAY, fontSize: '22px', fontWeight: FW_REGULAR, color: t.TEXT, letterSpacing: '0.01em', lineHeight: 1.2 }}>{viewNote.title}</p>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <span style={{ fontSize: '12px', color: t.TEXT_MUTED, fontFamily: FONT_BODY, fontWeight: FW_LIGHT }}>
+                        {new Date(viewNote.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                      </span>
+                      {viewNote.note_type && (
+                        <span style={{ fontSize: '10px', fontWeight: FW_SEMIBOLD, padding: '2px 8px', borderRadius: RADIUS_PILL, background: t.ACCENT_MUTED, color: t.ACCENT, border: `1px solid ${t.ACCENT_BORDER}`, letterSpacing: '0.06em', textTransform: 'uppercase', fontFamily: FONT_BODY }}>
+                          {viewNote.note_type}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <button style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: t.TEXT_MUTED, padding: '4px 8px', flexShrink: 0 }} onClick={() => setViewNoteId(null)}>✕</button>
+                </div>
+                {/* Body */}
+                <div style={{ overflowY: 'auto', flex: 1, padding: '20px 24px' }}>
+                  {viewNote.body ? (
+                    <p style={{ margin: 0, fontSize: '14px', fontWeight: FW_LIGHT, color: t.TEXT, fontFamily: FONT_BODY, lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>{viewNote.body}</p>
+                  ) : (
+                    <p style={{ margin: 0, fontSize: '14px', color: t.TEXT_MUTED, fontFamily: FONT_BODY, fontWeight: FW_LIGHT, fontStyle: 'italic' }}>No note content recorded.</p>
+                  )}
+                </div>
+                {/* Footer */}
+                <div style={{ padding: '14px 24px', borderTop: `1px solid ${t.BORDER}`, flexShrink: 0, display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                  <button style={{ background: 'none', border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_MD, padding: '8px 16px', fontSize: '13px', color: t.TEXT_MUTED, cursor: 'pointer', fontFamily: FONT_BODY }} onClick={() => setViewNoteId(null)}>Close</button>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
 
         <style>{`
           @keyframes noteHighlight {

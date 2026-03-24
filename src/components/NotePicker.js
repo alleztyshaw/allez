@@ -43,11 +43,11 @@ export default function NotePicker({ isOpen, onClose, onSelect, notes = [], meet
     <div style={{
       position: 'fixed', inset: 0, background: OVERLAY_BG,
       display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
-      zIndex: 1100, padding: '60px 20px 20px',
+      zIndex: 1100, padding: '340px 20px 20px',
     }}>
       <div style={{
         background: t.SURFACE, border: `1px solid ${t.BORDER}`,
-        borderRadius: RADIUS_LG, width: '100%', maxWidth: '520px',
+        borderRadius: RADIUS_LG, width: 'min(520px, calc(100vw - 40px))',
         maxHeight: '75vh', display: 'flex', flexDirection: 'column',
         boxShadow: SHADOW_LG,
       }}>
