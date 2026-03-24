@@ -19,9 +19,8 @@ import {
 } from '../utils/hqConstants';
 
 function formatDate(isoStr) {
-  return new Date(isoStr).toLocaleDateString('en-US', {
-    month: 'short', day: 'numeric', year: 'numeric',
-  });
+  if (!isoStr) return '—';
+  return new Date(isoStr).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
 }
 
 function daysBetween(a, b) {

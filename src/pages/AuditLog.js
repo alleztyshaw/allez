@@ -2,21 +2,46 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../supabaseClient';
 import { useOrg } from '../context/OrgContext';
 import {
-  FONT_BODY, FONT_DISPLAY,
+  FONT_BODY,
   RADIUS_LG, RADIUS_MD, RADIUS_PILL,
   SHADOW_MD,
   FULL_ACCESS_ROLES,
   pageStyles,
   FW_LIGHT, FW_REGULAR, FW_MEDIUM, FW_SEMIBOLD,
   MOBILE_BREAKPOINT,
+  COLOR_ERROR, COLOR_WARNING, COLOR_INFO,
+  ACCENT, ACCENT_MUTED, ACCENT_BORDER,
 } from '../utils/hqConstants';
 import { useTokens } from '../context/ThemeContext';
 import useWindowWidth from '../hooks/useWindowWidth';
 
-const ACTION_COLORS = {
-  INSERT: { color: '#34d399', bg: 'rgba(52,211,153,0.10)', label: 'Created'  },
-  UPDATE: { color: '#60a5fa', bg: 'rgba(96,165,250,0.10)', label: 'Updated'  },
-  DELETE: { color: '#f87171', bg: 'rgba(248,113,113,0.10)', label: 'Deleted' },
+// ── Constants ───────────────────────────────────────────────────────────────
+
+const ACTION_META = {
+  INSERT: {
+    label: 'Created',
+    color: ACCENT,
+    bg:    ACCENT_MUTED,
+    border: ACCENT_BORDER,
+  },
+  UPDATE: {
+    label: 'Updated',
+    color: COLOR_INFO,
+    bg:    'rgba(96,165,250,0.10)',
+    border: 'rgba(96,165,250,0.30)',
+  },
+  DELETE: {
+    label: 'Deleted',
+    color: COLOR_ERROR,
+    bg:    'rgba(248,113,113,0.10)',
+    border: 'rgba(248,113,113,0.30)',
+  },
+};
+
+const SEVERITY_META = {
+  high:   { color: COLOR_ERROR,   bg: 'rgba(248,113,113,0.10)', border: 'rgba(248,113,113,0.30)' },
+  medium: { color: COLOR_WARNING, bg: 'rgba(251,191,36,0.10)',  border: 'rgba(251,191,36,0.30)'  },
+  low:    { color: ACCENT,        bg: ACCENT_MUTED,             border: ACCENT_BORDER            },
 };
 
 const TABLE_LABELS = {
@@ -25,7 +50,6 @@ const TABLE_LABELS = {
   client_tasks: 'Task',
 };
 
-// Field names → readable labels for the change diff
 const FIELD_LABELS = {
   first_name:               'First Name',
   last_name:                'Last Name',
@@ -59,6 +83,8 @@ const FIELD_LABELS = {
   assigned_to:              'Assigned To',
 };
 
+// ── Helpers ─────────────────────────────────────────────────────────────────
+
 function formatFieldValue(field, val) {
   if (val === null || val === undefined || val === '') return '—';
   const raw = typeof val === 'object' ? JSON.stringify(val) : String(val);
@@ -78,48 +104,43 @@ function formatFieldValue(field, val) {
   return raw;
 }
 
-function formatTime(isoStr) {
+function formatDateTime(isoStr) {
   const d = new Date(isoStr);
-  return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-}
-
-function formatDate(isoStr) {
-  const d = new Date(isoStr);
-  const today = new Date();
-  const yesterday = new Date(today); yesterday.setDate(today.getDate() - 1);
+  const today     = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
   const sameDay = (a, b) =>
     a.getFullYear() === b.getFullYear() &&
-    a.getMonth() === b.getMonth() &&
-    a.getDate() === b.getDate();
-  if (sameDay(d, today))     return 'Today';
-  if (sameDay(d, yesterday)) return 'Yesterday';
-  return d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+    a.getMonth()    === b.getMonth()    &&
+    a.getDate()     === b.getDate();
+
+  const timeStr = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+
+  if (sameDay(d, today))     return { date: 'Today',     time: timeStr };
+  if (sameDay(d, yesterday)) return { date: 'Yesterday', time: timeStr };
+  return {
+    date: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+    time: timeStr,
+  };
 }
 
-function groupByDate(logs) {
-  const groups = {};
-  logs.forEach(log => {
-    const key = new Date(log.changed_at).toDateString();
-    if (!groups[key]) groups[key] = { label: formatDate(log.changed_at), items: [] };
-    groups[key].items.push(log);
-  });
-  return Object.values(groups);
-}
+// ── Component ────────────────────────────────────────────────────────────────
 
 export default function AuditLog() {
-  const t = useTokens();
+  const t           = useTokens();
   const { orgId, userRole: contextRole } = useOrg();
   const windowWidth = useWindowWidth();
-  const isMobile = windowWidth < MOBILE_BREAKPOINT;
+  const isMobile    = windowWidth < MOBILE_BREAKPOINT;
 
-  const [logs, setLogs]           = useState([]);
-  const [members, setMembers]     = useState([]);
-  const [loading, setLoading]     = useState(true);
-  const [expanded, setExpanded]   = useState({});
-  const [activeTab, setActiveTab] = useState('audit'); // 'audit' | 'flagged'
-  const [flaggedNotes, setFlaggedNotes]     = useState([]);
+  const [logs,           setLogs]           = useState([]);
+  const [members,        setMembers]        = useState([]);
+  const [loading,        setLoading]        = useState(true);
+  const [expanded,       setExpanded]       = useState({});
+  const [activeTab,      setActiveTab]      = useState('audit'); // 'audit' | 'flagged'
+  const [flaggedNotes,   setFlaggedNotes]   = useState([]);
   const [flaggedLoading, setFlaggedLoading] = useState(false);
   const [flaggedClients, setFlaggedClients] = useState({});
+  const [expandedFlags,  setExpandedFlags]  = useState({});
 
   // Filters
   const [filterTable,  setFilterTable]  = useState('all');
@@ -154,8 +175,6 @@ export default function AuditLog() {
     setLoading(false);
   }, [orgId, filterTable, filterAction, filterUser, filterFrom, filterTo]);
 
-  // Fetch org members for the user filter dropdown via SECURITY DEFINER RPC
-  // Direct org_members query only returns the current user's row due to RLS
   useEffect(() => {
     if (!orgId) return;
     supabase.rpc('get_org_members', { target_org_id: orgId })
@@ -176,7 +195,6 @@ export default function AuditLog() {
         .is('deleted_at', null)
         .order('compliance_flagged_at', { ascending: false });
       setFlaggedNotes(notes || []);
-      // Fetch client names
       const clientIds = [...new Set((notes || []).map(n => n.client_id).filter(Boolean))];
       if (clientIds.length) {
         const { data: clients } = await supabase
@@ -193,7 +211,7 @@ export default function AuditLog() {
   }, [orgId, activeTab]);
 
   function memberName(userId) {
-    const m = members.find(m => m.user_id === userId);
+    const m = members.find(mb => mb.user_id === userId);
     if (!m || !m.first_name) return 'Unknown user';
     return `${m.first_name} ${m.last_name}`;
   }
@@ -202,7 +220,11 @@ export default function AuditLog() {
     setExpanded(e => ({ ...e, [id]: !e[id] }));
   }
 
-  // ── Access gate ─────────────────────────────────────────────────────────────
+  function toggleFlagExpand(id) {
+    setExpandedFlags(e => ({ ...e, [id]: !e[id] }));
+  }
+
+  // ── Access gate ─────────────────────────────────────────────────────────
   if (contextRole && !FULL_ACCESS_ROLES.includes(contextRole)) {
     return (
       <div style={{ padding: '80px 32px', textAlign: 'center' }}>
@@ -213,56 +235,117 @@ export default function AuditLog() {
     );
   }
 
-  const grouped = groupByDate(logs);
-
-  const s = {
-    ...pageStyles(t, isMobile),
-    filterRow:    { display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '32px', alignItems: 'flex-end' },
-    filterGroup:  { display: 'flex', flexDirection: 'column', gap: '4px' },
-    filterLabel:  { fontSize: '10px', fontWeight: FW_SEMIBOLD, textTransform: 'uppercase', letterSpacing: '0.08em', color: t.TEXT_MUTED, fontFamily: FONT_BODY },
-    tabRow: { display: 'flex', gap: '4px', marginBottom: '28px', borderBottom: `1px solid ${t.BORDER}` },
-    tab: { padding: '8px 20px', fontSize: '13px', fontWeight: FW_MEDIUM, fontFamily: FONT_BODY, cursor: 'pointer', background: 'none', border: 'none', borderBottom: '2px solid transparent', color: t.TEXT_MUTED, marginBottom: '-1px' },
-    tabActive: { color: t.TEXT, borderBottom: `2px solid ${t.ACCENT}` },
-    filterSelect: { fontFamily: FONT_BODY, fontSize: '13px', background: t.SURFACE, color: t.TEXT, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_MD, padding: '7px 10px', cursor: 'pointer' },
-    filterInput:  { fontFamily: FONT_BODY, fontSize: '13px', background: t.SURFACE, color: t.TEXT, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_MD, padding: '7px 10px' },
-    dateLabel:    { fontSize: '11px', fontWeight: FW_SEMIBOLD, textTransform: 'uppercase', letterSpacing: '0.08em', color: t.TEXT_MUTED, margin: '0 0 10px', fontFamily: FONT_BODY },
-    logCard:      { background: t.SURFACE, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_LG, padding: '14px 18px', marginBottom: '8px', boxShadow: SHADOW_MD },
-    logRow:       { display: 'flex', alignItems: 'flex-start', gap: '12px' },
-    actionBadge:  (action) => ({
-      fontSize: '10px', fontWeight: FW_SEMIBOLD, padding: '2px 9px', fontFamily: FONT_BODY,
-      borderRadius: RADIUS_PILL, flexShrink: 0, marginTop: '2px',
-      background: ACTION_COLORS[action]?.bg || t.SURFACE_ALT,
-      color: ACTION_COLORS[action]?.color || t.TEXT_MUTED,
-      border: `1px solid ${ACTION_COLORS[action]?.color || t.BORDER}44`,
-      textTransform: 'uppercase', letterSpacing: '0.06em',
-    }),
-    tableBadge:   { fontSize: '10px', fontWeight: FW_SEMIBOLD, padding: '2px 9px', borderRadius: RADIUS_PILL, fontFamily: FONT_BODY, background: t.SURFACE_ALT, color: t.TEXT_MUTED, border: `1px solid ${t.BORDER}`, flexShrink: 0, marginTop: '2px', letterSpacing: '0.04em' },
-    logMain:      { flex: 1, minWidth: 0 },
-    logLabel:     { fontSize: '15px', fontWeight: FW_REGULAR, color: t.TEXT, margin: '0 0 2px', fontFamily: FONT_DISPLAY, letterSpacing: '0.01em' },
-    logMeta:      { fontSize: '12px', color: t.TEXT_MUTED, fontWeight: FW_LIGHT, fontFamily: FONT_BODY },
-    expandBtn:    { background: 'none', border: 'none', color: t.ACCENT, fontSize: '11px', fontWeight: FW_SEMIBOLD, cursor: 'pointer', padding: '4px 0 0', fontFamily: FONT_BODY },
-    changeRow:    { display: 'flex', gap: '8px', alignItems: 'baseline', padding: '4px 0', borderBottom: `1px solid ${t.BORDER}` },
-    changeField:  { fontSize: '11px', fontWeight: FW_SEMIBOLD, color: t.TEXT_MUTED, fontFamily: FONT_BODY, minWidth: '140px', flexShrink: 0 },
-    changeOld:    { fontSize: '12px', color: '#f87171', fontWeight: FW_LIGHT, fontFamily: FONT_BODY, textDecoration: 'line-through', flex: 1 },
-    changeNew:    { fontSize: '12px', color: '#34d399', fontWeight: FW_REGULAR, fontFamily: FONT_BODY, flex: 1 },
-    emptyState:   { background: t.SURFACE, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_LG, padding: '48px', textAlign: 'center', color: t.TEXT_MUTED, fontSize: '14px', fontWeight: FW_LIGHT, fontFamily: FONT_BODY },
-    clearBtn:     { background: 'none', border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_MD, padding: '7px 14px', fontSize: '12px', color: t.TEXT_MUTED, cursor: 'pointer', fontFamily: FONT_BODY },
-  };
-
   const hasFilters = filterTable !== 'all' || filterAction !== 'all' || filterUser !== 'all' || filterFrom || filterTo;
 
+  // Column grid — different widths for mobile vs desktop
+  const auditCols    = isMobile ? '100px 86px 1fr'        : '140px 100px 86px 1fr 160px 80px';
+  const flaggedCols  = isMobile ? '1fr 86px'              : '1fr 160px 90px 140px 80px';
+
+  // ── Styles ───────────────────────────────────────────────────────────────
+  const s = {
+    ...pageStyles(t, isMobile),
+    tabRow: {
+      display: 'flex', gap: '4px', marginBottom: '28px',
+      borderBottom: `1px solid ${t.BORDER}`,
+    },
+    tab: {
+      padding: '8px 20px', fontSize: '13px', fontWeight: FW_MEDIUM,
+      fontFamily: FONT_BODY, cursor: 'pointer', background: 'none', border: 'none',
+      borderBottom: '2px solid transparent', color: t.TEXT_MUTED, marginBottom: '-1px',
+    },
+    tabActive: { color: t.TEXT, borderBottom: `2px solid ${t.ACCENT}` },
+
+    // Filters
+    filterRow:   { display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '24px', alignItems: 'flex-end' },
+    filterGroup: { display: 'flex', flexDirection: 'column', gap: '4px' },
+    filterLabel: { fontSize: '10px', fontWeight: FW_SEMIBOLD, textTransform: 'uppercase', letterSpacing: '0.08em', color: t.TEXT_MUTED, fontFamily: FONT_BODY },
+    filterSelect:{ fontFamily: FONT_BODY, fontSize: '13px', background: t.SURFACE, color: t.TEXT, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_MD, padding: '7px 10px', cursor: 'pointer' },
+    filterInput: { fontFamily: FONT_BODY, fontSize: '13px', background: t.SURFACE, color: t.TEXT, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_MD, padding: '7px 10px' },
+    clearBtn:    { background: 'none', border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_MD, padding: '7px 14px', fontSize: '12px', color: t.TEXT_MUTED, cursor: 'pointer', fontFamily: FONT_BODY },
+
+    // Table shared
+    tableWrap: { border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_LG, overflow: 'hidden', boxShadow: SHADOW_MD },
+    tableHead: (cols) => ({
+      display: 'grid', gridTemplateColumns: cols,
+      padding: '10px 20px', background: t.SURFACE_ALT,
+      borderBottom: `1px solid ${t.BORDER}`, gap: '8px', alignItems: 'center',
+    }),
+    colHeader: {
+      fontSize: '10px', fontWeight: FW_SEMIBOLD, textTransform: 'uppercase',
+      letterSpacing: '0.08em', color: t.TEXT_MUTED, fontFamily: FONT_BODY,
+    },
+    tableRow: (cols, isLast) => ({
+      display: 'grid', gridTemplateColumns: cols,
+      padding: '13px 20px', background: t.SURFACE, gap: '8px', alignItems: 'center',
+      borderBottom: isLast ? 'none' : `1px solid ${t.BORDER}`,
+    }),
+    expandPanel: {
+      padding: '12px 20px 14px', background: t.SURFACE_ALT,
+      borderBottom: `1px solid ${t.BORDER}`,
+    },
+
+    // Badges
+    actionBadge: (action) => {
+      const m = ACTION_META[action] || {};
+      return {
+        display: 'inline-block', fontSize: '10px', fontWeight: FW_SEMIBOLD,
+        padding: '2px 9px', borderRadius: RADIUS_PILL, fontFamily: FONT_BODY,
+        background: m.bg || t.SURFACE_ALT, color: m.color || t.TEXT_MUTED,
+        border: `1px solid ${m.border || t.BORDER}`,
+        textTransform: 'uppercase', letterSpacing: '0.06em', whiteSpace: 'nowrap',
+      };
+    },
+    typeBadge: {
+      display: 'inline-block', fontSize: '10px', fontWeight: FW_SEMIBOLD,
+      padding: '2px 9px', borderRadius: RADIUS_PILL, fontFamily: FONT_BODY,
+      background: t.SURFACE_ALT, color: t.TEXT_MUTED,
+      border: `1px solid ${t.BORDER}`,
+      letterSpacing: '0.04em', whiteSpace: 'nowrap',
+    },
+    severityBadge: (sev) => {
+      const m = SEVERITY_META[sev] || SEVERITY_META.low;
+      return {
+        display: 'inline-block', fontSize: '10px', fontWeight: FW_SEMIBOLD,
+        padding: '2px 9px', borderRadius: RADIUS_PILL, fontFamily: FONT_BODY,
+        background: m.bg, color: m.color, border: `1px solid ${m.border}`,
+        textTransform: 'uppercase', letterSpacing: '0.06em', whiteSpace: 'nowrap',
+      };
+    },
+
+    // Cell text
+    cellPrimary: { fontSize: '13px', fontWeight: FW_REGULAR, color: t.TEXT, fontFamily: FONT_BODY, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
+    cellMuted:   { fontSize: '11px', fontWeight: FW_LIGHT,   color: t.TEXT_MUTED, fontFamily: FONT_BODY },
+    detailsBtn:  { background: 'none', border: 'none', color: t.ACCENT, fontSize: '11px', fontWeight: FW_SEMIBOLD, cursor: 'pointer', padding: 0, fontFamily: FONT_BODY, whiteSpace: 'nowrap' },
+
+    // Change diff rows
+    changeRow:   { display: 'flex', gap: '8px', alignItems: 'baseline', padding: '5px 0', borderBottom: `1px solid ${t.BORDER}` },
+    changeField: { fontSize: '11px', fontWeight: FW_SEMIBOLD, color: t.TEXT_MUTED, fontFamily: FONT_BODY, minWidth: '140px', flexShrink: 0 },
+    changeOld:   { fontSize: '12px', color: COLOR_ERROR, fontWeight: FW_LIGHT, fontFamily: FONT_BODY, textDecoration: 'line-through', flex: 1 },
+    changeArrow: { fontSize: '11px', color: t.TEXT_SUBTLE, flexShrink: 0, padding: '0 4px' },
+    changeNew:   { fontSize: '12px', color: ACCENT, fontWeight: FW_REGULAR, fontFamily: FONT_BODY, flex: 1 },
+
+    emptyState: {
+      background: t.SURFACE, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_LG,
+      padding: '48px', textAlign: 'center', color: t.TEXT_MUTED,
+      fontSize: '14px', fontWeight: FW_LIGHT, fontFamily: FONT_BODY,
+    },
+  };
+
+  // ── Render ───────────────────────────────────────────────────────────────
   return (
     <div style={s.pageWrapper}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=DM+Sans:wght@300;400;500;600&display=swap');
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        .audit-row:hover > div { background: ${t.SURFACE_ALT} !important; }
       `}</style>
       <div style={s.page}>
+
+        {/* Header */}
         <div style={s.header}>
           <div>
             <h1 style={s.title}>Audit Log</h1>
             <p style={s.subtitle}>
-              A record of all writes to client, note, and task data across your organization.
+              A complete record of all writes to client, note, and task data across your organization.
               Visible to admin and compliance roles only.
             </p>
           </div>
@@ -281,175 +364,258 @@ export default function AuditLog() {
           ))}
         </div>
 
-      {/* ── Flagged Notes tab ─────────────────────────────────────────── */}
-      {activeTab === 'flagged' && (
-        <div>
-          {flaggedLoading ? (
-            <p style={{ color: t.TEXT_MUTED, fontWeight: FW_LIGHT }}>Loading flagged notes…</p>
+        {/* ── Flagged Notes tab ─────────────────────────────────────────── */}
+        {activeTab === 'flagged' && (
+          flaggedLoading ? (
+            <div style={s.emptyState}>Loading flagged notes…</div>
           ) : flaggedNotes.length === 0 ? (
-            <div style={{ color: t.TEXT_MUTED, fontSize: '14px', fontWeight: FW_LIGHT, padding: '32px 0', textAlign: 'center' }}>
+            <div style={s.emptyState}>
               No flagged notes. Run a compliance scan on any AI note from the Notes page.
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {flaggedNotes.map(note => {
-                const severityColor = note.compliance_severity === 'high' ? '#f87171' : note.compliance_severity === 'medium' ? '#fbbf24' : t.TEXT_MUTED;
+            <div style={s.tableWrap}>
+              {/* Header */}
+              <div style={s.tableHead(flaggedCols)}>
+                <span style={s.colHeader}>Note</span>
+                {!isMobile && <span style={s.colHeader}>Client</span>}
+                <span style={s.colHeader}>Severity</span>
+                {!isMobile && <span style={s.colHeader}>Flagged</span>}
+                {!isMobile && <span style={s.colHeader}>Reasons</span>}
+              </div>
+
+              {/* Rows */}
+              {flaggedNotes.map((note, idx) => {
+                const isLast    = idx === flaggedNotes.length - 1;
+                const isExpanded = expandedFlags[note.id];
+                const reasons   = note.compliance_reasons || [];
                 const flaggedDate = note.compliance_flagged_at
                   ? new Date(note.compliance_flagged_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-                  : null;
+                  : '—';
+                const clientName = flaggedClients[note.client_id] || '—';
+
                 return (
-                  <div key={note.id} style={{ background: t.SURFACE, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_LG, padding: '18px 20px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px', flexWrap: 'wrap', gap: '8px' }}>
-                      <div>
-                        <p style={{ fontSize: '14px', color: t.TEXT, fontWeight: FW_REGULAR, margin: '0 0 2px' }}>{note.title}</p>
-                        <p style={{ fontSize: '11px', color: t.TEXT_MUTED, fontWeight: FW_LIGHT, margin: 0 }}>
-                          {flaggedClients[note.client_id] || '—'}{flaggedDate ? ` · Flagged ${flaggedDate}` : ''}
-                        </p>
+                  <div key={note.id} className="audit-row">
+                    <div style={s.tableRow(flaggedCols, isLast && !isExpanded)}>
+                      {/* Note title */}
+                      <div style={{ overflow: 'hidden' }}>
+                        <div style={s.cellPrimary}>{note.title}</div>
+                        {isMobile && (
+                          <div style={s.cellMuted}>{clientName} · {flaggedDate}</div>
+                        )}
                       </div>
-                      <span style={{ fontSize: '11px', fontWeight: FW_SEMIBOLD, padding: '3px 10px', borderRadius: RADIUS_PILL, textTransform: 'uppercase', letterSpacing: '0.06em', background: `${severityColor}22`, color: severityColor, border: `1px solid ${severityColor}44` }}>
-                        {note.compliance_severity || 'flagged'}
-                      </span>
+                      {!isMobile && <div style={s.cellPrimary}>{clientName}</div>}
+                      {/* Severity */}
+                      <div>
+                        <span style={s.severityBadge(note.compliance_severity)}>
+                          {note.compliance_severity || 'flagged'}
+                        </span>
+                      </div>
+                      {!isMobile && <div style={s.cellMuted}>{flaggedDate}</div>}
+                      {/* Reasons toggle */}
+                      {!isMobile && (
+                        <div>
+                          {reasons.length > 0 ? (
+                            <button style={s.detailsBtn} onClick={() => toggleFlagExpand(note.id)}>
+                              {isExpanded ? 'Hide' : `${reasons.length} reason${reasons.length > 1 ? 's' : ''}`}
+                            </button>
+                          ) : (
+                            <span style={s.cellMuted}>—</span>
+                          )}
+                        </div>
+                      )}
                     </div>
-                    {(note.compliance_reasons || []).map((r, i) => (
-                      <p key={i} style={{ fontSize: '12px', color: t.TEXT_MUTED, fontWeight: FW_LIGHT, margin: '4px 0', lineHeight: '1.5' }}>· {r}</p>
-                    ))}
+
+                    {/* Expanded reasons */}
+                    {isExpanded && reasons.length > 0 && (
+                      <div style={{ ...s.expandPanel, borderBottom: isLast ? 'none' : `1px solid ${t.BORDER}` }}>
+                        {reasons.map((r, i) => (
+                          <p key={i} style={{ ...s.cellMuted, margin: '3px 0', lineHeight: '1.6' }}>· {r}</p>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 );
               })}
             </div>
-          )}
-        </div>
-      )}
-
-      {/* ── Audit Log tab ─────────────────────────────────────────────── */}
-      {activeTab === 'audit' && (
-        <div>
-
-      {/* Filters */}
-      <div style={s.filterRow}>
-        <div style={s.filterGroup}>
-          <span style={s.filterLabel}>Record Type</span>
-          <select style={s.filterSelect} value={filterTable} onChange={e => setFilterTable(e.target.value)}>
-            <option value="all">All types</option>
-            <option value="clients">Clients</option>
-            <option value="notes">Notes</option>
-            <option value="client_tasks">Tasks</option>
-          </select>
-        </div>
-        <div style={s.filterGroup}>
-          <span style={s.filterLabel}>Action</span>
-          <select style={s.filterSelect} value={filterAction} onChange={e => setFilterAction(e.target.value)}>
-            <option value="all">All actions</option>
-            <option value="INSERT">Created</option>
-            <option value="UPDATE">Updated</option>
-            <option value="DELETE">Deleted</option>
-          </select>
-        </div>
-        <div style={s.filterGroup}>
-          <span style={s.filterLabel}>User</span>
-          <select style={s.filterSelect} value={filterUser} onChange={e => setFilterUser(e.target.value)}>
-            <option value="all">All users</option>
-            {members.filter(m => m.first_name).map(m => (
-              <option key={m.user_id} value={m.user_id}>
-                {m.first_name} {m.last_name}
-              </option>
-            ))}
-          </select>
-        </div>
-        {!isMobile && (
-          <>
-            <div style={s.filterGroup}>
-              <span style={s.filterLabel}>From</span>
-              <input type="date" style={s.filterInput} value={filterFrom} onChange={e => setFilterFrom(e.target.value)} />
-            </div>
-            <div style={s.filterGroup}>
-              <span style={s.filterLabel}>To</span>
-              <input type="date" style={s.filterInput} value={filterTo} onChange={e => setFilterTo(e.target.value)} />
-            </div>
-          </>
+          )
         )}
-        {hasFilters && (
-          <div style={s.filterGroup}>
-            <span style={s.filterLabel}>&nbsp;</span>
-            <button style={s.clearBtn} onClick={() => {
-              setFilterTable('all'); setFilterAction('all');
-              setFilterUser('all'); setFilterFrom(''); setFilterTo('');
-            }}>
-              Clear filters
-            </button>
-          </div>
-        )}
-      </div>
 
-      {/* Log entries */}
-      {loading ? (
-        <div style={s.emptyState}>Loading audit log…</div>
-      ) : logs.length === 0 ? (
-        <div style={s.emptyState}>No activity found{hasFilters ? ' for these filters' : ''}.</div>
-      ) : (
-        grouped.map(group => (
-          <div key={group.label} style={{ marginBottom: '28px' }}>
-            <p style={s.dateLabel}>{group.label}</p>
-            {group.items.map(log => {
-              const ac = ACTION_COLORS[log.action];
-              const isExpanded = expanded[log.id];
-              const changeKeys = log.changes ? Object.keys(log.changes) : [];
-              return (
-                <div key={log.id} style={s.logCard}>
-                  <div style={s.logRow}>
-                    <span style={s.actionBadge(log.action)}>
-                      {ac?.label || log.action}
-                    </span>
-                    <span style={s.tableBadge}>
-                      {TABLE_LABELS[log.table_name] || log.table_name}
-                    </span>
-                    <div style={s.logMain}>
-                      <p style={s.logLabel}>{log.record_label || 'Unknown record'}</p>
-                      <p style={s.logMeta}>
-                        {memberName(log.changed_by)} · {formatTime(log.changed_at)}
-                        {log.action === 'UPDATE' && changeKeys.length > 0 && (
-                          <> · {changeKeys.length} field{changeKeys.length > 1 ? 's' : ''} changed</>
+        {/* ── Audit Log tab ────────────────────────────────────────────── */}
+        {activeTab === 'audit' && (
+          <div>
+
+            {/* Filters */}
+            <div style={s.filterRow}>
+              <div style={s.filterGroup}>
+                <span style={s.filterLabel}>Record Type</span>
+                <select style={s.filterSelect} value={filterTable} onChange={e => setFilterTable(e.target.value)}>
+                  <option value="all">All types</option>
+                  <option value="clients">Clients</option>
+                  <option value="notes">Notes</option>
+                  <option value="client_tasks">Tasks</option>
+                </select>
+              </div>
+              <div style={s.filterGroup}>
+                <span style={s.filterLabel}>Action</span>
+                <select style={s.filterSelect} value={filterAction} onChange={e => setFilterAction(e.target.value)}>
+                  <option value="all">All actions</option>
+                  <option value="INSERT">Created</option>
+                  <option value="UPDATE">Updated</option>
+                  <option value="DELETE">Deleted</option>
+                </select>
+              </div>
+              <div style={s.filterGroup}>
+                <span style={s.filterLabel}>User</span>
+                <select style={s.filterSelect} value={filterUser} onChange={e => setFilterUser(e.target.value)}>
+                  <option value="all">All users</option>
+                  {members.filter(m => m.first_name).map(m => (
+                    <option key={m.user_id} value={m.user_id}>
+                      {m.first_name} {m.last_name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              {!isMobile && (
+                <>
+                  <div style={s.filterGroup}>
+                    <span style={s.filterLabel}>From</span>
+                    <input type="date" style={s.filterInput} value={filterFrom} onChange={e => setFilterFrom(e.target.value)} />
+                  </div>
+                  <div style={s.filterGroup}>
+                    <span style={s.filterLabel}>To</span>
+                    <input type="date" style={s.filterInput} value={filterTo} onChange={e => setFilterTo(e.target.value)} />
+                  </div>
+                </>
+              )}
+              {hasFilters && (
+                <div style={s.filterGroup}>
+                  <span style={s.filterLabel}>&nbsp;</span>
+                  <button style={s.clearBtn} onClick={() => {
+                    setFilterTable('all'); setFilterAction('all');
+                    setFilterUser('all'); setFilterFrom(''); setFilterTo('');
+                  }}>
+                    Clear filters
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Table */}
+            {loading ? (
+              <div style={s.emptyState}>Loading audit log…</div>
+            ) : logs.length === 0 ? (
+              <div style={s.emptyState}>
+                No activity found{hasFilters ? ' for these filters' : ''}.
+              </div>
+            ) : (
+              <div style={s.tableWrap}>
+
+                {/* Header row */}
+                <div style={s.tableHead(auditCols)}>
+                  <span style={s.colHeader}>Date &amp; Time</span>
+                  <span style={s.colHeader}>Action</span>
+                  {!isMobile && <span style={s.colHeader}>Type</span>}
+                  <span style={s.colHeader}>Description</span>
+                  {!isMobile && <span style={s.colHeader}>User</span>}
+                  {!isMobile && <span style={s.colHeader}>Changes</span>}
+                </div>
+
+                {/* Data rows */}
+                {logs.map((log, idx) => {
+                  const isLast     = idx === logs.length - 1;
+                  const isExpanded = expanded[log.id];
+                  const changeKeys = log.changes ? Object.keys(log.changes) : [];
+                  const { date, time } = formatDateTime(log.changed_at);
+                  const typeLabel  = TABLE_LABELS[log.table_name] || log.table_name;
+                  const user       = memberName(log.changed_by);
+
+                  return (
+                    <div key={log.id} className="audit-row">
+                      {/* Main row */}
+                      <div style={s.tableRow(auditCols, isLast && !isExpanded)}>
+
+                        {/* Date & Time */}
+                        <div>
+                          <div style={s.cellPrimary}>{date}</div>
+                          <div style={s.cellMuted}>{time}</div>
+                        </div>
+
+                        {/* Action badge */}
+                        <div>
+                          <span style={s.actionBadge(log.action)}>
+                            {ACTION_META[log.action]?.label || log.action}
+                          </span>
+                        </div>
+
+                        {/* Record type badge */}
+                        {!isMobile && (
+                          <div>
+                            <span style={s.typeBadge}>{typeLabel}</span>
+                          </div>
                         )}
-                      </p>
-                      {/* Expandable field diff for UPDATE */}
-                      {log.action === 'UPDATE' && changeKeys.length > 0 && (
-                        <>
-                          <button style={s.expandBtn} onClick={() => toggleExpand(log.id)}>
-                            {isExpanded ? 'Hide changes' : 'View changes'}
-                          </button>
-                          {isExpanded && (
-                            <div style={{ marginTop: '10px', borderTop: `1px solid ${t.BORDER}`, paddingTop: '10px' }}>
-                              {changeKeys.map(field => {
-                                const { old: oldVal, new: newVal } = log.changes[field];
-                                return (
-                                  <div key={field} style={s.changeRow}>
-                                    <span style={s.changeField}>
-                                      {FIELD_LABELS[field] || field}
-                                    </span>
-                                    <span style={s.changeOld}>
-                                      {formatFieldValue(field, oldVal)}
-                                    </span>
-                                    <span style={{ fontSize: '11px', color: t.TEXT_SUBTLE, flexShrink: 0, padding: '0 4px' }}>→</span>
-                                    <span style={s.changeNew}>
-                                      {formatFieldValue(field, newVal)}
-                                    </span>
-                                  </div>
-                                );
-                              })}
-                            </div>
+
+                        {/* Description */}
+                        <div style={{ overflow: 'hidden' }}>
+                          <div style={s.cellPrimary}>{log.record_label || 'Unknown record'}</div>
+                          {isMobile && (
+                            <div style={s.cellMuted}>{typeLabel} · {user}</div>
                           )}
-                        </>
+                        </div>
+
+                        {/* User */}
+                        {!isMobile && (
+                          <div style={{ ...s.cellPrimary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {user}
+                          </div>
+                        )}
+
+                        {/* Changes toggle */}
+                        {!isMobile && (
+                          <div>
+                            {log.action === 'UPDATE' && changeKeys.length > 0 ? (
+                              <button style={s.detailsBtn} onClick={() => toggleExpand(log.id)}>
+                                {isExpanded
+                                  ? 'Hide'
+                                  : `${changeKeys.length} field${changeKeys.length > 1 ? 's' : ''}`
+                                }
+                              </button>
+                            ) : (
+                              <span style={s.cellMuted}>—</span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Expanded field diff — UPDATE only */}
+                      {isExpanded && changeKeys.length > 0 && (
+                        <div style={{ ...s.expandPanel, borderBottom: isLast ? 'none' : `1px solid ${t.BORDER}` }}>
+                          {changeKeys.map(field => {
+                            const { old: oldVal, new: newVal } = log.changes[field];
+                            return (
+                              <div key={field} style={s.changeRow}>
+                                <span style={s.changeField}>
+                                  {FIELD_LABELS[field] || field}
+                                </span>
+                                <span style={s.changeOld}>
+                                  {formatFieldValue(field, oldVal)}
+                                </span>
+                                <span style={s.changeArrow}>→</span>
+                                <span style={s.changeNew}>
+                                  {formatFieldValue(field, newVal)}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
                       )}
                     </div>
-                  </div>
-                </div>
-              );
-            })}
+                  );
+                })}
+              </div>
+            )}
           </div>
-        ))
-      )}
-      </div>
-      )} {/* end activeTab === 'audit' */}
+        )}
+
       </div>
     </div>
   );

@@ -29,6 +29,7 @@ export const AI_COLOR_BORDER = 'rgba(139,92,246,0.4)';
 // Semantic status colors — use these instead of hardcoding hex values
 export const COLOR_ERROR   = '#f87171'; // red — destructive actions, errors, cancelled
 export const COLOR_WARNING = '#fbbf24'; // amber — caution, overdue, pending
+export const COLOR_INFO    = '#60a5fa'; // blue — informational, updates, neutral changes
 
 // --- SITE ACCENT — Allez Capital Portfolio (allezcapital.com) ---
 export const SITE_ACCENT        = '#667eea'; // Purple — portfolio brand colour

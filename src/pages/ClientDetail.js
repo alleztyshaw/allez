@@ -105,6 +105,16 @@ function stripAUMFormat(str) {
   return str.replace(/[$,]/g, '');
 }
 
+// Formats any date string to MM/DD/YYYY.
+// Appends T12:00:00 to date-only strings (YYYY-MM-DD) to prevent timezone shift.
+function fmtDate(raw) {
+  if (!raw) return '—';
+  const iso = /^\d{4}-\d{2}-\d{2}$/.test(raw) ? raw + 'T12:00:00' : raw;
+  const d = new Date(iso);
+  if (isNaN(d)) return raw;
+  return d.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
+}
+
 // ── MeetingRow ────────────────────────────────────────────────────────────────
 // Extracted so each row can measure its own text overflow via a ref.
 // Lives in this file to share all imported constants without prop-passing them.
@@ -117,7 +127,7 @@ function MeetingRow({ meeting, index, total, meetingCols, isMobile, canWrite, ex
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const isCancelled     = meeting.status === 'cancelled';
-  const meetingDate     = new Date(meeting.scheduled_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  const meetingDate     = fmtDate(meeting.scheduled_at);
   const meetingTime     = new Date(meeting.scheduled_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
   const typeLabel       = MEETING_TYPES.find(mt => mt.value === meeting.meeting_type)?.label || meeting.meeting_type;
   const recurrenceLabel = meeting.recurrence !== 'none' ? MEETING_RECURRENCES.find(r => r.value === meeting.recurrence)?.label || '—' : '—';
@@ -612,7 +622,7 @@ export default function ClientDetail() {
           <>
             <div style={s.grid}>
               <Section title="Core Identity" s={s}>
-                <Field label="Date of Birth"           value={client.date_of_birth}           s={s} />
+                <Field label="Date of Birth"           value={fmtDate(client.date_of_birth)}           s={s} />
                 <Field label="Preferred Contact"       value={client.preferred_contact_method} s={s} />
                 <Field label="Communication Frequency" value={client.communication_frequency}  s={s} />
               </Section>
@@ -623,7 +633,7 @@ export default function ClientDetail() {
                 <Field label="Custodian"         value={client.custodian || '—'}                        s={s} />
                 {client.aum_source === 'api' && client.aum_synced_at && (
                   <div style={{ fontSize: '11px', color: t.TEXT_SUBTLE, fontWeight: FW_LIGHT, marginTop: '2px' }}>
-                    Synced {new Date(client.aum_synced_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                    Synced {fmtDate(client.aum_synced_at)}
                   </div>
                 )}
               </Section>
@@ -639,9 +649,9 @@ export default function ClientDetail() {
                 {client.status === 'Prospect' && client.pipeline_stage && (
                   <Field label="Pipeline Stage" value={client.is_reactivation ? `${client.pipeline_stage} *` : client.pipeline_stage} s={s} />
                 )}
-                <Field label="Client Since"     value={client.client_since}     s={s} />
-                <Field label="Referral Source"  value={client.referral_source}  s={s} />
-                <Field label="Next Review Date" value={client.next_review_date} s={s} />
+                <Field label="Client Since"     value={fmtDate(client.client_since)}     s={s} />
+                <Field label="Referral Source"  value={client.referral_source}           s={s} />
+                <Field label="Next Review Date" value={fmtDate(client.next_review_date)} s={s} />
               </Section>
             </div>
             {client.notes && (
@@ -729,7 +739,7 @@ export default function ClientDetail() {
             {briefError && <p style={{ color: COLOR_ERROR, fontSize: '13px', margin: '0 0 16px' }}>{briefError}</p>}
             {brief && !briefGenerating && (() => {
               const b = brief.body;
-              const generatedDate = brief.generated_at ? new Date(brief.generated_at).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' }) : null;
+              const generatedDate = brief.generated_at ? fmtDate(brief.generated_at) : null;
               return (
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
@@ -963,7 +973,7 @@ export default function ClientDetail() {
                     <p style={{ margin: '0 0 6px', fontFamily: FONT_DISPLAY, fontSize: '22px', fontWeight: FW_REGULAR, color: t.TEXT, letterSpacing: '0.01em', lineHeight: 1.2 }}>{viewNote.title}</p>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                       <span style={{ fontSize: '12px', color: t.TEXT_MUTED, fontFamily: FONT_BODY, fontWeight: FW_LIGHT }}>
-                        {new Date(viewNote.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                        {fmtDate(viewNote.created_at)}
                       </span>
                       {viewNote.note_type && (
                         <span style={{ fontSize: '10px', fontWeight: FW_SEMIBOLD, padding: '2px 8px', borderRadius: RADIUS_PILL, background: t.ACCENT_MUTED, color: t.ACCENT, border: `1px solid ${t.ACCENT_BORDER}`, letterSpacing: '0.06em', textTransform: 'uppercase', fontFamily: FONT_BODY }}>
