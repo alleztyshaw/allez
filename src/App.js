@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-route
 import { OrgProvider } from './context/OrgContext';
 import { ThemeProvider } from './context/ThemeContext';
 import Login from './pages/Login';
+import ProductPage from './pages/ProductPage';
 import Signup from './pages/Signup';
 import Contact from './pages/Contact';
 import Clients from './pages/Clients';
@@ -47,6 +48,7 @@ function App() {
           <div className="App">
             <Routes>
               <Route path="/"        element={<Login />} />
+              <Route path="/product" element={<ProductPage />} />
               <Route path="/signup"  element={<Signup />} />
               <Route path="/welcome" element={<Welcome />} />
               <Route path="/contact"        element={<ProtectedLayout><Contact      /></ProtectedLayout>} />
