@@ -234,7 +234,10 @@ export default function ClientDetail() {
   const canManageAdvisors = FULL_ACCESS_ROLES.includes(userRole);
   const canGenerateBrief  = BRIEF_ROLES.includes(userRole);
   const backPath  = location.state?.from || '/hq/clients';
-  const backLabel = backPath === '/hq/notes' ? '← Back to Notes' : backPath === '/hq/crm' ? '← Back to CRM' : '← Back to Clients';
+  const backLabel = backPath === '/hq/notes'  ? '← Back to Notes'
+                  : backPath === '/hq/crm'    ? '← Back to CRM'
+                  : backPath === '/hq/brief'  ? '← Back to Daily Brief'
+                  : '← Back to Clients';
 
   const initialTab = new URLSearchParams(location.search).get('tab') || 'overview';
   const [activeTab, setActiveTab] = useState(initialTab);

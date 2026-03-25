@@ -77,6 +77,7 @@ export default function CalendarView({
   defaultDate     = null,
   hideControls    = false,
   hideViewToggle  = false,
+  cardContent     = null,  // fn(dayMeetings) — when provided, renders cards instead of time grid
 }) {
   const t = useTokens();
   const windowWidth = useWindowWidth();
@@ -268,7 +269,7 @@ export default function CalendarView({
     <div>
       {/* Controls — hidden when hideControls=true (e.g. Daily Brief embed) */}
       {!hideControls && (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', flexWrap: 'wrap', gap: '10px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: cardContent ? 'center' : 'space-between', marginBottom: '20px', flexWrap: 'wrap', gap: '10px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <button onClick={() => nav(-1)} style={navBtn}>‹</button>
             <span style={{ fontSize: '15px', fontWeight: FW_MEDIUM, color: t.TEXT, fontFamily: FONT_BODY, minWidth: isMobile ? 'auto' : '220px', textAlign: 'center' }}>{title()}</span>
@@ -311,7 +312,10 @@ export default function CalendarView({
         </div>
       )}
 
-      {view === 'month' ? renderMonth() : renderTimeGrid()}
+      {cardContent
+        ? cardContent(calDays.flatMap(day => meetingsForDay(meetings, day)))
+        : view === 'month' ? renderMonth() : renderTimeGrid()
+      }
     </div>
   );
 }
