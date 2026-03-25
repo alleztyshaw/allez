@@ -4,21 +4,29 @@ import {
   L_BG, L_TEXT, L_TEXT_MUTED,
   FONT_DISPLAY, FONT_BODY,
   FW_LIGHT, FW_REGULAR, FW_MEDIUM, FW_SEMIBOLD,
+  MOBILE_BREAKPOINT,
 } from '../utils/hqConstants';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
+import useWindowWidth from '../hooks/useWindowWidth';
 import PublicHeader from '../components/public/PublicHeader';
 import PublicFooter from '../components/public/PublicFooter';
 
 export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
+  const windowWidth = useWindowWidth();
+  const isMobile = windowWidth < MOBILE_BREAKPOINT;
   const wasIdled   = new URLSearchParams(location.search).get('reason') === 'idle';
   const [showLogin, setShowLogin] = useState(false);
   const [email,    setEmail]    = useState('');
   const [password, setPassword] = useState('');
   const [error,    setError]    = useState('');
   const [loading,  setLoading]  = useState(false);
+  const [showForgot,      setShowForgot]      = useState(false);
+  const [forgotEmail,     setForgotEmail]     = useState('');
+  const [forgotSent,      setForgotSent]      = useState(false);
+  const [forgotLoading,   setForgotLoading]   = useState(false);
 
   // Open the login card whenever ?signin=true appears in the URL —
   // including when the user is already on / and clicks Sign In
@@ -27,6 +35,19 @@ export default function Login() {
       setShowLogin(true);
     }
   }, [location.search]);
+
+  async function handleForgot(e) {
+    e.preventDefault();
+    setForgotLoading(true);
+    await fetch('/api/reset-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: forgotEmail.trim().toLowerCase() }),
+    });
+    // Always show success — don't leak whether email exists
+    setForgotSent(true);
+    setForgotLoading(false);
+  }
 
   async function handleLogin(e) {
     e.preventDefault();
@@ -105,35 +126,73 @@ export default function Login() {
 
       {/* Login card */}
       {showLogin && (
-        <div style={s.cardWrapper}>
+        <div style={{ ...s.cardWrapper, right: isMobile ? '12px' : '48px', left: isMobile ? '12px' : 'auto' }}>
           <div style={s.card}>
-            <button style={s.closeBtn} onClick={() => { setShowLogin(false); setError(''); }}>✕</button>
-            <p style={s.cardEyebrow}>Welcome back</p>
-            <h2 style={s.cardTitle}>Sign in</h2>
-            <form onSubmit={handleLogin} style={s.form}>
-              <div style={s.fieldGroup}>
-                <label style={s.fieldLabel}>Email</label>
-                <input className="login-input" type="email" value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  placeholder="you@example.com" required style={s.input} />
-              </div>
-              <div style={s.fieldGroup}>
-                <label style={s.fieldLabel}>Password</label>
-                <input className="login-input" type="password" value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  placeholder="••••••••" required style={s.input} />
-              </div>
-              {error && <p style={s.errorText}>{error}</p>}
-              <button type="submit" className="submit-btn" disabled={loading} style={s.submitBtn}>
-                {loading ? 'Signing in…' : 'Sign In →'}
-              </button>
-            </form>
+            <button style={s.closeBtn} onClick={() => { setShowLogin(false); setError(''); setShowForgot(false); setForgotSent(false); }}>✕</button>
+
+            {!showForgot ? (
+              <>
+                <p style={s.cardEyebrow}>Welcome back</p>
+                <h2 style={s.cardTitle}>Sign in</h2>
+                <form onSubmit={handleLogin} style={s.form}>
+                  <div style={s.fieldGroup}>
+                    <label style={s.fieldLabel}>Email</label>
+                    <input className="login-input" type="email" value={email}
+                      onChange={e => setEmail(e.target.value)}
+                      placeholder="you@example.com" required style={s.input} />
+                  </div>
+                  <div style={s.fieldGroup}>
+                    <label style={s.fieldLabel}>Password</label>
+                    <input className="login-input" type="password" value={password}
+                      onChange={e => setPassword(e.target.value)}
+                      placeholder="••••••••" required style={s.input} />
+                  </div>
+                  {error && <p style={s.errorText}>{error}</p>}
+                  <button type="submit" className="submit-btn" disabled={loading} style={s.submitBtn}>
+                    {loading ? 'Signing in…' : 'Sign In →'}
+                  </button>
+                </form>
+                <button style={s.forgotLink} onClick={() => { setShowForgot(true); setForgotEmail(email); setError(''); }}>
+                  Forgot password?
+                </button>
+              </>
+            ) : forgotSent ? (
+              <>
+                <p style={s.cardEyebrow}>Check your inbox</p>
+                <h2 style={s.cardTitle}>Email sent</h2>
+                <p style={{ fontSize: '13px', fontWeight: FW_LIGHT, color: L_TEXT_MUTED, lineHeight: 1.65, margin: '0 0 20px' }}>
+                  If an account exists for that email, you'll receive a reset link shortly.
+                </p>
+                <button style={s.forgotLink} onClick={() => { setShowForgot(false); setForgotSent(false); }}>
+                  ← Back to sign in
+                </button>
+              </>
+            ) : (
+              <>
+                <p style={s.cardEyebrow}>Forgot password</p>
+                <h2 style={s.cardTitle}>Reset</h2>
+                <form onSubmit={handleForgot} style={s.form}>
+                  <div style={s.fieldGroup}>
+                    <label style={s.fieldLabel}>Email</label>
+                    <input className="login-input" type="email" value={forgotEmail}
+                      onChange={e => setForgotEmail(e.target.value)}
+                      placeholder="you@example.com" required style={s.input} />
+                  </div>
+                  <button type="submit" className="submit-btn" disabled={forgotLoading} style={s.submitBtn}>
+                    {forgotLoading ? 'Sending…' : 'Send Reset Link →'}
+                  </button>
+                </form>
+                <button style={s.forgotLink} onClick={() => setShowForgot(false)}>
+                  ← Back to sign in
+                </button>
+              </>
+            )}
           </div>
         </div>
       )}
 
       {/* Hero */}
-      <main style={s.hero}>
+      <main style={{ ...s.hero, padding: isMobile ? '0 24px 80px' : '0 40px 100px' }}>
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
           <div style={{ animation: 'fadeIn 1s ease 0.2s both' }}>
             <p style={s.eyebrow}>For independent advisors, RIAs &amp; wealth management firms</p>
@@ -156,7 +215,7 @@ export default function Login() {
       <section style={s.scrollSection}>
 
         {/* Definition */}
-        <div style={s.definitionBlock}>
+        <div style={{ ...s.definitionBlock, padding: isMobile ? '60px 24px 48px' : '100px 40px 80px' }}>
           <div style={s.phonetic}>
             <span style={s.word}>Allez</span>
             <span style={s.pronunciation}>&nbsp;&nbsp;/a·ˈlɛ/&nbsp;&nbsp;·&nbsp;&nbsp;ah-LAY</span>
@@ -176,7 +235,7 @@ export default function Login() {
         <div style={s.divider} />
 
         {/* Value section */}
-        <div style={s.valueBlock}>
+        <div style={{ ...s.valueBlock, padding: isMobile ? '48px 24px 64px' : '80px 40px 100px' }}>
           <p style={s.valueEyebrow}>Built in partnership with working advisors</p>
           <h2 style={s.valueTitle}>
             Your clients deserve an advisor<br />
@@ -218,7 +277,7 @@ export default function Login() {
         <div style={s.divider} />
 
         {/* Trust / compliance section */}
-        <div style={s.trustBlock}>
+        <div style={{ ...s.trustBlock, padding: isMobile ? '48px 24px 64px' : '80px 40px 100px' }}>
           <p style={s.trustEyebrow}>Data security &amp; privacy</p>
           <h2 style={s.trustTitle}>Your client data stays yours.</h2>
           <p style={s.trustSubtitle}>
@@ -267,24 +326,24 @@ const s = {
 
   meshWrap: { position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none' },
   mesh1: {
-    position: 'absolute', width: '900px', height: '900px', borderRadius: '50%',
-    background: 'radial-gradient(circle, rgba(99,102,241,0.55) 0%, rgba(99,102,241,0.20) 50%, transparent 70%)',
-    top: '-350px', left: '-250px', filter: 'blur(40px)', animation: 'mesh1 20s ease-in-out infinite',
+    position: 'absolute', width: '800px', height: '800px', borderRadius: '50%',
+    background: 'radial-gradient(circle, rgba(99,102,241,0.45) 0%, rgba(99,102,241,0.15) 50%, transparent 70%)',
+    top: '-250px', left: '-200px', filter: 'blur(50px)', animation: 'mesh1 20s ease-in-out infinite',
   },
   mesh2: {
-    position: 'absolute', width: '800px', height: '800px', borderRadius: '50%',
-    background: 'radial-gradient(circle, rgba(236,72,153,0.50) 0%, rgba(236,72,153,0.18) 50%, transparent 70%)',
-    top: '-150px', right: '-250px', filter: 'blur(45px)', animation: 'mesh2 24s ease-in-out infinite',
+    position: 'absolute', width: '700px', height: '700px', borderRadius: '50%',
+    background: 'radial-gradient(circle, rgba(236,72,153,0.40) 0%, rgba(236,72,153,0.14) 50%, transparent 70%)',
+    top: '-100px', right: '-200px', filter: 'blur(50px)', animation: 'mesh2 24s ease-in-out infinite',
   },
   mesh3: {
-    position: 'absolute', width: '700px', height: '700px', borderRadius: '50%',
-    background: 'radial-gradient(circle, rgba(20,184,166,0.48) 0%, rgba(20,184,166,0.16) 50%, transparent 70%)',
-    bottom: '-250px', left: '5%', filter: 'blur(40px)', animation: 'mesh3 28s ease-in-out infinite',
+    position: 'absolute', width: '600px', height: '600px', borderRadius: '50%',
+    background: 'radial-gradient(circle, rgba(20,184,166,0.35) 0%, rgba(20,184,166,0.12) 50%, transparent 70%)',
+    top: '300px', left: '30%', filter: 'blur(50px)', animation: 'mesh3 28s ease-in-out infinite',
   },
   mesh4: {
-    position: 'absolute', width: '600px', height: '600px', borderRadius: '50%',
-    background: 'radial-gradient(circle, rgba(251,146,60,0.45) 0%, rgba(251,146,60,0.15) 70%)',
-    bottom: '-150px', right: '0%', filter: 'blur(45px)', animation: 'mesh4 22s ease-in-out infinite',
+    position: 'absolute', width: '500px', height: '500px', borderRadius: '50%',
+    background: 'radial-gradient(circle, rgba(251,146,60,0.35) 0%, rgba(251,146,60,0.12) 50%, transparent 70%)',
+    top: '200px', right: '5%', filter: 'blur(50px)', animation: 'mesh4 22s ease-in-out infinite',
   },
 
   idleNotice: {
@@ -313,6 +372,12 @@ const s = {
     fontFamily: FONT_BODY, transition: 'border-color 0.2s, box-shadow 0.2s',
   },
   errorText: { fontSize: '12px', color: '#e53e3e', margin: 0 },
+  forgotLink: {
+    background: 'none', border: 'none', padding: '10px 0 0',
+    fontSize: '12px', color: L_TEXT_MUTED, cursor: 'pointer',
+    fontFamily: FONT_BODY, textDecoration: 'underline',
+    textUnderlineOffset: '2px', display: 'block',
+  },
   submitBtn: {
     background: 'linear-gradient(135deg, #6366f1 0%, #ec4899 100%)',
     color: 'white', border: 'none', borderRadius: '10px', padding: '12px',

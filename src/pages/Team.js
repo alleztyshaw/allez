@@ -54,6 +54,7 @@ export default function Team() {
   const [showInvite, setShowInvite]           = useState(false);
   const [inviteError, setInviteError]         = useState('');
   const [resending, setResending]             = useState(null);
+  const [deactivating, setDeactivating]       = useState(null);
   const [toast, setToast]                     = useState(null);
 
   function showToast(message, type = 'success') {
@@ -129,6 +130,23 @@ export default function Team() {
     setSaving(null);
   }
 
+  async function handleDeactivate(m) {
+    setDeactivating(m.user_id);
+    const newActive = !m.is_active;
+    const { error } = await supabase
+      .from('org_members')
+      .update({ is_active: newActive })
+      .eq('user_id', m.user_id)
+      .eq('org_id', selectedOrg);
+    if (error) {
+      showToast('Failed to update account status', 'error');
+    } else {
+      showToast(newActive ? `${m.email} reactivated` : `${m.email} deactivated`);
+      fetchMembers(selectedOrg);
+    }
+    setDeactivating(null);
+  }
+
   async function handleResendInvite(m) {
     setResending(m.user_id);
     try {
@@ -159,7 +177,21 @@ export default function Team() {
     o.name.toLowerCase().includes(orgSearch.toLowerCase())
   );
 
-  const cols = isMobile ? '1fr 100px 32px' : '1fr 1fr 120px 130px 180px';
+  const ROLE_ORDER = { admin: 0, manager: 1, advisor: 2, associate: 3, compliance: 4 };
+
+  // Sort: active → pending → deactivated, then by role within each group
+  const sortedMembers = [...members].sort((a, b) => {
+    const statusWeight = m => {
+      if (!m.is_active) return 2;
+      if (!m.onboarding_complete) return 1;
+      return 0;
+    };
+    const sw = statusWeight(a) - statusWeight(b);
+    if (sw !== 0) return sw;
+    return (ROLE_ORDER[a.role] ?? 9) - (ROLE_ORDER[b.role] ?? 9);
+  });
+
+  const cols = isMobile ? '1fr 100px 32px' : '0.8fr 0.8fr 110px 110px 240px';
 
   const s = {
     ...pageStyles(t, isMobile),
@@ -455,9 +487,10 @@ export default function Team() {
               {!isMobile && <div style={s.tableHeadCell}>Actions</div>}
             </div>
 
-            {members.map((m, idx) => {
-              const isPending = !m.onboarding_complete;
-              const isLast = idx === members.length - 1;
+            {sortedMembers.map((m, idx) => {
+              const isPending    = !m.onboarding_complete && m.is_active;
+              const isDeactivated = m.is_active === false;
+              const isLast = idx === sortedMembers.length - 1;
               const name = memberName(m);
 
               return (
@@ -487,7 +520,7 @@ export default function Team() {
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <span style={{
                         width: '7px', height: '7px', borderRadius: '50%', flexShrink: 0,
-                        background: isPending ? COLOR_WARNING : t.ACCENT
+                        background: isDeactivated ? t.TEXT_SUBTLE : isPending ? COLOR_WARNING : t.ACCENT
                       }} />
                     </div>
                   )}
@@ -526,7 +559,9 @@ export default function Team() {
                   {/* Status */}
                   {!isMobile && (
                     <div style={s.tableCellMuted}>
-                      {isPending ? (
+                      {isDeactivated ? (
+                        <span style={{ color: t.TEXT_SUBTLE, fontSize: '12px', fontWeight: FW_LIGHT }}>Deactivated</span>
+                      ) : isPending ? (
                         <span style={{ color: COLOR_WARNING, fontSize: '12px', fontWeight: FW_LIGHT }}>Pending setup</span>
                       ) : (
                         <span style={{ color: t.ACCENT, fontSize: '12px', fontWeight: FW_LIGHT }}>Active</span>
@@ -555,7 +590,7 @@ export default function Team() {
                         </>
                       ) : (
                         <>
-                          {isAdmin && (
+                          {isAdmin && !isDeactivated && (
                             <button
                               style={s.linkButton}
                               onClick={() => { setEditingRole(m.user_id); setPendingRole(m.role); }}
@@ -563,6 +598,7 @@ export default function Team() {
                               Change role
                             </button>
                           )}
+                          {/* Resend: pending users for all admins, active users for platform admins only */}
                           {isAdmin && isPending && (
                             <button
                               style={s.linkButtonMuted}
@@ -570,6 +606,26 @@ export default function Team() {
                               onClick={() => handleResendInvite(m)}
                             >
                               {resending === m.user_id ? 'Sending…' : 'Resend invite'}
+                            </button>
+                          )}
+                          {isPlatformAdmin && !isPending && !isDeactivated && (
+                            <button
+                              style={s.linkButtonMuted}
+                              disabled={resending === m.user_id}
+                              onClick={() => handleResendInvite(m)}
+                            >
+                              {resending === m.user_id ? 'Sending…' : 'Resend invite'}
+                            </button>
+                          )}
+                          {isAdmin && (
+                            <button
+                              style={{ ...s.linkButtonMuted, color: isDeactivated ? t.ACCENT : '#f87171' }}
+                              disabled={deactivating === m.user_id}
+                              onClick={() => handleDeactivate(m)}
+                            >
+                              {deactivating === m.user_id
+                                ? '…'
+                                : isDeactivated ? 'Reactivate' : 'Deactivate'}
                             </button>
                           )}
                         </>

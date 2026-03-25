@@ -22,7 +22,7 @@ export default function Orgs() {
   const [orgs, setOrgs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expandedOrg, setExpandedOrg] = useState(null);
-  const [orgStats, setOrgStats] = useState({}); // { [org_id]: { members, clients, activeClients, notes } }
+  const [orgStats, setOrgStats] = useState({});
   const [statsLoading, setStatsLoading] = useState({});
   const [showForm, setShowForm] = useState(false);
   const [orgName, setOrgName] = useState('');
@@ -50,7 +50,7 @@ export default function Orgs() {
   }
 
   async function fetchStats(orgId) {
-    if (orgStats[orgId]) return; // already loaded
+    if (orgStats[orgId]) return;
     setStatsLoading(prev => ({ ...prev, [orgId]: true }));
 
     const [
@@ -81,7 +81,6 @@ export default function Orgs() {
       setExpandedOrg(orgId);
       fetchStats(orgId);
     }
-    // Trigger border pulse on every click, clear after animation completes
     setPulsingOrgId(orgId);
     setTimeout(() => setPulsingOrgId(null), 600);
   }
@@ -310,7 +309,6 @@ export default function Orgs() {
                   style={s.orgCard}
                   className={pulsingOrgId === org.org_id ? 'org-card-pulse' : ''}
                 >
-                  {/* Clickable header row */}
                   <div style={s.orgRow} onClick={() => handleToggle(org.org_id)}>
                     <div style={s.avatar}>
                       {org.name?.[0]?.toUpperCase() || '?'}
@@ -336,7 +334,6 @@ export default function Orgs() {
                     </div>
                   </div>
 
-                  {/* Expanded stats panel */}
                   {isExpanded && (
                     <div style={{ ...s.expandedPanel, animation: 'fadeIn 0.18s ease' }}>
                       {isStatsLoading ? (
@@ -373,26 +370,6 @@ export default function Orgs() {
                             </div>
                           </div>
                           <p style={s.createdDate}>Created {formatDate(org.created_at)}</p>
-                          {/* Demo org toggle */}
-                          <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: `1px solid ${t.BORDER}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                            <div>
-                              <p style={{ fontSize: '13px', fontWeight: FW_REGULAR, color: t.TEXT, margin: '0 0 2px' }}>Demo Org</p>
-                              <p style={{ fontSize: '11px', fontWeight: FW_LIGHT, color: t.TEXT_MUTED, margin: 0 }}>
-                                Enables role switcher for all members of this org
-                              </p>
-                            </div>
-                            <button
-                              onClick={async () => {
-                                const { error } = await supabase.from('organizations')
-                                  .update({ is_demo: !org.is_demo })
-                                  .eq('org_id', org.org_id);
-                                if (!error) fetchOrgs();
-                              }}
-                              style={{ padding: '6px 14px', borderRadius: '6px', border: `1px solid ${org.is_demo ? t.ACCENT_BORDER : t.BORDER}`, background: org.is_demo ? t.ACCENT_MUTED : 'transparent', color: org.is_demo ? t.ACCENT : t.TEXT_MUTED, fontSize: '12px', fontWeight: FW_MEDIUM, cursor: 'pointer', fontFamily: FONT_BODY, flexShrink: 0 }}
-                            >
-                              {org.is_demo ? 'Demo On' : 'Set as Demo'}
-                            </button>
-                          </div>
                         </>
                       ) : null}
                     </div>

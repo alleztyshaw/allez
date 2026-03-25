@@ -9,7 +9,9 @@ import {
   COLOR_ERROR, COLOR_WARNING, COLOR_INFO,
   FONT_DISPLAY, FONT_BODY,
   FW_LIGHT, FW_REGULAR, FW_MEDIUM, FW_SEMIBOLD,
+  MOBILE_BREAKPOINT,
 } from '../utils/hqConstants';
+import useWindowWidth from '../hooks/useWindowWidth';
 import PublicHeader from '../components/public/PublicHeader';
 import PublicFooter from '../components/public/PublicFooter';
 
@@ -460,6 +462,8 @@ const WHY = [
 // ── Page component ───────────────────────────────────────────────────────────
 
 export default function ProductPage() {
+  const windowWidth = useWindowWidth();
+  const isMobile = windowWidth < MOBILE_BREAKPOINT;
   return (
     <div style={s.root}>
       <style>{`
@@ -487,7 +491,7 @@ export default function ProductPage() {
       <PublicHeader />
 
       {/* Hero */}
-      <div style={s.hero}>
+      <div style={{ ...s.hero, padding: isMobile ? '48px 24px 64px' : '80px 40px 100px' }}>
         <p style={s.heroEyebrow}>The platform</p>
         <h1 style={s.heroTitle}>Practice management built<br />for the relationship era.</h1>
         <p style={s.heroSub}>
@@ -500,7 +504,7 @@ export default function ProductPage() {
       <div style={s.scrollSection}>
 
         {/* How it fits together */}
-        <div style={s.unifiedBlock}>
+        <div style={{ ...s.unifiedBlock, padding: isMobile ? '48px 24px' : '80px 40px' }}>
           <p style={s.eyebrow}>Everything you need, in one platform</p>
           <h2 style={s.sectionTitle}>Everything connects.</h2>
           <p style={s.bodyText}>
@@ -515,12 +519,17 @@ export default function ProductPage() {
         <div style={s.divider} />
 
         {/* Features */}
-        <div style={s.featuresBlock}>
+        <div style={{ ...s.featuresBlock, padding: isMobile ? '48px 24px' : '80px 40px' }}>
           <p style={s.eyebrow}>Features</p>
           <h2 style={s.sectionTitle}>What's inside.</h2>
 
           {FEATURES.map(f => (
-            <div key={f.name} className="feature-row" style={s.featureRow}>
+            <div key={f.name} className="feature-row" style={{
+              ...s.featureRow,
+              gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+              gap: isMobile ? '32px' : '56px',
+              padding: isMobile ? '40px 0' : '56px 0',
+            }}>
               {/* Left: text */}
               <div style={s.featureLeft}>
                 <p style={s.featureName}>{f.name}</p>
@@ -552,7 +561,7 @@ export default function ProductPage() {
         <div style={s.divider} />
 
         {/* Why */}
-        <div style={s.whyBlock}>
+        <div style={{ ...s.whyBlock, padding: isMobile ? '48px 24px 64px' : '80px 40px 100px' }}>
           <p style={s.eyebrow}>Why Allez HQ</p>
           <h2 style={s.sectionTitle}>The thinking behind it.</h2>
           <div style={s.whyGrid}>
