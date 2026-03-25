@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   SITE_ACCENT,
   L_BG, L_TEXT, L_TEXT_MUTED,
@@ -14,12 +14,19 @@ export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
   const wasIdled   = new URLSearchParams(location.search).get('reason') === 'idle';
-  const autoSignIn = new URLSearchParams(location.search).get('signin') === 'true';
-  const [showLogin, setShowLogin] = useState(autoSignIn);
+  const [showLogin, setShowLogin] = useState(false);
   const [email,    setEmail]    = useState('');
   const [password, setPassword] = useState('');
   const [error,    setError]    = useState('');
   const [loading,  setLoading]  = useState(false);
+
+  // Open the login card whenever ?signin=true appears in the URL —
+  // including when the user is already on / and clicks Sign In
+  useEffect(() => {
+    if (new URLSearchParams(location.search).get('signin') === 'true') {
+      setShowLogin(true);
+    }
+  }, [location.search]);
 
   async function handleLogin(e) {
     e.preventDefault();
