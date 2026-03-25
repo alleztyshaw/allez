@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { useOrg } from '../context/OrgContext';
 import {
@@ -69,10 +69,14 @@ function isOverdue(dateStr) {
 export default function CRM() {
   const t = useTokens();
   const navigate = useNavigate();
+  const location = useLocation();
   const { orgId } = useOrg();
   const windowWidth = useWindowWidth();
   const isMobile = windowWidth < MOBILE_BREAKPOINT;
   const isTablet = windowWidth < 1100;
+
+  // Back link — present when navigated from Daily Brief
+  const fromBrief = location.state?.from === '/hq/brief';
 
   const [tab, setTab]               = useState('Calendar');
   const [clients, setClients]       = useState([]);
@@ -118,8 +122,6 @@ export default function CRM() {
     const c = clients.find(c => c.id === id);
     return c ? `${c.first_name} ${c.last_name}` : '—';
   }
-
-  // ── Calendar helpers ──────────────────────────────────────────────────────
 
   async function handleSaveTask() {
     if (!taskForm.title.trim()) { setTaskError('Please enter a task title.'); return; }
@@ -186,6 +188,7 @@ export default function CRM() {
     ...pageStyles(t, isMobile),
     pageHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? '12px' : '0', marginBottom: '32px' },
     addButton: { background: 'transparent', color: t.ACCENT, border: `1px solid ${t.ACCENT_BORDER}`, borderRadius: RADIUS_MD, padding: '10px 20px', fontSize: '14px', fontWeight: FW_SEMIBOLD, cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: FONT_BODY },
+    backLink: { fontSize: '13px', fontWeight: FW_LIGHT, color: t.TEXT_MUTED, textDecoration: 'none', display: 'inline-block', marginBottom: '20px' },
 
     // BI bar
     biBar: { display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : isTablet ? 'repeat(3, 1fr)' : 'repeat(5, 1fr)', gap: '12px', marginBottom: '32px' },
@@ -264,6 +267,11 @@ export default function CRM() {
         .task-check:hover { border-color: ${t.ACCENT} !important; }
       `}</style>
       <div style={s.page}>
+
+        {/* Back to Daily Brief — only shown when navigated from there */}
+        {fromBrief && (
+          <Link to="/hq/brief" style={s.backLink}>← Back to Daily Brief</Link>
+        )}
 
         {/* Header */}
         <div style={s.pageHeader}>
@@ -602,7 +610,6 @@ function PipelineTable({ clients, navigate, s, t, isMobile, orgId, onStageChange
   const [savingId, setSavingId]       = useState(null);
   const [tooltip, setTooltip]         = useState(null);
 
-  // Prospects + reactivating clients only (not Active or Inactive without a stage)
   const pipelineClients = clients.filter(c =>
     c.pipeline_stage && c.pipeline_stage !== 'Active'
   );
@@ -640,7 +647,6 @@ function PipelineTable({ clients, navigate, s, t, isMobile, orgId, onStageChange
   };
 
   async function handleStageChange(client, newStage) {
-    // Reactivation guard on the frontend too
     if (client.is_reactivation && newStage === 'Lead') return;
     setSavingId(client.id);
     const { error } = await supabase.rpc('update_pipeline_stage', {
@@ -657,7 +663,6 @@ function PipelineTable({ clients, navigate, s, t, isMobile, orgId, onStageChange
 
   return (
     <div>
-      {/* Stage filter pills */}
       <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', flexWrap: 'wrap', alignItems: 'center' }}>
         <button
           onClick={() => setStageFilter('All')}
@@ -691,12 +696,10 @@ function PipelineTable({ clients, navigate, s, t, isMobile, orgId, onStageChange
         })}
       </div>
 
-      {/* Table */}
       {filtered.length === 0 ? (
         <div style={s.emptyState}>No prospects in this stage.</div>
       ) : (
         <div style={s.tableWrap}>
-          {/* Header */}
           <div style={{ display: 'grid', gridTemplateColumns: gridCols, padding: '10px 20px', background: t.SURFACE_ALT, borderBottom: `1px solid ${t.BORDER}`, minWidth: isMobile ? 'unset' : '640px' }}>
             {[
               { key: 'last_name', label: 'Prospect' },
@@ -717,10 +720,8 @@ function PipelineTable({ clients, navigate, s, t, isMobile, orgId, onStageChange
             ))}
           </div>
 
-          {/* Rows */}
           {filtered.map((client, i) => {
             const isSaving = savingId === client.id;
-            // Stages this client can move to
             const allStages = PIPELINE_STAGES.filter(st => st.key !== 'Active');
             const availableStages = client.is_reactivation
               ? allStages.filter(st => st.key !== 'Lead')
@@ -745,7 +746,6 @@ function PipelineTable({ clients, navigate, s, t, isMobile, orgId, onStageChange
                 onMouseEnter={e => e.currentTarget.style.background = `${t.ACCENT}08`}
                 onMouseLeave={e => e.currentTarget.style.background = i % 2 === 0 ? t.SURFACE : t.SURFACE_ALT}
               >
-                {/* Name — clickable */}
                 <div
                   style={{ fontSize: '13px', color: t.TEXT, fontWeight: FW_MEDIUM, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
                   onClick={() => navigate(`/hq/clients/${client.id}`, { state: { from: '/hq/crm' } })}
@@ -753,14 +753,12 @@ function PipelineTable({ clients, navigate, s, t, isMobile, orgId, onStageChange
                   {client.last_name}, {client.first_name}
                 </div>
 
-                {/* Stage — plain text */}
                 <div>
                   <span style={{ fontSize: '13px', fontWeight: FW_REGULAR, color: t.TEXT_MUTED }}>
                     {client.pipeline_stage}
                   </span>
                 </div>
 
-                {/* Type — new vs reactivation */}
                 {!isMobile && (
                   <div style={{ position: 'relative' }}>
                     {client.is_reactivation ? (
@@ -788,14 +786,12 @@ function PipelineTable({ clients, navigate, s, t, isMobile, orgId, onStageChange
                   </div>
                 )}
 
-                {/* AUM */}
                 {!isMobile && (
                   <div style={{ fontSize: '13px', color: client.aum ? t.ACCENT : t.TEXT_SUBTLE, fontWeight: client.aum ? '500' : '300' }}>
                     {formatAUM(client.aum)}
                   </div>
                 )}
 
-                {/* Move stage buttons */}
                 {!isMobile && (
                   <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
                     {prevStage && (

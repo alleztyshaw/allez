@@ -389,7 +389,7 @@ export default function DailyBrief() {
           <div style={s.columns}>
 
             {/* ── Meetings ─────────────────────────────────────────── */}
-            <div style={{ minWidth: 0, overflow: 'hidden' }}>
+            <div style={{ minWidth: 0 }}>
               <div style={s.colHeader}>
                 <span style={s.colHeaderLabel}>Meetings</span>
                 {dayMeetingCount > 0 && (

@@ -266,7 +266,7 @@ export default function CalendarView({
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
-    <div>
+    <div style={{ width: '100%' }}>
       {/* Controls — hidden when hideControls=true (e.g. Daily Brief embed) */}
       {!hideControls && (
         <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: cardContent ? 'center' : 'space-between', marginBottom: '20px', flexWrap: 'wrap', gap: '10px' }}>
