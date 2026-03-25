@@ -114,10 +114,10 @@ export default function Login() {
 
       {/* Orbs */}
       <div style={s.meshWrap}>
-        <div style={s.mesh1} />
-        <div style={s.mesh2} />
-        <div style={s.mesh3} />
-        <div style={s.mesh4} />
+        <div style={{ ...s.mesh1, width: isMobile ? '500px' : '900px', height: isMobile ? '500px' : '900px' }} />
+        <div style={{ ...s.mesh2, width: isMobile ? '400px' : '800px', height: isMobile ? '400px' : '800px' }} />
+        {!isMobile && <div style={s.mesh3} />}
+        {!isMobile && <div style={s.mesh4} />}
       </div>
 
       <PublicHeader />
@@ -326,24 +326,24 @@ const s = {
 
   meshWrap: { position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none' },
   mesh1: {
-    position: 'absolute', width: '800px', height: '800px', borderRadius: '50%',
-    background: 'radial-gradient(circle, rgba(99,102,241,0.45) 0%, rgba(99,102,241,0.15) 50%, transparent 70%)',
-    top: '-250px', left: '-200px', filter: 'blur(50px)', animation: 'mesh1 20s ease-in-out infinite',
+    position: 'absolute', width: '900px', height: '900px', borderRadius: '50%',
+    background: 'radial-gradient(circle, rgba(99,102,241,0.55) 0%, rgba(99,102,241,0.20) 50%, transparent 70%)',
+    top: '-350px', left: '-250px', filter: 'blur(40px)', animation: 'mesh1 20s ease-in-out infinite',
   },
   mesh2: {
-    position: 'absolute', width: '700px', height: '700px', borderRadius: '50%',
-    background: 'radial-gradient(circle, rgba(236,72,153,0.40) 0%, rgba(236,72,153,0.14) 50%, transparent 70%)',
-    top: '-100px', right: '-200px', filter: 'blur(50px)', animation: 'mesh2 24s ease-in-out infinite',
+    position: 'absolute', width: '800px', height: '800px', borderRadius: '50%',
+    background: 'radial-gradient(circle, rgba(236,72,153,0.50) 0%, rgba(236,72,153,0.18) 50%, transparent 70%)',
+    top: '-150px', right: '-250px', filter: 'blur(45px)', animation: 'mesh2 24s ease-in-out infinite',
   },
   mesh3: {
-    position: 'absolute', width: '600px', height: '600px', borderRadius: '50%',
-    background: 'radial-gradient(circle, rgba(20,184,166,0.35) 0%, rgba(20,184,166,0.12) 50%, transparent 70%)',
-    top: '300px', left: '30%', filter: 'blur(50px)', animation: 'mesh3 28s ease-in-out infinite',
+    position: 'absolute', width: '700px', height: '700px', borderRadius: '50%',
+    background: 'radial-gradient(circle, rgba(20,184,166,0.48) 0%, rgba(20,184,166,0.16) 50%, transparent 70%)',
+    bottom: '-250px', left: '5%', filter: 'blur(40px)', animation: 'mesh3 28s ease-in-out infinite',
   },
   mesh4: {
-    position: 'absolute', width: '500px', height: '500px', borderRadius: '50%',
-    background: 'radial-gradient(circle, rgba(251,146,60,0.35) 0%, rgba(251,146,60,0.12) 50%, transparent 70%)',
-    top: '200px', right: '5%', filter: 'blur(50px)', animation: 'mesh4 22s ease-in-out infinite',
+    position: 'absolute', width: '600px', height: '600px', borderRadius: '50%',
+    background: 'radial-gradient(circle, rgba(251,146,60,0.45) 0%, rgba(251,146,60,0.15) 70%)',
+    bottom: '-150px', right: '0%', filter: 'blur(45px)', animation: 'mesh4 22s ease-in-out infinite',
   },
 
   idleNotice: {
