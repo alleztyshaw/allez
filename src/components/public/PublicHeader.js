@@ -6,7 +6,7 @@
 import { Link } from 'react-router-dom';
 import {
   FONT_DISPLAY, FONT_BODY,
-  L_TEXT, L_TEXT_MUTED,
+  L_TEXT_MUTED,
   FW_LIGHT, FW_MEDIUM,
 } from '../../utils/hqConstants';
 

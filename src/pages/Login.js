@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import {
-  ACCENT, ACCENT_MUTED,
   SITE_ACCENT,
   L_BG, L_TEXT, L_TEXT_MUTED,
   FONT_DISPLAY, FONT_BODY,
