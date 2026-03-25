@@ -269,32 +269,36 @@ export default function CalendarView({
     <div>
       {/* Controls — hidden when hideControls=true (e.g. Daily Brief embed) */}
       {!hideControls && (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: cardContent ? 'center' : 'space-between', marginBottom: '20px', flexWrap: 'wrap', gap: '10px' }}>
+        <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: cardContent ? 'center' : 'space-between', marginBottom: '20px', flexWrap: 'wrap', gap: '10px' }}>
+          {/* Arrows + date label — always centered when in cardContent mode */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <button onClick={() => nav(-1)} style={navBtn}>‹</button>
             <span style={{ fontSize: '15px', fontWeight: FW_MEDIUM, color: t.TEXT, fontFamily: FONT_BODY, minWidth: isMobile ? 'auto' : '220px', textAlign: 'center' }}>{title()}</span>
             <button onClick={() => nav(1)}  style={navBtn}>›</button>
-            {/* Jump to date */}
-            <label style={{ position: 'relative', cursor: 'pointer' }} title={`Jump to ${view}`}>
-              <span style={{ display: 'flex', alignItems: 'center', background: 'none', border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_MD, padding: '5px 9px', color: t.TEXT_MUTED, userSelect: 'none' }}>
-                <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <rect x="1" y="3" width="13" height="11" rx="1.5" stroke="currentColor" strokeWidth="1.2" fill="none" />
-                  <line x1="1" y1="6.5" x2="14" y2="6.5" stroke="currentColor" strokeWidth="1.1" />
-                  <line x1="4.5" y1="1.5" x2="4.5" y2="4.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-                  <line x1="10.5" y1="1.5" x2="10.5" y2="4.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-                </svg>
-              </span>
-              <input
-                type={view === 'month' ? 'month' : 'date'}
-                style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%', top: 0, left: 0, cursor: 'pointer' }}
-                onChange={e => {
-                  if (!e.target.value) return;
-                  const d = new Date(e.target.value + (view === 'month' ? '-01' : '') + 'T12:00:00');
-                  if (!isNaN(d)) setAnchor(d);
-                }}
-              />
-            </label>
           </div>
+          {/* Calendar icon — floated right when in cardContent mode, inline otherwise */}
+          <label
+            style={{ position: cardContent ? 'absolute' : 'relative', right: cardContent ? '0' : 'auto', cursor: 'pointer' }}
+            title={`Jump to ${view}`}
+          >
+            <span style={{ display: 'flex', alignItems: 'center', background: 'none', border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_MD, padding: '5px 9px', color: t.TEXT_MUTED, userSelect: 'none' }}>
+              <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="1" y="3" width="13" height="11" rx="1.5" stroke="currentColor" strokeWidth="1.2" fill="none" />
+                <line x1="1" y1="6.5" x2="14" y2="6.5" stroke="currentColor" strokeWidth="1.1" />
+                <line x1="4.5" y1="1.5" x2="4.5" y2="4.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+                <line x1="10.5" y1="1.5" x2="10.5" y2="4.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+              </svg>
+            </span>
+            <input
+              type={view === 'month' ? 'month' : 'date'}
+              style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%', top: 0, left: 0, cursor: 'pointer' }}
+              onChange={e => {
+                if (!e.target.value) return;
+                const d = new Date(e.target.value + (view === 'month' ? '-01' : '') + 'T12:00:00');
+                if (!isNaN(d)) setAnchor(d);
+              }}
+            />
+          </label>
           {/* View toggle — hidden when hideViewToggle=true (e.g. Daily Brief) */}
           {!hideViewToggle && (
             <div style={{ display: 'flex', gap: '4px' }}>
