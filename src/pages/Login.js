@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import {
-    SITE_ACCENT,
+  ACCENT, ACCENT_MUTED,
+  SITE_ACCENT,
   L_BG, L_TEXT, L_TEXT_MUTED,
   FONT_DISPLAY, FONT_BODY,
   FW_LIGHT, FW_REGULAR, FW_MEDIUM, FW_SEMIBOLD,
@@ -13,8 +14,9 @@ import PublicFooter from '../components/public/PublicFooter';
 export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
-  const wasIdled = new URLSearchParams(location.search).get('reason') === 'idle';
-  const [showLogin, setShowLogin] = useState(false);
+  const wasIdled   = new URLSearchParams(location.search).get('reason') === 'idle';
+  const autoSignIn = new URLSearchParams(location.search).get('signin') === 'true';
+  const [showLogin, setShowLogin] = useState(autoSignIn);
   const [email,    setEmail]    = useState('');
   const [password, setPassword] = useState('');
   const [error,    setError]    = useState('');
@@ -91,7 +93,7 @@ export default function Login() {
         <div style={s.mesh4} />
       </div>
 
-      <PublicHeader onSignIn={() => setShowLogin(v => !v)} />
+      <PublicHeader />
 
       {wasIdled && <div style={s.idleNotice}>You were signed out due to inactivity. Please sign in again.</div>}
 

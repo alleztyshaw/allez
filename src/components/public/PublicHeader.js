@@ -1,21 +1,21 @@
 // src/components/public/PublicHeader.js
-// Shared header for all public-facing pages (Login, ProductPage).
-// No auth context — purely presentational.
+// Shared header for all public-facing pages.
+// Fully static — no auth context, no props, no conditional rendering.
+// Sign In always links to /?signin=true so Login.js auto-opens the card.
 
 import { Link } from 'react-router-dom';
 import {
   FONT_DISPLAY, FONT_BODY,
-  L_TEXT,
+  L_TEXT, L_TEXT_MUTED,
   FW_LIGHT, FW_MEDIUM,
 } from '../../utils/hqConstants';
 
-export default function PublicHeader({ onSignIn }) {
+export default function PublicHeader() {
   return (
     <header style={s.header}>
       <style>{`
-        .pub-nav-link:hover  { opacity: 0.6 !important; }
-        .pub-sign-in:hover   { opacity: 0.6 !important; }
-        .pub-logo:hover      { opacity: 0.75 !important; }
+        .pub-logo:hover   { opacity: 0.7 !important; }
+        .pub-nav-link:hover { opacity: 0.7 !important; }
       `}</style>
 
       <Link to="/" style={s.logoLink} className="pub-logo">
@@ -24,11 +24,7 @@ export default function PublicHeader({ onSignIn }) {
 
       <nav style={s.nav}>
         <Link to="/product" className="pub-nav-link" style={s.navLink}>Product</Link>
-        {onSignIn && (
-          <button className="pub-sign-in" style={s.signInBtn} onClick={onSignIn}>
-            Sign In
-          </button>
-        )}
+        <Link to="/?signin=true" className="pub-nav-link" style={s.navLink}>Sign In</Link>
       </nav>
     </header>
   );
@@ -44,7 +40,7 @@ const s = {
     fontFamily: FONT_DISPLAY,
     fontSize: '22px',
     fontWeight: FW_LIGHT,
-    color: L_TEXT,
+    color: L_TEXT_MUTED,
     letterSpacing: '0.06em',
   },
   nav: { display: 'flex', alignItems: 'center', gap: '36px' },
@@ -52,18 +48,8 @@ const s = {
     fontFamily: FONT_BODY,
     fontSize: '15px',
     fontWeight: FW_MEDIUM,
-    color: L_TEXT,
+    color: L_TEXT_MUTED,
     textDecoration: 'none',
-    letterSpacing: '0.01em',
-    transition: 'opacity 0.2s',
-  },
-  signInBtn: {
-    background: 'none', border: 'none', padding: 0,
-    fontFamily: FONT_BODY,
-    fontSize: '15px',
-    fontWeight: FW_MEDIUM,
-    color: L_TEXT,
-    cursor: 'pointer',
     letterSpacing: '0.01em',
     transition: 'opacity 0.2s',
   },

@@ -406,6 +406,7 @@ export default function Team() {
                             email: inviteEmail.trim(),
                             role: inviteRole,
                             org_id: selectedOrg,
+                            org_name: selectedOrgName,
                             first_name: inviteFirstName.trim(),
                             last_name: inviteLastName.trim()
                           })

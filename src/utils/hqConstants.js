@@ -31,7 +31,7 @@ export const COLOR_ERROR   = '#f87171'; // red — destructive actions, errors, 
 export const COLOR_WARNING = '#fbbf24'; // amber — caution, overdue, pending
 export const COLOR_INFO    = '#60a5fa'; // blue — informational, updates, neutral changes
 
-// --- SITE ACCENT — Allez Capital Portfolio (allezcapital.com) ---
+// --- SITE ACCENT — Allez HQ public/marketing pages (allezhq.com) ---
 export const SITE_ACCENT        = '#667eea'; // Purple — portfolio brand colour
 export const SITE_ACCENT_HOVER  = '#5a6fd6';
 export const SITE_ACCENT_MUTED  = 'rgba(102, 126, 234, 0.10)';
