@@ -116,8 +116,6 @@ function fmtDate(raw) {
 }
 
 // ── MeetingRow ────────────────────────────────────────────────────────────────
-// Extracted so each row can measure its own text overflow via a ref.
-// Lives in this file to share all imported constants without prop-passing them.
 function MeetingRow({ meeting, index, total, meetingCols, isMobile, canWrite, expandedMeetings, toggleMeeting, openEditMeeting, handleMeetingDelete, setViewNoteId, setNotePickerMeeting, handleUnlinkNote, t, s }) {
   const [overflows, setOverflows] = useState(false);
   const textRef = useRef(null);
@@ -257,8 +255,8 @@ export default function ClientDetail() {
   const [meetings, setMeetings]                 = useState([]);
   const [meetingModal, setMeetingModal]         = useState(false);
   const [editingMeeting, setEditingMeeting]     = useState(null);
-  const [notePickerMeeting, setNotePickerMeeting] = useState(null); // meeting to link a note to
-  const [viewNoteId, setViewNoteId]               = useState(null); // note id to preview in modal
+  const [notePickerMeeting, setNotePickerMeeting] = useState(null);
+  const [viewNoteId, setViewNoteId]               = useState(null);
   const [expandedMeetings, setExpandedMeetings]   = useState(new Set());
   const toggleMeeting = (id) => setExpandedMeetings(prev => {
     const next = new Set(prev);
@@ -272,11 +270,6 @@ export default function ClientDetail() {
   const [showAdvisorModal, setShowAdvisorModal] = useState(false);
 
   useEffect(() => {
-    // ── ARCH-01: Single RPC replaces fetchClient + loadNotes + loadTasks
-    // + loadMeetings + loadAdvisors (which itself had a sequential
-    // client_advisors → get_org_members chain inside it).
-    // get_org_members is still called separately for the advisor
-    // assignment modal, but only once instead of twice.
     async function fetchClientDetail() {
       const { data, error } = await supabase.rpc('get_client_detail', { p_client_id: id, p_org_id: orgId });
       if (error) {
@@ -341,7 +334,6 @@ export default function ClientDetail() {
     setMeetings(prev => prev.map(m => m.id === meetingId ? { ...m, note_id: null } : m));
   }
 
-  // Read highlight param from URL — used when navigating from "View Note" on a meeting
   const [highlightNoteId] = useState(
     () => new URLSearchParams(location.search).get('highlight')
   );
@@ -776,12 +768,26 @@ export default function ClientDetail() {
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <p style={{ ...s.sectionLabel, margin: 0 }}>Notes ({clientNotes.length})</p>
-              {canWrite && <button style={s.editButton} onClick={() => navigate(`/hq/notes?client_id=${id}`, { state: { from: `/hq/clients/${id}` } })}>+ Record Note</button>}
+              {canWrite && (
+                <button
+                  style={s.editButton}
+                  onClick={() => navigate('/hq/notes', { state: { from: `/hq/clients/${id}`, clientId: id, tab: 'record' } })}
+                >
+                  + Record Note
+                </button>
+              )}
             </div>
             {clientNotes.length === 0 ? (
               <div style={{ ...s.notesCard, textAlign: 'center', color: t.TEXT_MUTED, fontSize: '14px' }}>
                 No notes yet.{' '}
-                {canWrite && <span style={{ color: t.ACCENT, cursor: 'pointer' }} onClick={() => navigate(`/hq/notes?client_id=${id}`, { state: { from: `/hq/clients/${id}` } })}>Add the first note →</span>}
+                {canWrite && (
+                  <span
+                    style={{ color: t.ACCENT, cursor: 'pointer' }}
+                    onClick={() => navigate('/hq/notes', { state: { from: `/hq/clients/${id}`, clientId: id, tab: 'record' } })}
+                  >
+                    Add the first note →
+                  </span>
+                )}
               </div>
             ) : (
               groupNotesByDate(clientNotes).map(([date, dateNotes]) => (
@@ -957,7 +963,6 @@ export default function ClientDetail() {
           return (
             <div style={{ position: 'fixed', inset: 0, background: OVERLAY_BG, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', zIndex: 1100, padding: '340px 20px 20px' }}>
               <div style={{ background: t.SURFACE, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_LG, width: 'min(600px, calc(100vw - 40px))', maxHeight: '80vh', display: 'flex', flexDirection: 'column', boxShadow: SHADOW_LG }}>
-                {/* Header */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', padding: '20px 24px', borderBottom: `1px solid ${t.BORDER}`, flexShrink: 0, gap: '12px' }}>
                   <div style={{ minWidth: 0 }}>
                     <p style={{ margin: '0 0 6px', fontFamily: FONT_DISPLAY, fontSize: '22px', fontWeight: FW_REGULAR, color: t.TEXT, letterSpacing: '0.01em', lineHeight: 1.2 }}>{viewNote.title}</p>
@@ -974,7 +979,6 @@ export default function ClientDetail() {
                   </div>
                   <button style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: t.TEXT_MUTED, padding: '4px 8px', flexShrink: 0 }} onClick={() => setViewNoteId(null)}>✕</button>
                 </div>
-                {/* Body */}
                 <div style={{ overflowY: 'auto', flex: 1, padding: '20px 24px' }}>
                   {viewNote.body ? (
                     <p style={{ margin: 0, fontSize: '14px', fontWeight: FW_LIGHT, color: t.TEXT, fontFamily: FONT_BODY, lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>{viewNote.body}</p>
@@ -982,7 +986,6 @@ export default function ClientDetail() {
                     <p style={{ margin: 0, fontSize: '14px', color: t.TEXT_MUTED, fontFamily: FONT_BODY, fontWeight: FW_LIGHT, fontStyle: 'italic' }}>No note content recorded.</p>
                   )}
                 </div>
-                {/* Footer */}
                 <div style={{ padding: '14px 24px', borderTop: `1px solid ${t.BORDER}`, flexShrink: 0, display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
                   <button style={{ background: 'none', border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_MD, padding: '8px 16px', fontSize: '13px', color: t.TEXT_MUTED, cursor: 'pointer', fontFamily: FONT_BODY }} onClick={() => setViewNoteId(null)}>Close</button>
                 </div>

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useSearchParams, useNavigate, useLocation, Link } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { useOrg } from '../context/OrgContext';
 import {
@@ -54,14 +54,15 @@ export default function Notes() {
   const t = useTokens();
   const windowWidth = useWindowWidth();
   const isMobile = windowWidth < MOBILE_BREAKPOINT;
-  const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
   const location = useLocation();
   const fromBrief = location.state?.from === '/hq/brief';
   const fromClient = location.state?.from?.startsWith('/hq/clients/');
   const backTo = fromBrief ? '/hq/brief' : fromClient ? location.state.from : null;
   const backLabel = fromBrief ? '← Back to Daily Brief' : fromClient ? '← Back to Client' : null;
   const { orgId } = useOrg();
+
+  // Tab state — always default to Record
+  const [activeTab, setActiveTab] = useState('record');
 
   // Core data
   const [notes, setNotes] = useState([]);
@@ -71,7 +72,6 @@ export default function Notes() {
   const [loading, setLoading] = useState(true);
 
   // Compose
-  const [showCompose, setShowCompose] = useState(false);
   const [composeMode, setComposeMode] = useState('ai'); // 'ai' | 'manual'
   const [formData, setFormData] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
@@ -87,7 +87,7 @@ export default function Notes() {
 
   // Audio input
   const [inputMode, setInputMode]           = useState('paste'); // 'paste' | 'upload' | 'record'
-  const [wasRecorded, setWasRecorded]       = useState(false); // true if current session came from record mode
+  const [wasRecorded, setWasRecorded]       = useState(false);
   const [audioFile, setAudioFile]           = useState(null);
   const [audioTranscribing, setAudioTranscribing] = useState(false);
   const [audioError, setAudioError]         = useState('');
@@ -96,10 +96,10 @@ export default function Notes() {
   const mediaRecorderRef = useRef(null);
   const audioChunksRef   = useRef([]);
   const recordingTimerRef = useRef(null);
-  const [pushedTasks, setPushedTasks] = useState(new Set()); // indices of action items pushed to tasks
+  const [pushedTasks, setPushedTasks] = useState(new Set());
 
   // Email draft modal
-  const [emailNote, setEmailNote]           = useState(null);   // note being drafted for
+  const [emailNote, setEmailNote]           = useState(null);
   const [emailSalutation, setEmailSalutation] = useState('');
   const [emailSignOff, setEmailSignOff]     = useState('Best,');
   const [emailTone, setEmailTone]           = useState('professional');
@@ -109,7 +109,7 @@ export default function Notes() {
   const [emailBody, setEmailBody]           = useState('');
   const [emailError, setEmailError]         = useState('');
   const [emailCopied, setEmailCopied]       = useState(false);
-  const [emailDrafts, setEmailDrafts]       = useState({}); // persisted drafts keyed by note id
+  const [emailDrafts, setEmailDrafts]       = useState({});
 
   // Note list
   const [editingNote, setEditingNote] = useState(null);
@@ -123,14 +123,16 @@ export default function Notes() {
     setExpandedNotes((prev) => ({ ...prev, [noteId]: !prev[noteId] }));
   }
 
+  // Read pre-fill state from ClientDetail navigation
   useEffect(() => {
-    const clientId = searchParams.get('client_id');
+    const clientId = location.state?.clientId;
+    const tab = location.state?.tab;
     if (clientId) {
       setFormData((f) => ({ ...f, client_id: clientId }));
-      setShowCompose(true);
       setClientFilter(clientId);
     }
-  }, [searchParams]);
+    if (tab) setActiveTab(tab);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (orgId) fetchData();
@@ -165,9 +167,9 @@ export default function Notes() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   }
 
+  // Resets compose form state — does not change tab
   function resetCompose() {
-    setShowCompose(false);
-    setComposeMode('manual');
+    setComposeMode('ai');
     setFormData(emptyForm);
     setAiTranscript('');
     setAiResult(null);
@@ -181,7 +183,6 @@ export default function Notes() {
     setAudioFile(null);
     setAudioError('');
     stopRecording();
-    navigate('/hq/notes', { replace: true });
   }
 
   // ── Audio transcription ──────────────────────────────────────────────────────
@@ -200,7 +201,6 @@ export default function Notes() {
       } else {
         setAiTranscript(data.transcript);
         if (autoProcess) {
-          // Trigger AI processing directly — skip paste review step
           setAiProcessing(true);
           setAudioTranscribing(false);
           await handleAiProcessWithTranscript(data.transcript);
@@ -242,10 +242,10 @@ export default function Notes() {
         stream.getTracks().forEach(t => t.stop());
         const blob = new Blob(audioChunksRef.current, { type: mimeType });
         const file = new File([blob], 'recording.webm', { type: mimeType });
-        await transcribeAudio(file, true); // auto-process after transcription
+        await transcribeAudio(file, true);
       };
 
-      recorder.start(1000); // collect in 1s chunks
+      recorder.start(1000);
       mediaRecorderRef.current = recorder;
       setRecording(true);
       setWasRecorded(true);
@@ -253,7 +253,7 @@ export default function Notes() {
       recordingTimerRef.current = setInterval(() => {
         setRecordingSeconds(s => s + 1);
       }, 1000);
-    } catch (err) {
+    } catch {
       setAudioError('Microphone access denied. Please allow microphone access and try again.');
     }
   }
@@ -271,11 +271,10 @@ export default function Notes() {
   }
 
   async function handleSave() {
-    if (!formData.client_id) { setError('Please select a client.'); return; }
     if (!formData.title.trim()) { setError('Please enter a title.'); return; }
     setSaving(true); setError('');
     const { error } = await supabase.from('notes').insert([{
-      client_id: formData.client_id,
+      client_id: formData.client_id || null,
       title: formData.title,
       body: formData.body,
       note_type: formData.note_type,
@@ -283,14 +282,13 @@ export default function Notes() {
       org_id: orgId,
     }]);
     if (error) { setError('Something went wrong. Please try again.'); console.error(error); }
-    else { resetCompose(); fetchData(); }
+    else { resetCompose(); fetchData(); setActiveTab('history'); }
     setSaving(false);
   }
 
   // ── AI processing ───────────────────────────────────────────────────────────
 
   async function handleAiProcess() {
-    if (!formData.client_id) { setAiError('Please select a client.'); return; }
     if (!aiTranscript.trim()) { setAiError('Please paste a transcript to process.'); return; }
     setAiProcessing(true);
     setAiError('');
@@ -329,10 +327,7 @@ export default function Notes() {
     setAiProcessing(false);
   }
 
-  // Used by auto-process path (record mode) — accepts transcript directly
-  // since state may not have updated yet when called
   async function handleAiProcessWithTranscript(transcript) {
-    if (!formData.client_id) { setAiError('Please select a client before recording.'); setAiProcessing(false); return; }
     setAiError('');
     setAiResult(null);
 
@@ -372,7 +367,7 @@ export default function Notes() {
     setAiError('');
     const finalTitle = aiTitleOverride.trim() || aiResult.title || 'AI Note';
     const { error } = await supabase.from('notes').insert([{
-      client_id: formData.client_id,
+      client_id: formData.client_id || null,
       title: finalTitle,
       body: aiTranscript,
       transcript: aiTranscript,
@@ -396,17 +391,15 @@ export default function Notes() {
     } else {
       resetCompose();
       fetchData();
+      setActiveTab('history');
     }
     setSaving(false);
   }
 
-  // Pushes a single action item from the AI result card into client_tasks
-  // index can be a number (live result card) or string like "noteId-j" (saved notes)
   async function pushToTask(item, index, clientIdOverride) {
     const clientId = clientIdOverride || formData.client_id;
     if (!clientId || pushedTasks.has(index)) return;
 
-    // Best-effort due date parsing — only use if the string looks like a real date
     let dueDate = null;
     if (item.due) {
       const parsed = new Date(item.due);
@@ -477,7 +470,6 @@ export default function Notes() {
       } else {
         setEmailSubject(data.subject);
         setEmailBody(data.body);
-        // Persist so draft survives modal close
         setEmailDrafts(prev => ({
           ...prev,
           [emailNote.id]: {
@@ -517,7 +509,6 @@ export default function Notes() {
       title: note.title,
       body: note.body,
       note_type: note.note_type,
-      // AI fields — editable as plain text, re-serialised on save
       ai_summary_text: aiSummary?.summary || '',
       ai_decisions: aiSummary?.decisions?.join('\n') || '',
       ai_action_items: aiSummary?.action_items?.map(a =>
@@ -538,7 +529,6 @@ export default function Notes() {
     if (!isAi) {
       update.body = editForm.body;
     } else {
-      // Re-serialise edited AI fields back into ai_summary JSON
       const decisions = editForm.ai_decisions.split('\n').map(s => s.trim()).filter(Boolean);
       const action_items = editForm.ai_action_items.split('\n').map(s => s.trim()).filter(Boolean).map(line => {
         const [task, owner, due] = line.split(' · ');
@@ -569,7 +559,6 @@ export default function Notes() {
 
   const s = {
     ...pageStyles(t, isMobile),
-    addButton: { background: 'transparent', color: t.ACCENT, border: `1px solid ${t.ACCENT_BORDER}`, borderRadius: RADIUS_MD, padding: '10px 20px', fontSize: '14px', fontWeight: FW_SEMIBOLD, cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: FONT_BODY },
     composeCard: { background: t.SURFACE, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_LG, padding: '24px', marginBottom: '32px', boxShadow: SHADOW_MD },
     composeHeader: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' },
     modeToggle: { display: 'flex', gap: '2px', background: t.SURFACE_ALT, borderRadius: RADIUS_MD, padding: '3px', border: `1px solid ${t.BORDER}` },
@@ -619,6 +608,17 @@ export default function Notes() {
     modalFooter: { padding: '14px 22px', borderTop: `1px solid ${t.BORDER}`, display: 'flex', justifyContent: 'flex-end', gap: '10px' },
   };
 
+  // Tab button style helper
+  function tabStyle(tab) {
+    const isActive = activeTab === tab;
+    return {
+      padding: '8px 20px', fontSize: '13px', fontWeight: FW_MEDIUM,
+      fontFamily: FONT_BODY, cursor: 'pointer', background: 'none', border: 'none',
+      borderBottom: isActive ? `2px solid ${t.ACCENT}` : '2px solid transparent',
+      color: isActive ? t.TEXT : t.TEXT_MUTED, marginBottom: '-1px',
+    };
+  }
+
   // ── JSX ─────────────────────────────────────────────────────────────────────
 
   return (
@@ -657,30 +657,20 @@ export default function Notes() {
                 : `${notes.length} total across ${clients.length} clients`}
             </p>
           </div>
-          {!showCompose && canWrite && (
-            <button style={s.addButton} onClick={() => setShowCompose(true)}>+ New Note</button>
-          )}
         </div>
 
-        {/* Client filter */}
-        {!showCompose && clients.length > 0 && (
-          <div style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <select value={clientFilter} onChange={e => setClientFilter(e.target.value)} style={{ ...s.input, maxWidth: '280px', padding: '8px 12px' }}>
-              <option value="">All clients</option>
-              {clients.map(c => (
-                <option key={c.id} value={c.id}>{c.first_name} {c.last_name} ({noteCounts[c.id] || 0})</option>
-              ))}
-            </select>
-            {clientFilter && (
-              <button onClick={() => { setClientFilter(''); navigate('/hq/notes', { replace: true }); }} style={{ ...s.cancelButton, padding: '6px 14px', fontSize: '12px' }}>
-                Clear
-              </button>
-            )}
-          </div>
-        )}
+        {/* Tab row */}
+        <div style={{ display: 'flex', gap: '4px', marginBottom: '28px', borderBottom: `1px solid ${t.BORDER}` }}>
+          <button style={tabStyle('record')} onClick={() => setActiveTab('record')}>
+            Record
+          </button>
+          <button style={tabStyle('history')} onClick={() => setActiveTab('history')}>
+            History
+          </button>
+        </div>
 
-        {/* ── Compose card ─────────────────────────────────────────────────── */}
-        {showCompose && canWrite && (
+        {/* ── Record tab ───────────────────────────────────────────────────── */}
+        {activeTab === 'record' && (
           <div style={s.composeCard}>
 
             {/* Mode toggle */}
@@ -705,9 +695,9 @@ export default function Notes() {
             {/* Shared fields */}
             <div style={s.formRow}>
               <div style={{ ...s.formField, minWidth: '220px' }}>
-                <label style={s.label}>Client *</label>
+                <label style={s.label}>Client <span style={{ fontWeight: FW_LIGHT, opacity: 0.7 }}>— optional, can link later</span></label>
                 <select name="client_id" value={formData.client_id} onChange={handleChange} style={s.input}>
-                  <option value="">— Select client —</option>
+                  <option value="">— No client selected —</option>
                   {clients.map((c) => (
                     <option key={c.id} value={c.id}>{c.first_name} {c.last_name}</option>
                   ))}
@@ -733,7 +723,7 @@ export default function Notes() {
                 <textarea name="body" value={formData.body} onChange={handleChange} placeholder="Note content, key discussion points, action items..." style={s.textarea} />
                 {error && <p style={s.errorText}>{error}</p>}
                 <div style={s.composeFooter}>
-                  <button style={s.cancelButton} onClick={resetCompose}>Cancel</button>
+                  <button style={s.cancelButton} onClick={resetCompose}>Reset</button>
                   <button style={s.saveButton} onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : 'Save Note'}</button>
                 </div>
               </>
@@ -982,7 +972,7 @@ export default function Notes() {
                 {aiError && <p style={s.errorText}>{aiError}</p>}
 
                 <div style={s.composeFooter}>
-                  <button style={s.cancelButton} onClick={resetCompose}>Cancel</button>
+                  <button style={s.cancelButton} onClick={resetCompose}>Reset</button>
                   {!aiResult && inputMode !== 'record' && !wasRecorded && (
                     <button style={s.processButton} onClick={handleAiProcess} disabled={aiProcessing}>
                       {aiProcessing ? 'Processing...' : 'Process with AI'}
@@ -1000,165 +990,196 @@ export default function Notes() {
           </div>
         )}
 
-        {/* ── Notes list ───────────────────────────────────────────────────── */}
-        {loading ? (
-          <div style={s.emptyState}>Loading notes...</div>
-        ) : notes.length === 0 ? (
-          <div style={s.emptyState}>
-            {clientFilter ? `No notes found for ${clientName(clientFilter)}.` : 'No notes yet. Create your first note above.'}
-          </div>
-        ) : (
-          grouped.map(([date, dateNotes]) => (
-            <div key={date} style={s.dateGroup}>
-              <p style={s.dateLabel}>{formatDateLabel(date)}</p>
-              {dateNotes.map((note, i) => {
-                const status = clientStatus(note.client_id);
-                const isExpanded = expandedNotes[note.id];
-                const aiSummary = parseAiSummary(note);
-                const isAi = note.source === 'ai' && aiSummary;
-                const previewText = isAi ? aiSummary.summary : note.body;
-                const isLong = previewText && previewText.length > 80;
+        {/* ── History tab ──────────────────────────────────────────────────── */}
+        {activeTab === 'history' && (
+          <>
+            {/* Client filter */}
+            {clients.length > 0 && (
+              <div style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <select value={clientFilter} onChange={e => setClientFilter(e.target.value)} style={{ ...s.input, maxWidth: '280px', padding: '8px 12px' }}>
+                  <option value="">All clients</option>
+                  {clients.map(c => (
+                    <option key={c.id} value={c.id}>{c.first_name} {c.last_name} ({noteCounts[c.id] || 0})</option>
+                  ))}
+                </select>
+                {clientFilter && (
+                  <button onClick={() => setClientFilter('')} style={{ ...s.cancelButton, padding: '6px 14px', fontSize: '12px' }}>
+                    Clear
+                  </button>
+                )}
+              </div>
+            )}
 
-                return (
-                  <div
-                    key={note.id}
-                    className="note-card"
-                    style={{ ...s.noteCard, animationDelay: `${i * 60}ms`, transition: 'transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease' }}
-                  >
-                    {/* Header */}
-                    <div style={s.noteHeader}>
-                      <span style={s.noteTitle}>{note.title}</span>
-                      {!isAi && <span style={s.manualBadge}>Manual</span>}
-                      {note.note_type && <span style={s.noteTypeBadge}>{note.note_type}</span>}
-                      <Link
-                        to={`/hq/clients/${note.client_id}`}
-                        state={{ from: '/hq/notes' }}
-                        className="client-name-badge"
-                        style={{
-                          ...s.clientBadge,
-                          backgroundColor: STATUS_COLORS?.[status]?.bg || 'rgba(96,165,250,0.12)',
-                          color: STATUS_COLORS?.[status]?.color || '#60a5fa',
-                          border: `1px solid ${STATUS_COLORS?.[status]?.color || '#60a5fa'}33`,
-                        }}
+            {/* Notes list */}
+            {loading ? (
+              <div style={s.emptyState}>Loading notes...</div>
+            ) : notes.length === 0 ? (
+              <div style={s.emptyState}>
+                {clientFilter
+                  ? `No notes found for ${clientName(clientFilter)}.`
+                  : canWrite
+                    ? 'No notes yet — head to the Record tab to capture your first meeting.'
+                    : 'No notes yet.'}
+              </div>
+            ) : (
+              grouped.map(([date, dateNotes]) => (
+                <div key={date} style={s.dateGroup}>
+                  <p style={s.dateLabel}>{formatDateLabel(date)}</p>
+                  {dateNotes.map((note, i) => {
+                    const status = clientStatus(note.client_id);
+                    const isExpanded = expandedNotes[note.id];
+                    const aiSummary = parseAiSummary(note);
+                    const isAi = note.source === 'ai' && aiSummary;
+                    const previewText = isAi ? aiSummary.summary : note.body;
+                    const isLong = previewText && previewText.length > 80;
+
+                    return (
+                      <div
+                        key={note.id}
+                        className="note-card"
+                        style={{ ...s.noteCard, animationDelay: `${i * 60}ms`, transition: 'transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease' }}
                       >
-                        {clientName(note.client_id)}
-                      </Link>
-                    </div>
+                        {/* Header */}
+                        <div style={s.noteHeader}>
+                          <span style={s.noteTitle}>{note.title}</span>
+                          {!isAi && <span style={s.manualBadge}>Manual</span>}
+                          {note.note_type && <span style={s.noteTypeBadge}>{note.note_type}</span>}
+                          {note.client_id ? (
+                            <Link
+                              to={`/hq/clients/${note.client_id}`}
+                              state={{ from: '/hq/notes' }}
+                              className="client-name-badge"
+                              style={{
+                                ...s.clientBadge,
+                                backgroundColor: STATUS_COLORS?.[status]?.bg || 'rgba(96,165,250,0.12)',
+                                color: STATUS_COLORS?.[status]?.color || '#60a5fa',
+                                border: `1px solid ${STATUS_COLORS?.[status]?.color || '#60a5fa'}33`,
+                              }}
+                            >
+                              {clientName(note.client_id)}
+                            </Link>
+                          ) : (
+                            <span style={{ ...s.clientBadge, background: t.SURFACE_ALT, color: t.TEXT_MUTED, border: `1px solid ${t.BORDER}` }}>
+                              Unlinked
+                            </span>
+                          )}
+                        </div>
 
-                    {/* Preview / expanded content */}
-                    {previewText && (
-                      <div style={{ marginBottom: '10px' }}>
-                        <div style={{
-                          maxHeight: isExpanded ? '2000px' : '1.4em',
-                          overflow: 'hidden',
-                          transition: isExpanded ? 'max-height 0.4s ease-in-out' : 'max-height 0.3s ease-in-out',
-                        }}>
-                          <p style={{ ...s.noteBody, marginBottom: 0 }}>{previewText}</p>
+                        {/* Preview / expanded content */}
+                        {previewText && (
+                          <div style={{ marginBottom: '10px' }}>
+                            <div style={{
+                              maxHeight: isExpanded ? '2000px' : '1.4em',
+                              overflow: 'hidden',
+                              transition: isExpanded ? 'max-height 0.4s ease-in-out' : 'max-height 0.3s ease-in-out',
+                            }}>
+                              <p style={{ ...s.noteBody, marginBottom: 0 }}>{previewText}</p>
 
-                          {/* AI structured sections shown on expand */}
-                          {isAi && isExpanded && (
-                            <div style={{ marginTop: '16px' }}>
-                              {aiSummary.decisions?.length > 0 && (
-                                <div style={s.aiSection}>
-                                  <p style={s.aiSectionLabel}>Decisions</p>
-                                  {aiSummary.decisions.map((d, j) => (
-                                    <div key={j} style={s.aiListItem}>
-                                      <span style={{ color: AI_COLOR, flexShrink: 0 }}>·</span>
-                                      <span style={s.aiSectionText}>{d}</span>
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
-                              {aiSummary.action_items?.length > 0 && (
-                                <div style={s.aiSection}>
-                                  <p style={s.aiSectionLabel}>Action Items</p>
-                                  {aiSummary.action_items.map((item, j) => {
-                                    const key = `${note.id}-${j}`;
-                                    const pushed = pushedTasks.has(key);
-                                    return (
-                                      <div key={j} style={{ ...s.aiListItem, justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                        <div style={{ display: 'flex', gap: '8px', flex: 1 }}>
+                              {/* AI structured sections shown on expand */}
+                              {isAi && isExpanded && (
+                                <div style={{ marginTop: '16px' }}>
+                                  {aiSummary.decisions?.length > 0 && (
+                                    <div style={s.aiSection}>
+                                      <p style={s.aiSectionLabel}>Decisions</p>
+                                      {aiSummary.decisions.map((d, j) => (
+                                        <div key={j} style={s.aiListItem}>
                                           <span style={{ color: AI_COLOR, flexShrink: 0 }}>·</span>
-                                          <span style={s.aiSectionText}>
-                                            {item.task}
-                                            {item.owner && <span style={{ opacity: 0.7 }}> · {item.owner}</span>}
-                                            {item.due && <span style={{ opacity: 0.7 }}> · {item.due}</span>}
-                                          </span>
+                                          <span style={s.aiSectionText}>{d}</span>
                                         </div>
-                                        <button
-                                          className={pushed ? '' : 'push-task-btn'}
-                                          onClick={() => pushToTask(item, key, note.client_id)}
-                                          disabled={pushed}
-                                          style={{
-                                            flexShrink: 0,
-                                            marginLeft: '12px',
-                                            background: 'none',
-                                            border: `1px solid ${pushed ? t.ACCENT_BORDER : t.BORDER}`,
-                                            borderRadius: '6px',
-                                            padding: '3px 10px',
-                                            fontSize: '11px',
-                                            fontWeight: FW_SEMIBOLD,
-                                            color: pushed ? t.ACCENT : t.TEXT_MUTED,
-                                            cursor: pushed ? 'default' : 'pointer',
-                                            fontFamily: FONT_BODY,
-                                            letterSpacing: '0.03em',
-                                          }}
-                                        >
-                                          {pushed ? '✓ Added' : '+ Task'}
-                                        </button>
-                                      </div>
-                                    );
-                                  })}
-                                </div>
-                              )}
-                              {aiSummary.follow_ups?.length > 0 && (
-                                <div style={{ ...s.aiSection, marginBottom: 0 }}>
-                                  <p style={s.aiSectionLabel}>Follow-ups</p>
-                                  {aiSummary.follow_ups.map((f, j) => (
-                                    <div key={j} style={s.aiListItem}>
-                                      <span style={{ color: AI_COLOR, flexShrink: 0 }}>·</span>
-                                      <span style={s.aiSectionText}>{f}</span>
+                                      ))}
                                     </div>
-                                  ))}
+                                  )}
+                                  {aiSummary.action_items?.length > 0 && (
+                                    <div style={s.aiSection}>
+                                      <p style={s.aiSectionLabel}>Action Items</p>
+                                      {aiSummary.action_items.map((item, j) => {
+                                        const key = `${note.id}-${j}`;
+                                        const pushed = pushedTasks.has(key);
+                                        return (
+                                          <div key={j} style={{ ...s.aiListItem, justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                            <div style={{ display: 'flex', gap: '8px', flex: 1 }}>
+                                              <span style={{ color: AI_COLOR, flexShrink: 0 }}>·</span>
+                                              <span style={s.aiSectionText}>
+                                                {item.task}
+                                                {item.owner && <span style={{ opacity: 0.7 }}> · {item.owner}</span>}
+                                                {item.due && <span style={{ opacity: 0.7 }}> · {item.due}</span>}
+                                              </span>
+                                            </div>
+                                            <button
+                                              className={pushed ? '' : 'push-task-btn'}
+                                              onClick={() => pushToTask(item, key, note.client_id)}
+                                              disabled={pushed}
+                                              style={{
+                                                flexShrink: 0,
+                                                marginLeft: '12px',
+                                                background: 'none',
+                                                border: `1px solid ${pushed ? t.ACCENT_BORDER : t.BORDER}`,
+                                                borderRadius: '6px',
+                                                padding: '3px 10px',
+                                                fontSize: '11px',
+                                                fontWeight: FW_SEMIBOLD,
+                                                color: pushed ? t.ACCENT : t.TEXT_MUTED,
+                                                cursor: pushed ? 'default' : 'pointer',
+                                                fontFamily: FONT_BODY,
+                                                letterSpacing: '0.03em',
+                                              }}
+                                            >
+                                              {pushed ? '✓ Added' : '+ Task'}
+                                            </button>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  )}
+                                  {aiSummary.follow_ups?.length > 0 && (
+                                    <div style={{ ...s.aiSection, marginBottom: 0 }}>
+                                      <p style={s.aiSectionLabel}>Follow-ups</p>
+                                      {aiSummary.follow_ups.map((f, j) => (
+                                        <div key={j} style={s.aiListItem}>
+                                          <span style={{ color: AI_COLOR, flexShrink: 0 }}>·</span>
+                                          <span style={s.aiSectionText}>{f}</span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
                                 </div>
                               )}
                             </div>
-                          )}
-                        </div>
 
-                        <div style={{ height: '24px', display: 'flex', alignItems: 'center', marginTop: '4px' }}>
-                          {(isAi || isLong) && (
-                            <button style={s.noteAction} onClick={() => toggleExpand(note.id)}>
-                              {isExpanded ? 'Show less' : isAi ? 'View full analysis' : 'Read more'}
-                              <span className={`expand-triangle${isExpanded ? ' open' : ''}`} />
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                    {!previewText && <div style={{ height: '58px' }} />}
-
-                    {canWrite && (
-                      <div style={s.noteActions}>
-                        {isAi && (
-                          <button style={{ ...s.noteAction, color: t.ACCENT }} onClick={() => openEmailDraft(note)}>
-                            {emailDrafts[note.id] ? 'Draft Email ·' : 'Draft Email'}
-                          </button>
+                            <div style={{ height: '24px', display: 'flex', alignItems: 'center', marginTop: '4px' }}>
+                              {(isAi || isLong) && (
+                                <button style={s.noteAction} onClick={() => toggleExpand(note.id)}>
+                                  {isExpanded ? 'Show less' : isAi ? 'View full analysis' : 'Read more'}
+                                  <span className={`expand-triangle${isExpanded ? ' open' : ''}`} />
+                                </button>
+                              )}
+                            </div>
+                          </div>
                         )}
-                        <button style={s.noteAction} onClick={() => openEdit(note)}>Edit</button>
-                        <button style={{ ...s.noteAction, color: '#f87171' }} onClick={() => handleDelete(note.id)}>Delete</button>
-                      </div>
-                    )}
 
-                  </div>
-                );
-              })}
-            </div>
-          ))
+                        {!previewText && <div style={{ height: '58px' }} />}
+
+                        {canWrite && (
+                          <div style={s.noteActions}>
+                            {isAi && (
+                              <button style={{ ...s.noteAction, color: t.ACCENT }} onClick={() => openEmailDraft(note)}>
+                                {emailDrafts[note.id] ? 'Draft Email ·' : 'Draft Email'}
+                              </button>
+                            )}
+                            <button style={s.noteAction} onClick={() => openEdit(note)}>Edit</button>
+                            <button style={{ ...s.noteAction, color: '#f87171' }} onClick={() => handleDelete(note.id)}>Delete</button>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              ))
+            )}
+          </>
         )}
 
-        {/* ── Edit modal ───────────────────────────────────────────────────── */}
+        {/* ── Edit modal — always accessible regardless of active tab ──────── */}
         {editingNote && (
           <div style={s.overlay}>
             <div style={s.modal}>
@@ -1228,34 +1249,21 @@ export default function Notes() {
 
               <div style={s.modalBody}>
 
-                {/* For advisor review notice */}
                 <p style={{ fontSize: '11px', color: t.TEXT_MUTED, fontStyle: 'italic', margin: '0 0 28px', fontWeight: FW_LIGHT, paddingLeft: '2px' }}>
                   For advisor review — please check before sending to client.
                 </p>
 
-                {/* Salutation + sign-off row */}
                 <div style={{ display: 'flex', gap: '16px', marginBottom: '24px', paddingLeft: '2px' }}>
                   <div style={{ flex: 1 }}>
                     <label style={{ ...s.label, display: 'block', marginBottom: '6px' }}>Salutation</label>
-                    <input
-                      style={s.input}
-                      value={emailSalutation}
-                      onChange={e => setEmailSalutation(e.target.value)}
-                      placeholder="Hi [Name],"
-                    />
+                    <input style={s.input} value={emailSalutation} onChange={e => setEmailSalutation(e.target.value)} placeholder="Hi [Name]," />
                   </div>
                   <div style={{ flex: 1 }}>
                     <label style={{ ...s.label, display: 'block', marginBottom: '6px' }}>Sign-off</label>
-                    <input
-                      style={s.input}
-                      value={emailSignOff}
-                      onChange={e => setEmailSignOff(e.target.value)}
-                      placeholder="Best,"
-                    />
+                    <input style={s.input} value={emailSignOff} onChange={e => setEmailSignOff(e.target.value)} placeholder="Best," />
                   </div>
                 </div>
 
-                {/* Tone selector */}
                 <div style={{ marginBottom: '24px', paddingLeft: '2px' }}>
                   <label style={{ ...s.label, display: 'block', marginBottom: '8px' }}>Tone</label>
                   <div style={{ display: 'flex', gap: '8px' }}>
@@ -1281,7 +1289,6 @@ export default function Notes() {
                   </div>
                 </div>
 
-                {/* Content checkboxes */}
                 <div style={{ marginBottom: '28px', paddingLeft: '2px' }}>
                   <label style={{ ...s.label, display: 'block', marginBottom: '10px' }}>Include</label>
                   <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
@@ -1305,7 +1312,6 @@ export default function Notes() {
                   </div>
                 </div>
 
-                {/* Generate button */}
                 {!emailBody && (
                   <button
                     style={{ ...s.saveButton, width: '100%', padding: '13px', fontSize: '14px', marginBottom: emailError ? '12px' : 0 }}
@@ -1320,7 +1326,6 @@ export default function Notes() {
                   <p style={{ color: '#f87171', fontSize: '13px', margin: '10px 0 0' }}>{emailError}</p>
                 )}
 
-                {/* Draft output */}
                 {emailBody && (
                   <div style={{ marginTop: '4px' }}>
                     <div style={{ marginBottom: '16px' }}>
