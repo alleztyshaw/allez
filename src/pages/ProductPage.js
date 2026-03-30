@@ -2,6 +2,7 @@
 // Public-facing product page at /product.
 // Visualizations are CSS/SVG mockups — no image dependencies.
 
+import { Link } from 'react-router-dom';
 import {
   ACCENT, ACCENT_MUTED, ACCENT_BORDER,
   SITE_ACCENT,
@@ -46,14 +47,12 @@ function DailyBriefMockup() {
   return (
     <MockWindow label="Daily Brief — Tuesday, March 25">
       <div style={{ padding: '20px 24px' }}>
-        {/* Greeting */}
         <p style={{ fontFamily: FONT_DISPLAY, fontSize: '22px', fontWeight: FW_LIGHT, color: L_TEXT, margin: '0 0 4px' }}>
           Good morning.
         </p>
         <p style={{ fontFamily: FONT_BODY, fontSize: '12px', fontWeight: FW_LIGHT, color: L_TEXT_MUTED, margin: '0 0 20px' }}>
           3 meetings today · 2 tasks overdue · 4 clients due for review
         </p>
-        {/* Today's meetings */}
         <p style={{ fontSize: '10px', fontWeight: FW_SEMIBOLD, textTransform: 'uppercase', letterSpacing: '0.1em', color: L_TEXT_MUTED, margin: '0 0 10px', fontFamily: FONT_BODY }}>Today's Schedule</p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {meetings.map(m => (
@@ -67,7 +66,6 @@ function DailyBriefMockup() {
             </div>
           ))}
         </div>
-        {/* Overdue tasks */}
         <p style={{ fontSize: '10px', fontWeight: FW_SEMIBOLD, textTransform: 'uppercase', letterSpacing: '0.1em', color: L_TEXT_MUTED, margin: '16px 0 10px', fontFamily: FONT_BODY }}>Overdue Tasks</p>
         {[
           { client: 'James Kowalski', task: 'Send estate planning summary' },
@@ -91,7 +89,6 @@ function ClientProfileMockup() {
   return (
     <MockWindow label="Client — Margaret Chen">
       <div style={{ padding: '20px 24px' }}>
-        {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
           <div>
             <p style={{ fontFamily: FONT_DISPLAY, fontSize: '28px', fontWeight: FW_LIGHT, color: L_TEXT, margin: '0 0 4px', lineHeight: 1.1 }}>Margaret Chen</p>
@@ -99,12 +96,10 @@ function ClientProfileMockup() {
           </div>
           <span style={{ fontSize: '10px', fontWeight: FW_SEMIBOLD, padding: '3px 10px', borderRadius: '999px', background: ACCENT_MUTED, color: ACCENT, fontFamily: FONT_BODY, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Active</span>
         </div>
-        {/* Assigned advisors */}
         <p style={{ fontSize: '10px', fontWeight: FW_SEMIBOLD, textTransform: 'uppercase', letterSpacing: '0.1em', color: L_TEXT_MUTED, margin: '0 0 8px', fontFamily: FONT_BODY }}>Assigned Advisors</p>
         <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
           <span style={{ padding: '4px 12px', background: ACCENT_MUTED, border: `1px solid ${ACCENT_BORDER}`, borderRadius: '8px', fontSize: '12px', color: L_TEXT, fontFamily: FONT_BODY }}>T. Shaw <span style={{ fontSize: '10px', color: ACCENT, marginLeft: '4px' }}>Primary</span></span>
         </div>
-        {/* Fields */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
           {[
             ['AUM', '$3.2M'], ['Asset Level', '$2M – $5M'],
@@ -127,7 +122,6 @@ function AINoteMockup() {
   return (
     <MockWindow label="AI Note — Margaret Chen · Annual Review">
       <div style={{ padding: '20px 24px' }}>
-        {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
           <div>
             <p style={{ margin: '0 0 2px', fontSize: '15px', fontWeight: FW_MEDIUM, color: L_TEXT, fontFamily: FONT_BODY }}>Annual Review – March 2026</p>
@@ -135,12 +129,10 @@ function AINoteMockup() {
           </div>
           <span style={{ fontSize: '10px', fontWeight: FW_SEMIBOLD, padding: '2px 9px', borderRadius: '999px', background: 'rgba(167,139,250,0.12)', color: '#a78bfa', border: '1px solid rgba(167,139,250,0.3)', fontFamily: FONT_BODY, letterSpacing: '0.06em' }}>AI</span>
         </div>
-        {/* Summary */}
         <p style={{ fontSize: '10px', fontWeight: FW_SEMIBOLD, textTransform: 'uppercase', letterSpacing: '0.1em', color: ACCENT, margin: '0 0 8px', fontFamily: FONT_BODY }}>Summary</p>
         <p style={{ fontSize: '12px', fontWeight: FW_LIGHT, lineHeight: 1.65, color: L_TEXT, margin: '0 0 16px', fontFamily: FONT_BODY }}>
           Reviewed full portfolio allocation. Client pleased with bond ladder performance. Discussed rebalancing equities from 58% to 55% given approaching retirement horizon.
         </p>
-        {/* Action items */}
         <p style={{ fontSize: '10px', fontWeight: FW_SEMIBOLD, textTransform: 'uppercase', letterSpacing: '0.1em', color: ACCENT, margin: '0 0 8px', fontFamily: FONT_BODY }}>Action Items</p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '16px' }}>
           {['Prepare rebalancing proposal by April 1', 'Send updated RMD projection for 2026'].map(item => (
@@ -150,7 +142,6 @@ function AINoteMockup() {
             </div>
           ))}
         </div>
-        {/* Compliance */}
         <div style={{ display: 'flex', gap: '8px', padding: '10px 12px', background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.25)', borderRadius: '8px', alignItems: 'flex-start' }}>
           <span style={{ fontSize: '14px', flexShrink: 0 }}>⚠️</span>
           <div>
@@ -168,7 +159,6 @@ function SearchMockup() {
   return (
     <MockWindow label="Global Search">
       <div style={{ padding: '0' }}>
-        {/* Search input */}
         <div style={{ padding: '14px 16px', borderBottom: '1px solid rgba(0,0,0,0.07)', display: 'flex', alignItems: 'center', gap: '10px' }}>
           <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
             <circle cx="9" cy="9" r="6" stroke={L_TEXT_MUTED} strokeWidth="1.5"/>
@@ -177,7 +167,6 @@ function SearchMockup() {
           <span style={{ fontSize: '13px', color: L_TEXT, fontFamily: FONT_BODY }}>chen</span>
           <span style={{ marginLeft: 'auto', fontSize: '10px', color: L_TEXT_SUBTLE, fontFamily: FONT_BODY, border: '1px solid rgba(0,0,0,0.1)', borderRadius: '4px', padding: '1px 5px' }}>Esc</span>
         </div>
-        {/* Results */}
         {[
           { group: 'Clients', items: [{ label: 'Margaret Chen', sub: 'Active · $3.2M AUM' }, { label: 'David Chen', sub: 'Prospect · Lead stage' }] },
           { group: 'Notes', items: [{ label: 'Annual Review – Margaret Chen', sub: 'Mar 25, 2026 · Meeting' }] },
@@ -228,7 +217,7 @@ function AIPipelineDiagram() {
             </div>
             {i < steps.length - 1 && (
               <div style={{ width: '24px', height: '1px', background: 'rgba(0,0,0,0.15)', position: 'relative', flexShrink: 0 }}>
-                <div style={{ position: 'absolute', right: '-4px', top: '-3px', width: 0, height: 0, borderTop: '4px solid transparent', borderBottom: '4px solid transparent', borderLeft: `5px solid rgba(0,0,0,0.2)` }} />
+                <div style={{ position: 'absolute', right: '-4px', top: '-3px', width: 0, height: 0, borderTop: '4px solid transparent', borderBottom: '4px solid transparent', borderLeft: '5px solid rgba(0,0,0,0.2)' }} />
               </div>
             )}
           </div>
@@ -243,7 +232,6 @@ function ComplianceDiagram() {
     <div style={{ padding: '28px', background: '#ffffff', border: '1px solid rgba(0,0,0,0.08)', borderRadius: '12px', boxShadow: '0 4px 24px rgba(0,0,0,0.08)' }}>
       <p style={{ fontSize: '10px', fontWeight: FW_SEMIBOLD, textTransform: 'uppercase', letterSpacing: '0.1em', color: L_TEXT_MUTED, margin: '0 0 20px', fontFamily: FONT_BODY }}>Compliance scan flow</p>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-        {/* Input */}
         <div style={{ padding: '12px 16px', background: '#fafaf8', border: '1px solid rgba(0,0,0,0.07)', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '10px' }}>
           <span style={{ fontSize: '16px' }}>📝</span>
           <div>
@@ -251,11 +239,9 @@ function ComplianceDiagram() {
             <p style={{ margin: 0, fontSize: '11px', color: L_TEXT_MUTED, fontFamily: FONT_BODY }}>Full text submitted for scan</p>
           </div>
         </div>
-        {/* Arrow */}
         <div style={{ display: 'flex', justifyContent: 'center' }}>
-          <div style={{ width: 0, height: 0, borderLeft: '6px solid transparent', borderRight: '6px solid transparent', borderTop: `8px solid rgba(0,0,0,0.15)` }} />
+          <div style={{ width: 0, height: 0, borderLeft: '6px solid transparent', borderRight: '6px solid transparent', borderTop: '8px solid rgba(0,0,0,0.15)' }} />
         </div>
-        {/* Scan */}
         <div style={{ padding: '12px 16px', background: 'rgba(167,139,250,0.06)', border: '1px solid rgba(167,139,250,0.2)', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '10px' }}>
           <span style={{ fontSize: '16px' }}>✦</span>
           <div>
@@ -263,11 +249,9 @@ function ComplianceDiagram() {
             <p style={{ margin: 0, fontSize: '11px', color: L_TEXT_MUTED, fontFamily: FONT_BODY }}>Securities mentions · promissory language · risk signals</p>
           </div>
         </div>
-        {/* Arrow */}
         <div style={{ display: 'flex', justifyContent: 'center' }}>
-          <div style={{ width: 0, height: 0, borderLeft: '6px solid transparent', borderRight: '6px solid transparent', borderTop: `8px solid rgba(0,0,0,0.15)` }} />
+          <div style={{ width: 0, height: 0, borderLeft: '6px solid transparent', borderRight: '6px solid transparent', borderTop: '8px solid rgba(0,0,0,0.15)' }} />
         </div>
-        {/* Results */}
         <div style={{ display: 'flex', gap: '8px' }}>
           <div style={{ flex: 1, padding: '10px 12px', background: ACCENT_MUTED, border: `1px solid ${ACCENT_BORDER}`, borderRadius: '8px', textAlign: 'center' }}>
             <p style={{ margin: 0, fontSize: '11px', fontWeight: FW_SEMIBOLD, color: ACCENT, fontFamily: FONT_BODY }}>✓ Clear</p>
@@ -293,7 +277,6 @@ function PipelineDiagram() {
   return (
     <div style={{ padding: '28px', background: '#ffffff', border: '1px solid rgba(0,0,0,0.08)', borderRadius: '12px', boxShadow: '0 4px 24px rgba(0,0,0,0.08)' }}>
       <p style={{ fontSize: '10px', fontWeight: FW_SEMIBOLD, textTransform: 'uppercase', letterSpacing: '0.1em', color: L_TEXT_MUTED, margin: '0 0 20px', fontFamily: FONT_BODY }}>Prospect pipeline</p>
-      {/* Pipeline stages */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '0', marginBottom: '24px', overflowX: 'auto' }}>
         {stages.map((stage, i) => (
           <div key={stage} style={{ display: 'flex', alignItems: 'center', flex: 1, minWidth: 0 }}>
@@ -314,7 +297,6 @@ function PipelineDiagram() {
           </div>
         ))}
       </div>
-      {/* Prospect cards */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
         {[
           { name: 'Daniel Kim', stage: 'Agreement', time: '3 weeks', value: '$2M–$5M' },
@@ -338,6 +320,25 @@ function PipelineDiagram() {
 
 const FEATURES = [
   {
+    slug: 'notes',
+    name: 'AI Note-taker',
+    tagline: 'Be fully present. Allez captures the rest.',
+    description: 'Open Allez before the meeting, hit record, and have the conversation. When it ends, a structured note is waiting — summary, decisions made, action items, and compliance signals, all extracted automatically.',
+    details: [
+      'Record live from any meeting — transcribed and structured in real time',
+      'Structured output: summary, decisions, action items, and follow-up topics',
+      'Auto-generated tasks linked to the client record',
+      'Compliance scan with severity levels and specific reasons per flag',
+      'Draft follow-up email generated and ready to send',
+      'Works with existing transcripts and recordings too',
+    ],
+    visual: <AINoteMockup />,
+    visualType: 'mockup',
+    diagram: <AIPipelineDiagram />,
+    diagramLabel: 'How the AI pipeline works',
+  },
+  {
+    slug: 'daily-brief',
     name: 'Daily Brief',
     tagline: 'Start every morning already prepared.',
     description: 'Most advisors begin their day piecing together what\'s happening across their book. The Daily Brief eliminates that — surfacing today\'s meetings, overdue tasks, and clients due for a touchpoint the moment you log in.',
@@ -351,6 +352,7 @@ const FEATURES = [
     visualType: 'mockup',
   },
   {
+    slug: 'clients',
     name: 'Client Profiles',
     tagline: 'Every detail about every client, always in reach.',
     description: 'A client profile in Allez HQ holds the full picture of the relationship — financial profile, risk tolerance, communication preferences, notes history, tasks, and meetings — all in one place.',
@@ -364,22 +366,7 @@ const FEATURES = [
     visualType: 'mockup',
   },
   {
-    name: 'AI Notes',
-    tagline: 'From transcript to structured record in seconds.',
-    description: 'Accept a transcript, a recording, or a pasted summary and turn it into a structured record — meeting summary, decisions made, action items, and follow-up topics extracted automatically. Compliance signals flagged in real time.',
-    details: [
-      'Three input modes: paste text, upload a file, or record directly',
-      'Structured output: summary, decisions, action items, follow-ups',
-      'Auto-generated tasks linked to the client record',
-      'Compliance scan with severity levels and specific reasons',
-      'Draft follow-up email generation with tone controls',
-    ],
-    visual: <AINoteMockup />,
-    visualType: 'mockup',
-    diagram: <AIPipelineDiagram />,
-    diagramLabel: 'How the AI pipeline works',
-  },
-  {
+    slug: 'crm',
     name: 'CRM & Pipeline',
     tagline: 'See the full arc of every relationship.',
     description: 'Prospects move through a configurable pipeline. Active clients have communication cadence tracking. Every interaction is logged. Nothing falls through the cracks because the system is always watching the relationship health you might miss.',
@@ -393,6 +380,7 @@ const FEATURES = [
     visualType: 'diagram',
   },
   {
+    slug: 'compliance',
     name: 'Compliance Layer',
     tagline: 'Documentation that protects you as you work.',
     description: 'Compliance in most practices is retroactive. Allez HQ builds it into the workflow — every AI note scanned automatically, flags surfaced in a dedicated compliance view, and a full audit log recording every write across your organization.',
@@ -407,6 +395,7 @@ const FEATURES = [
     visualType: 'diagram',
   },
   {
+    slug: 'search',
     name: 'Global Search',
     tagline: 'Find anything, instantly.',
     description: 'Cmd+K from anywhere searches clients by name, notes by content, and tasks by title simultaneously. Results grouped and navigable. Role-scoped so advisors only see their assigned clients and records.',
@@ -420,6 +409,7 @@ const FEATURES = [
     visualType: 'mockup',
   },
   {
+    slug: 'team',
     name: 'Team & Access Control',
     tagline: 'The right people see the right things.',
     description: 'Supports the full range of roles in a real advisory practice — Admin, Manager, Advisor, Associate, Compliance. Role-based access enforced at the database level. Advisors see their clients. Compliance has full read access. Admins manage the team.',
@@ -481,6 +471,7 @@ export default function ProductPage() {
           75%      { transform:translate(-30px,-30px) scale(1.04); }
         }
         .feature-row:not(:last-child) { border-bottom:1px solid rgba(0,0,0,0.07); }
+        .feature-name-link:hover { opacity: 0.7; }
       `}</style>
 
       <div style={s.meshWrap}>
@@ -493,30 +484,15 @@ export default function ProductPage() {
       {/* Hero */}
       <div style={{ ...s.hero, padding: isMobile ? '48px 24px 64px' : '80px 40px 100px' }}>
         <p style={s.heroEyebrow}>The platform</p>
-        <h1 style={s.heroTitle}>Practice management built<br />for the relationship era.</h1>
+        <h1 style={s.heroTitle}>Practice management for advisors<br />who set the standard.</h1>
         <p style={s.heroSub}>
-          Independent advisors, RIAs, and wealth management firms use Allez HQ
-          to manage their client relationships, meeting workflows, compliance obligations,
-          and team operations — in one place, purpose-built for this industry.
+          Every meeting, every milestone, every relationship — Allez captures the details
+          that matter across the full client journey. From meeting notes to client records,
+          pipeline tracking to team alignment, everything your practice needs lives in one place.
         </p>
       </div>
 
       <div style={s.scrollSection}>
-
-        {/* How it fits together */}
-        <div style={{ ...s.unifiedBlock, padding: isMobile ? '48px 24px' : '80px 40px' }}>
-          <p style={s.eyebrow}>Everything you need, in one platform</p>
-          <h2 style={s.sectionTitle}>Everything connects.</h2>
-          <p style={s.bodyText}>
-            Most advisory practices run on a patchwork of tools — a CRM here, a notes app there, a spreadsheet for tasks, and a compliance folder somewhere on a shared drive. Each tool knows part of the story. None of them know all of it.
-          </p>
-          <p style={s.bodyText}>
-            Allez HQ is a single platform where your client data, meeting history, AI-generated notes, open tasks, and compliance record all live together and reference each other. When you open a client profile, you see everything. When you take a note, it links to the client. When a task is generated from a meeting, it appears in your Daily Brief the next morning.
-          </p>
-          <p style={s.bodyText}>Not feature richness — coherence.</p>
-        </div>
-
-        <div style={s.divider} />
 
         {/* Features */}
         <div style={{ ...s.featuresBlock, padding: isMobile ? '48px 24px' : '80px 40px' }}>
@@ -532,7 +508,13 @@ export default function ProductPage() {
             }}>
               {/* Left: text */}
               <div style={s.featureLeft}>
-                <p style={s.featureName}>{f.name}</p>
+                <Link
+                  to={`/product/${f.slug}`}
+                  className="feature-name-link"
+                  style={s.featureNameLink}
+                >
+                  {f.name}
+                </Link>
                 <p style={s.featureTagline}>{f.tagline}</p>
                 <p style={s.featureDesc}>{f.description}</p>
                 <ul style={s.featureList}>
@@ -606,17 +588,19 @@ const s = {
     WebkitBackdropFilter: 'blur(12px)', borderTop: '1px solid rgba(0,0,0,0.04)',
   },
 
-  unifiedBlock: { maxWidth: '1100px', margin: '0 auto', padding: '80px 40px' },
   eyebrow: { fontSize: '11px', fontWeight: FW_MEDIUM, textTransform: 'uppercase', letterSpacing: '0.18em', color: SITE_ACCENT, margin: '0 0 16px' },
   sectionTitle: { fontFamily: FONT_DISPLAY, fontSize: 'clamp(26px, 3vw, 40px)', fontWeight: FW_LIGHT, color: L_TEXT, margin: '0 0 28px', lineHeight: 1.2, letterSpacing: '0.01em' },
-  bodyText: { fontSize: '15px', fontWeight: FW_LIGHT, lineHeight: 1.85, color: 'rgba(26,26,26,0.6)', margin: '0 0 16px', maxWidth: '720px' },
 
   divider: { height: '1px', background: 'rgba(0,0,0,0.07)', margin: '0 40px' },
 
   featuresBlock: { maxWidth: '1100px', margin: '0 auto', padding: '80px 40px' },
   featureRow: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '56px', padding: '56px 0', alignItems: 'start' },
   featureLeft: {},
-  featureName: { fontFamily: FONT_DISPLAY, fontSize: '30px', fontWeight: FW_REGULAR, color: L_TEXT, margin: '0 0 6px', letterSpacing: '0.01em' },
+  featureNameLink: {
+    fontFamily: FONT_DISPLAY, fontSize: '30px', fontWeight: FW_REGULAR, color: L_TEXT,
+    margin: '0 0 6px', letterSpacing: '0.01em', textDecoration: 'none', display: 'block',
+    transition: 'opacity 0.15s ease',
+  },
   featureTagline: { fontSize: '13px', fontWeight: FW_LIGHT, color: SITE_ACCENT, margin: '0 0 16px' },
   featureDesc: { fontSize: '14px', fontWeight: FW_LIGHT, lineHeight: 1.85, color: 'rgba(26,26,26,0.6)', margin: '0 0 20px' },
   featureList: { listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: '10px' },

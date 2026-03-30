@@ -4,6 +4,7 @@ import { OrgProvider } from './context/OrgContext';
 import { ThemeProvider } from './context/ThemeContext';
 import Login from './pages/Login';
 import ProductPage from './pages/ProductPage';
+import PlaceholderFeaturePage from './pages/PlaceholderFeaturePage';
 import ResetPassword from './pages/ResetPassword';
 import Signup from './pages/Signup';
 import Contact from './pages/Contact';
@@ -48,22 +49,23 @@ function App() {
           <SearchOverlay />
           <div className="App">
             <Routes>
-              <Route path="/"              element={<Login />} />
-              <Route path="/product"       element={<ProductPage />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
-              <Route path="/signup"        element={<Signup />} />
-              <Route path="/welcome" element={<Welcome />} />
-              <Route path="/contact"        element={<ProtectedLayout><Contact      /></ProtectedLayout>} />
-              <Route path="/hq"             element={<ProtectedLayout><HQ           /></ProtectedLayout>} />
-              <Route path="/hq/brief"       element={<ProtectedLayout><DailyBrief   /></ProtectedLayout>} />
-              <Route path="/hq/clients"     element={<ProtectedLayout><Clients      /></ProtectedLayout>} />
-              <Route path="/hq/clients/:id" element={<ProtectedLayout><ClientDetail /></ProtectedLayout>} />
-              <Route path="/hq/notes"       element={<ProtectedLayout><Notes        /></ProtectedLayout>} />
-              <Route path="/hq/crm"         element={<ProtectedLayout><CRM          /></ProtectedLayout>} />
-              <Route path="/hq/team"        element={<ProtectedLayout><Team         /></ProtectedLayout>} />
-              <Route path="/hq/settings"    element={<ProtectedLayout><Settings     /></ProtectedLayout>} />
-              <Route path="/hq/orgs"        element={<ProtectedLayout><Orgs         /></ProtectedLayout>} />
-              <Route path="/hq/audit"       element={<ProtectedLayout><AuditLog     /></ProtectedLayout>} />
+              <Route path="/"                element={<Login />} />
+              <Route path="/product"         element={<ProductPage />} />
+              <Route path="/product/:feature" element={<PlaceholderFeaturePage />} />
+              <Route path="/reset-password"  element={<ResetPassword />} />
+              <Route path="/signup"          element={<Signup />} />
+              <Route path="/welcome"         element={<Welcome />} />
+              <Route path="/contact"         element={<ProtectedLayout><Contact      /></ProtectedLayout>} />
+              <Route path="/hq"              element={<ProtectedLayout><HQ           /></ProtectedLayout>} />
+              <Route path="/hq/brief"        element={<ProtectedLayout><DailyBrief   /></ProtectedLayout>} />
+              <Route path="/hq/clients"      element={<ProtectedLayout><Clients      /></ProtectedLayout>} />
+              <Route path="/hq/clients/:id"  element={<ProtectedLayout><ClientDetail /></ProtectedLayout>} />
+              <Route path="/hq/notes"        element={<ProtectedLayout><Notes        /></ProtectedLayout>} />
+              <Route path="/hq/crm"          element={<ProtectedLayout><CRM          /></ProtectedLayout>} />
+              <Route path="/hq/team"         element={<ProtectedLayout><Team         /></ProtectedLayout>} />
+              <Route path="/hq/settings"     element={<ProtectedLayout><Settings     /></ProtectedLayout>} />
+              <Route path="/hq/orgs"         element={<ProtectedLayout><Orgs         /></ProtectedLayout>} />
+              <Route path="/hq/audit"        element={<ProtectedLayout><AuditLog     /></ProtectedLayout>} />
             </Routes>
           </div>
         </Router>
