@@ -56,8 +56,7 @@ export default function HomePage() {
             <p style={s.eyebrow}>For independent advisors, RIAs &amp; wealth management firms</p>
             <p style={s.tagline}>Relationships,<br />refined.</p>
             <p style={s.heroSub}>
-              The practice management platform that keeps you ahead<br />
-              of every client relationship — not catching up to it.
+              The practice management platform that keeps you ahead of every client relationship — not catching up to it.
             </p>
           </div>
         </div>

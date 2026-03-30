@@ -6,7 +6,7 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
   FONT_DISPLAY, FONT_BODY,
-  PUB_TEXT_MUTED, PUB_BG, PUB_TEXT, PUB_DIVIDER,
+  PUB_TEXT_MUTED, PUB_BG, PUB_DIVIDER,
   FW_LIGHT, FW_MEDIUM,
   MOBILE_BREAKPOINT,
 } from '../../utils/publicConstants';
@@ -172,12 +172,13 @@ const s = {
     margin: '8px 0',
   },
   overlaySignIn: {
-    fontFamily:     FONT_DISPLAY,
-    fontSize:       '32px',
-    fontWeight:     FW_LIGHT,
-    color:          PUB_TEXT,
+    fontFamily:     FONT_BODY,
+    fontSize:       '13px',
+    fontWeight:     FW_MEDIUM,
+    color:          PUB_TEXT_MUTED,
     textDecoration: 'none',
-    letterSpacing:  '0.04em',
+    textTransform:  'uppercase',
+    letterSpacing:  '0.14em',
     padding:        '14px 0',
     transition:     'opacity 0.2s',
   },

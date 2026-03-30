@@ -14,7 +14,7 @@ export default function PublicFooter() {
   const isMobile = useWindowWidth() < MOBILE_BREAKPOINT;
 
   return (
-    <footer style={{ ...s.footer, flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'flex-start' : 'center', padding: isMobile ? '28px 24px' : '36px 48px' }}>
+    <footer style={{ ...s.footer, flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'flex-start' : 'center', padding: isMobile ? '28px 24px 40px' : '36px 48px' }}>
       <div style={s.left}>
         <Link to="/" style={s.logoLink}>
           <span style={{ ...s.logo, fontSize: isMobile ? '16px' : '20px' }}>Allez HQ</span>
@@ -23,7 +23,7 @@ export default function PublicFooter() {
           Built for advisors who believe the relationship is the product.
         </p>
       </div>
-      <div style={{ ...s.right, alignItems: isMobile ? 'flex-start' : 'flex-end', marginTop: isMobile ? '16px' : 0 }}>
+      <div style={{ ...s.right, alignItems: isMobile ? 'center' : 'flex-end', marginTop: isMobile ? '16px' : 0, width: isMobile ? '100%' : 'auto', paddingBottom: isMobile ? '16px' : 0 }}>
         <p style={s.meta}>Currently in early access · Invite only</p>
       </div>
     </footer>
