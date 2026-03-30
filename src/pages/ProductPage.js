@@ -208,7 +208,7 @@ function AIPipelineDiagram() {
   const steps = [
     { icon: '🎙️', label: 'Transcript', sub: 'Record, paste, or upload' },
     { icon: '🪪', label: 'De-identify', sub: 'PII replaced with tokens' },
-    { icon: '✦', label: 'AI Processing', sub: 'Claude Haiku' },
+    { icon: '✦', label: 'AI Processing', sub: 'Structured extraction' },
     { icon: '🔄', label: 'Re-identify', sub: 'Tokens restored' },
     { icon: '📄', label: 'Structured Note', sub: 'Summary + action items' },
   ];

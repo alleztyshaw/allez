@@ -179,7 +179,7 @@ export default function HomePage() {
                   </svg>
                 ),
                 heading: 'Enterprise-grade infrastructure.',
-                body: 'Allez HQ is built on Supabase, hosted on secure cloud infrastructure. Data is encrypted at rest and in transit. Row-level security ensures each firm\'s data is fully isolated.',
+                body: 'Allez HQ is built on enterprise-grade cloud infrastructure. Data is encrypted at rest and in transit. Firm-level data isolation ensures your client information is never commingled.',
               },
               {
                 icon: (
