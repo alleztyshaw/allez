@@ -24,6 +24,7 @@ export default function PublicHeader() {
 
       <nav style={s.nav}>
         <Link to="/product" className="pub-nav-link" style={s.navLink}>Product</Link>
+        <Link to="/company" className="pub-nav-link" style={s.navLink}>Company</Link>
         <Link to="/?signin=true" className="pub-nav-link" style={s.navLink}>Sign In</Link>
       </nav>
     </header>
@@ -46,11 +47,12 @@ const s = {
   nav: { display: 'flex', alignItems: 'center', gap: '36px' },
   navLink: {
     fontFamily: FONT_BODY,
-    fontSize: '15px',
+    fontSize: '12px',
     fontWeight: FW_MEDIUM,
     color: L_TEXT_MUTED,
     textDecoration: 'none',
-    letterSpacing: '0.01em',
+    textTransform: 'uppercase',
+    letterSpacing: '0.1em',
     transition: 'opacity 0.2s',
   },
 };

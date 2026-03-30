@@ -5,6 +5,7 @@ import { ThemeProvider } from './context/ThemeContext';
 import Login from './pages/Login';
 import ProductPage from './pages/ProductPage';
 import PlaceholderFeaturePage from './pages/PlaceholderFeaturePage';
+import CompanyPage from './pages/CompanyPage';
 import ResetPassword from './pages/ResetPassword';
 import Signup from './pages/Signup';
 import Contact from './pages/Contact';
@@ -52,6 +53,7 @@ function App() {
               <Route path="/"                element={<Login />} />
               <Route path="/product"         element={<ProductPage />} />
               <Route path="/product/:feature" element={<PlaceholderFeaturePage />} />
+              <Route path="/company"          element={<CompanyPage />} />
               <Route path="/reset-password"  element={<ResetPassword />} />
               <Route path="/signup"          element={<Signup />} />
               <Route path="/welcome"         element={<Welcome />} />
