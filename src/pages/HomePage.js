@@ -3,12 +3,16 @@
 // Marketing content only — auth lives at /sign-in.
 
 import {
-  SITE_ACCENT,
-  L_BG, L_TEXT,
+  PUB_BG, PUB_TEXT, PUB_ACCENT,
+  PUB_TEXT_MUTED, PUB_BODY_MUTED, PUB_BODY_SUBTLE, PUB_TEXT_SUBTLE,
+  PUB_DIVIDER, PUB_CARD_BG_LG, PUB_CARD_BORDER_LG, PUB_CARD_BG_SM, PUB_CARD_BORDER_SM,
+  PUB_SCROLL_SECTION_BG,
+  PUB_MESH_HOME_INDIGO, PUB_MESH_HOME_PINK, PUB_MESH_HOME_TEAL, PUB_MESH_HOME_AMBER,
+  PUB_FONTS_AND_KEYFRAMES,
   FONT_DISPLAY, FONT_BODY,
   FW_LIGHT, FW_REGULAR, FW_MEDIUM,
   MOBILE_BREAKPOINT,
-} from '../utils/hqConstants';
+} from '../utils/publicConstants';
 import useWindowWidth from '../hooks/useWindowWidth';
 import PublicHeader from '../components/public/PublicHeader';
 import PublicFooter from '../components/public/PublicFooter';
@@ -20,29 +24,7 @@ export default function HomePage() {
   return (
     <div style={s.root}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap');
-        @keyframes mesh1 {
-          0%,100% { transform:translate(0,0) scale(1); }
-          25%      { transform:translate(60px,-80px) scale(1.08); }
-          50%      { transform:translate(-40px,60px) scale(0.95); }
-          75%      { transform:translate(80px,40px) scale(1.05); }
-        }
-        @keyframes mesh2 {
-          0%,100% { transform:translate(0,0) scale(1); }
-          25%      { transform:translate(-70px,50px) scale(1.06); }
-          50%      { transform:translate(50px,-70px) scale(0.97); }
-          75%      { transform:translate(-30px,-30px) scale(1.04); }
-        }
-        @keyframes mesh3 {
-          0%,100% { transform:translate(0,0) scale(1); }
-          33%      { transform:translate(50px,60px) scale(1.07); }
-          66%      { transform:translate(-60px,-40px) scale(0.96); }
-        }
-        @keyframes mesh4 {
-          0%,100% { transform:translate(0,0) scale(1); }
-          40%      { transform:translate(-80px,30px) scale(1.05); }
-          80%      { transform:translate(40px,-60px) scale(0.98); }
-        }
+        ${PUB_FONTS_AND_KEYFRAMES}
         @keyframes fadeIn {
           from { opacity:0; transform:translateY(20px); }
           to   { opacity:1; transform:translateY(0); }
@@ -221,27 +203,27 @@ export default function HomePage() {
 }
 
 const s = {
-  root: { fontFamily: FONT_BODY, position: 'relative', background: L_BG, overflowX: 'hidden' },
+  root: { fontFamily: FONT_BODY, position: 'relative', background: PUB_BG, overflowX: 'hidden' },
 
   meshWrap: { position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none' },
   mesh1: {
     position: 'absolute', borderRadius: '50%',
-    background: 'radial-gradient(circle, rgba(99,102,241,0.55) 0%, rgba(99,102,241,0.20) 50%, transparent 70%)',
+    background: PUB_MESH_HOME_INDIGO,
     top: '-350px', left: '-250px', filter: 'blur(40px)', animation: 'mesh1 20s ease-in-out infinite',
   },
   mesh2: {
     position: 'absolute', borderRadius: '50%',
-    background: 'radial-gradient(circle, rgba(236,72,153,0.50) 0%, rgba(236,72,153,0.18) 50%, transparent 70%)',
+    background: PUB_MESH_HOME_PINK,
     top: '-150px', right: '-250px', filter: 'blur(45px)', animation: 'mesh2 24s ease-in-out infinite',
   },
   mesh3: {
     position: 'absolute', width: '700px', height: '700px', borderRadius: '50%',
-    background: 'radial-gradient(circle, rgba(20,184,166,0.48) 0%, rgba(20,184,166,0.16) 50%, transparent 70%)',
+    background: PUB_MESH_HOME_TEAL,
     bottom: '-250px', left: '5%', filter: 'blur(40px)', animation: 'mesh3 28s ease-in-out infinite',
   },
   mesh4: {
     position: 'absolute', width: '600px', height: '600px', borderRadius: '50%',
-    background: 'radial-gradient(circle, rgba(251,146,60,0.45) 0%, rgba(251,146,60,0.15) 70%)',
+    background: PUB_MESH_HOME_AMBER,
     bottom: '-150px', right: '0%', filter: 'blur(45px)', animation: 'mesh4 22s ease-in-out infinite',
   },
 
@@ -251,59 +233,59 @@ const s = {
     justifyContent: 'space-between', alignItems: 'center', textAlign: 'center',
     position: 'relative', zIndex: 1,
   },
-  eyebrow: { fontSize: '11px', fontWeight: FW_MEDIUM, textTransform: 'uppercase', letterSpacing: '0.18em', color: 'rgba(26,26,26,0.45)', margin: '0 0 20px' },
+  eyebrow: { fontSize: '11px', fontWeight: FW_MEDIUM, textTransform: 'uppercase', letterSpacing: '0.18em', color: PUB_BODY_SUBTLE, margin: '0 0 20px' },
   tagline: {
     fontFamily: FONT_DISPLAY, fontSize: 'clamp(48px, 6.5vw, 88px)', fontStyle: 'italic',
-    fontWeight: FW_LIGHT, color: L_TEXT, margin: '0 0 24px', letterSpacing: '0.01em', lineHeight: 1.1,
+    fontWeight: FW_LIGHT, color: PUB_TEXT, margin: '0 0 24px', letterSpacing: '0.01em', lineHeight: 1.1,
   },
-  heroSub: { fontSize: '15px', fontWeight: FW_LIGHT, lineHeight: 1.75, color: 'rgba(26,26,26,0.5)', margin: 0 },
+  heroSub: { fontSize: '15px', fontWeight: FW_LIGHT, lineHeight: 1.75, color: PUB_TEXT_MUTED, margin: 0 },
   scrollCue: { display: 'flex', justifyContent: 'center', width: '100%', flexShrink: 0, cursor: 'default' },
 
   scrollSection: {
     position: 'relative', zIndex: 1,
-    background: 'rgba(248,248,245,0.35)', backdropFilter: 'blur(12px)',
-    WebkitBackdropFilter: 'blur(12px)', borderTop: '1px solid rgba(0,0,0,0.04)',
+    background: PUB_SCROLL_SECTION_BG, backdropFilter: 'blur(12px)',
+    WebkitBackdropFilter: 'blur(12px)', borderTop: `1px solid ${PUB_DIVIDER}`,
   },
 
   definitionBlock: { maxWidth: '1100px', margin: '0 auto' },
   phonetic: { display: 'flex', alignItems: 'baseline', flexWrap: 'wrap', marginBottom: '8px' },
-  word: { fontFamily: FONT_DISPLAY, fontSize: '52px', fontWeight: FW_LIGHT, color: L_TEXT, letterSpacing: '0.02em' },
-  pronunciation: { fontFamily: FONT_BODY, fontSize: '16px', fontWeight: FW_LIGHT, color: 'rgba(26,26,26,0.45)', letterSpacing: '0.04em' },
-  partOfSpeech: { fontSize: '11px', fontWeight: FW_MEDIUM, textTransform: 'uppercase', letterSpacing: '0.14em', color: SITE_ACCENT, margin: '0 0 28px' },
-  definition: { fontFamily: FONT_DISPLAY, fontSize: '26px', fontWeight: FW_LIGHT, lineHeight: 1.6, color: L_TEXT, margin: '0 0 20px' },
-  definitionSub: { fontSize: '15px', fontWeight: FW_LIGHT, lineHeight: 1.75, color: 'rgba(26,26,26,0.55)', margin: 0 },
+  word: { fontFamily: FONT_DISPLAY, fontSize: '52px', fontWeight: FW_LIGHT, color: PUB_TEXT, letterSpacing: '0.02em' },
+  pronunciation: { fontFamily: FONT_BODY, fontSize: '16px', fontWeight: FW_LIGHT, color: PUB_BODY_SUBTLE, letterSpacing: '0.04em' },
+  partOfSpeech: { fontSize: '11px', fontWeight: FW_MEDIUM, textTransform: 'uppercase', letterSpacing: '0.14em', color: PUB_ACCENT, margin: '0 0 28px' },
+  definition: { fontFamily: FONT_DISPLAY, fontSize: '26px', fontWeight: FW_LIGHT, lineHeight: 1.6, color: PUB_TEXT, margin: '0 0 20px' },
+  definitionSub: { fontSize: '15px', fontWeight: FW_LIGHT, lineHeight: 1.75, color: PUB_BODY_MUTED, margin: 0 },
 
-  divider: { height: '1px', background: 'rgba(0,0,0,0.07)', margin: '0 40px' },
+  divider: { height: '1px', background: PUB_DIVIDER, margin: '0 40px' },
 
   valueBlock: { maxWidth: '1100px', margin: '0 auto' },
-  valueEyebrow: { fontSize: '11px', fontWeight: FW_MEDIUM, textTransform: 'uppercase', letterSpacing: '0.18em', color: SITE_ACCENT, margin: '0 0 16px' },
+  valueEyebrow: { fontSize: '11px', fontWeight: FW_MEDIUM, textTransform: 'uppercase', letterSpacing: '0.18em', color: PUB_ACCENT, margin: '0 0 16px' },
   valueTitle: {
     fontFamily: FONT_DISPLAY, fontSize: 'clamp(28px, 3.5vw, 44px)',
-    fontWeight: FW_LIGHT, color: L_TEXT, margin: '0 0 20px', lineHeight: 1.2, letterSpacing: '0.01em',
+    fontWeight: FW_LIGHT, color: PUB_TEXT, margin: '0 0 20px', lineHeight: 1.2, letterSpacing: '0.01em',
   },
-  valueSubtitle: { fontSize: '15px', fontWeight: FW_LIGHT, lineHeight: 1.75, color: 'rgba(26,26,26,0.55)', maxWidth: '600px', margin: '0 0 56px' },
+  valueSubtitle: { fontSize: '15px', fontWeight: FW_LIGHT, lineHeight: 1.75, color: PUB_BODY_MUTED, maxWidth: '600px', margin: '0 0 56px' },
   valueGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '16px' },
   valueCard: {
-    background: 'rgba(255,255,255,0.28)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
-    border: '1px solid rgba(255,255,255,0.48)', borderRadius: '16px', padding: '28px',
+    background: PUB_CARD_BG_LG, backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
+    border: `1px solid ${PUB_CARD_BORDER_LG}`, borderRadius: '16px', padding: '28px',
     transition: 'background 0.2s, transform 0.2s',
   },
-  valueCardHeadline: { fontFamily: FONT_DISPLAY, fontSize: '20px', fontWeight: FW_REGULAR, color: L_TEXT, margin: '0 0 12px', letterSpacing: '0.01em', lineHeight: 1.3 },
-  valueCardBody: { fontSize: '13px', fontWeight: FW_LIGHT, lineHeight: 1.75, color: 'rgba(26,26,26,0.58)', margin: 0 },
+  valueCardHeadline: { fontFamily: FONT_DISPLAY, fontSize: '20px', fontWeight: FW_REGULAR, color: PUB_TEXT, margin: '0 0 12px', letterSpacing: '0.01em', lineHeight: 1.3 },
+  valueCardBody: { fontSize: '13px', fontWeight: FW_LIGHT, lineHeight: 1.75, color: PUB_TEXT_SUBTLE, margin: 0 },
 
   trustBlock: { maxWidth: '1100px', margin: '0 auto' },
-  trustEyebrow: { fontSize: '11px', fontWeight: FW_MEDIUM, textTransform: 'uppercase', letterSpacing: '0.18em', color: SITE_ACCENT, margin: '0 0 16px' },
+  trustEyebrow: { fontSize: '11px', fontWeight: FW_MEDIUM, textTransform: 'uppercase', letterSpacing: '0.18em', color: PUB_ACCENT, margin: '0 0 16px' },
   trustTitle: {
     fontFamily: FONT_DISPLAY, fontSize: 'clamp(28px, 3.5vw, 44px)',
-    fontWeight: FW_LIGHT, color: L_TEXT, margin: '0 0 16px', lineHeight: 1.2, letterSpacing: '0.01em',
+    fontWeight: FW_LIGHT, color: PUB_TEXT, margin: '0 0 16px', lineHeight: 1.2, letterSpacing: '0.01em',
   },
-  trustSubtitle: { fontSize: '15px', fontWeight: FW_LIGHT, lineHeight: 1.75, color: 'rgba(26,26,26,0.55)', maxWidth: '520px', margin: '0 0 48px' },
+  trustSubtitle: { fontSize: '15px', fontWeight: FW_LIGHT, lineHeight: 1.75, color: PUB_BODY_MUTED, maxWidth: '520px', margin: '0 0 48px' },
   trustGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '16px' },
   trustCard: {
-    background: 'rgba(255,255,255,0.22)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
-    border: '1px solid rgba(255,255,255,0.40)', borderRadius: '16px', padding: '28px',
+    background: PUB_CARD_BG_SM, backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
+    border: `1px solid ${PUB_CARD_BORDER_SM}`, borderRadius: '16px', padding: '28px',
   },
-  trustIcon: { display: 'block', color: 'rgba(26,26,26,0.4)', marginBottom: '16px' },
-  trustHeading: { fontSize: '14px', fontWeight: FW_MEDIUM, color: L_TEXT, margin: '0 0 10px', lineHeight: 1.4 },
-  trustBody: { fontSize: '13px', fontWeight: FW_LIGHT, lineHeight: 1.75, color: 'rgba(26,26,26,0.58)', margin: 0 },
+  trustIcon: { display: 'block', color: PUB_TEXT_SUBTLE, marginBottom: '16px' },
+  trustHeading: { fontSize: '14px', fontWeight: FW_MEDIUM, color: PUB_TEXT, margin: '0 0 10px', lineHeight: 1.4 },
+  trustBody: { fontSize: '13px', fontWeight: FW_LIGHT, lineHeight: 1.75, color: PUB_TEXT_SUBTLE, margin: 0 },
 };

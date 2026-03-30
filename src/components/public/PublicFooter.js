@@ -1,11 +1,12 @@
 // src/components/public/PublicFooter.js
-// Shared footer for all public-facing pages (Login, ProductPage).
+// Shared footer for all public-facing pages.
 
 import { Link } from 'react-router-dom';
 import {
   FONT_DISPLAY, FONT_BODY,
   FW_LIGHT, FW_MEDIUM, FW_SEMIBOLD,
-} from '../../utils/hqConstants';
+  PUB_TEXT_SUBTLE, PUB_DIVIDER,
+} from '../../utils/publicConstants';
 
 export default function PublicFooter() {
   return (
@@ -27,7 +28,7 @@ export default function PublicFooter() {
 
 const s = {
   footer: {
-    borderTop: '1px solid rgba(0,0,0,0.07)',
+    borderTop: `1px solid ${PUB_DIVIDER}`,
     padding: '36px 48px',
     display: 'flex', alignItems: 'center',
     justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px',
@@ -37,18 +38,18 @@ const s = {
   logo: {
     fontFamily: FONT_DISPLAY,
     fontSize: '20px', fontWeight: FW_SEMIBOLD,
-    color: 'rgba(26,26,26,0.35)', letterSpacing: '0.06em',
+    color: PUB_TEXT_SUBTLE, letterSpacing: '0.06em',
   },
   tagline: {
     fontFamily: FONT_BODY,
     fontSize: '13px', fontWeight: FW_LIGHT,
-    color: 'rgba(26,26,26,0.35)', margin: 0,
+    color: PUB_TEXT_SUBTLE, margin: 0,
   },
   right: { display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' },
   meta: {
     fontFamily: FONT_BODY,
     fontSize: '11px', fontWeight: FW_MEDIUM,
     textTransform: 'uppercase', letterSpacing: '0.1em',
-    color: 'rgba(26,26,26,0.25)', margin: 0,
+    color: 'rgba(26,26,26,0.25)', margin: 0, // intentionally lighter than PUB_TEXT_SUBTLE
   },
 };

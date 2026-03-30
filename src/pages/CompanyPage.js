@@ -2,12 +2,12 @@
 // Public-facing company page at /company.
 
 import {
-  SITE_ACCENT,
-  L_BG, L_TEXT,
+  PUB_BG, PUB_TEXT, PUB_ACCENT, PUB_BODY_MUTED, PUB_DIVIDER,
+  PUB_MESH_INDIGO, PUB_MESH_TEAL, PUB_FONTS_AND_KEYFRAMES,
   FONT_BODY,
   FW_LIGHT, FW_MEDIUM,
   MOBILE_BREAKPOINT,
-} from '../utils/hqConstants';
+} from '../utils/publicConstants';
 import useWindowWidth from '../hooks/useWindowWidth';
 import PublicHeader from '../components/public/PublicHeader';
 import PublicFooter from '../components/public/PublicFooter';
@@ -18,21 +18,7 @@ export default function CompanyPage() {
 
   return (
     <div style={s.root}>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap');
-        @keyframes mesh1 {
-          0%,100% { transform:translate(0,0) scale(1); }
-          25%      { transform:translate(60px,-80px) scale(1.08); }
-          50%      { transform:translate(-40px,60px) scale(0.95); }
-          75%      { transform:translate(80px,40px) scale(1.05); }
-        }
-        @keyframes mesh2 {
-          0%,100% { transform:translate(0,0) scale(1); }
-          25%      { transform:translate(-70px,50px) scale(1.06); }
-          50%      { transform:translate(50px,-70px) scale(0.97); }
-          75%      { transform:translate(-30px,-30px) scale(1.04); }
-        }
-      `}</style>
+      <style>{PUB_FONTS_AND_KEYFRAMES}</style>
 
       <div style={s.meshWrap}>
         <div style={s.mesh1} />
@@ -43,7 +29,6 @@ export default function CompanyPage() {
 
       <div style={{ ...s.page, padding: isMobile ? '64px 24px' : '100px 40px' }}>
 
-        {/* Why We Built This */}
         <section style={s.section}>
           <p style={s.eyebrow}>Why We Built This</p>
           <p style={s.bodyText}>
@@ -58,7 +43,7 @@ export default function CompanyPage() {
             workflow — and advisors who spend more time managing their tools than managing
             their clients.
           </p>
-          <p style={{ ...s.bodyText, ...s.closing }}>
+          <p style={{ ...s.bodyText, color: PUB_TEXT, margin: 0 }}>
             Advisors who compete on the quality of that relationship deserve better.
             Allez HQ was built to deliver it.
           </p>
@@ -66,7 +51,6 @@ export default function CompanyPage() {
 
         <div style={s.divider} />
 
-        {/* Who We Are */}
         <section style={s.section}>
           <p style={s.eyebrow}>Who We Are</p>
           <p style={s.bodyText}>
@@ -90,43 +74,32 @@ export default function CompanyPage() {
 
 const s = {
   root: {
-    fontFamily: FONT_BODY, position: 'relative', background: L_BG,
+    fontFamily: FONT_BODY, position: 'relative', background: PUB_BG,
     overflowX: 'hidden', minHeight: '100vh', display: 'flex', flexDirection: 'column',
   },
-
   meshWrap: { position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none' },
   mesh1: {
     position: 'absolute', width: '700px', height: '700px', borderRadius: '50%',
-    background: 'radial-gradient(circle, rgba(99,102,241,0.30) 0%, rgba(99,102,241,0.10) 50%, transparent 70%)',
-    top: '-200px', left: '-200px', filter: 'blur(50px)', animation: 'mesh1 24s ease-in-out infinite',
+    background: PUB_MESH_INDIGO, top: '-200px', left: '-200px',
+    filter: 'blur(50px)', animation: 'mesh1 24s ease-in-out infinite',
   },
   mesh2: {
     position: 'absolute', width: '600px', height: '600px', borderRadius: '50%',
-    background: 'radial-gradient(circle, rgba(20,184,166,0.25) 0%, rgba(20,184,166,0.08) 50%, transparent 70%)',
-    top: '200px', right: '-150px', filter: 'blur(50px)', animation: 'mesh2 28s ease-in-out infinite',
+    background: PUB_MESH_TEAL, top: '200px', right: '-150px',
+    filter: 'blur(50px)', animation: 'mesh2 28s ease-in-out infinite',
   },
-
   page: {
     flex: 1, position: 'relative', zIndex: 1,
     maxWidth: '800px', margin: '0 auto', width: '100%',
   },
-
   section: { paddingBottom: '80px' },
-
   eyebrow: {
     fontSize: '11px', fontWeight: FW_MEDIUM, textTransform: 'uppercase',
-    letterSpacing: '0.18em', color: SITE_ACCENT, margin: '0 0 20px',
+    letterSpacing: '0.18em', color: PUB_ACCENT, margin: '0 0 20px',
   },
   bodyText: {
     fontSize: '16px', fontWeight: FW_LIGHT, lineHeight: 1.9,
-    color: 'rgba(26,26,26,0.65)', margin: '0 0 24px',
+    color: PUB_BODY_MUTED, margin: '0 0 24px',
   },
-  closing: {
-    color: L_TEXT, margin: 0,
-  },
-
-  divider: {
-    height: '1px', background: 'rgba(0,0,0,0.07)',
-    margin: '0 0 80px',
-  },
+  divider: { height: '1px', background: PUB_DIVIDER, margin: '0 0 80px' },
 };

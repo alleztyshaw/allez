@@ -1,20 +1,18 @@
 // src/components/public/PublicHeader.js
 // Shared header for all public-facing pages.
-// Fully static — no auth context, no props, no conditional rendering.
-// Sign In always links to /?signin=true so Login.js auto-opens the card.
 
 import { Link } from 'react-router-dom';
 import {
   FONT_DISPLAY, FONT_BODY,
-  L_TEXT_MUTED,
+  PUB_TEXT_MUTED,
   FW_LIGHT, FW_MEDIUM,
-} from '../../utils/hqConstants';
+} from '../../utils/publicConstants';
 
 export default function PublicHeader() {
   return (
     <header style={s.header}>
       <style>{`
-        .pub-logo:hover   { opacity: 0.7 !important; }
+        .pub-logo:hover     { opacity: 0.7 !important; }
         .pub-nav-link:hover { opacity: 0.7 !important; }
       `}</style>
 
@@ -23,9 +21,10 @@ export default function PublicHeader() {
       </Link>
 
       <nav style={s.nav}>
-        <Link to="/product" className="pub-nav-link" style={s.navLink}>Product</Link>
-        <Link to="/company" className="pub-nav-link" style={s.navLink}>Company</Link>
-        <Link to="/sign-in" className="pub-nav-link" style={s.navLink}>Sign In</Link>
+        <Link to="/product"     className="pub-nav-link" style={s.navLink}>Product</Link>
+        <Link to="/company"     className="pub-nav-link" style={s.navLink}>Company</Link>
+        <Link to="/get-started" className="pub-nav-link" style={s.navLink}>Get Started</Link>
+        <Link to="/sign-in"     className="pub-nav-link" style={s.navLink}>Sign In</Link>
       </nav>
     </header>
   );
@@ -38,21 +37,13 @@ const s = {
   },
   logoLink: { textDecoration: 'none', transition: 'opacity 0.2s' },
   logo: {
-    fontFamily: FONT_DISPLAY,
-    fontSize: '22px',
-    fontWeight: FW_LIGHT,
-    color: L_TEXT_MUTED,
-    letterSpacing: '0.06em',
+    fontFamily: FONT_DISPLAY, fontSize: '22px', fontWeight: FW_LIGHT,
+    color: PUB_TEXT_MUTED, letterSpacing: '0.06em',
   },
   nav: { display: 'flex', alignItems: 'center', gap: '36px' },
   navLink: {
-    fontFamily: FONT_BODY,
-    fontSize: '12px',
-    fontWeight: FW_MEDIUM,
-    color: L_TEXT_MUTED,
-    textDecoration: 'none',
-    textTransform: 'uppercase',
-    letterSpacing: '0.1em',
-    transition: 'opacity 0.2s',
+    fontFamily: FONT_BODY, fontSize: '12px', fontWeight: FW_MEDIUM,
+    color: PUB_TEXT_MUTED, textDecoration: 'none', textTransform: 'uppercase',
+    letterSpacing: '0.1em', transition: 'opacity 0.2s',
   },
 };

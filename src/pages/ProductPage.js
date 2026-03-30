@@ -4,14 +4,22 @@
 
 import { Link } from 'react-router-dom';
 import {
-  ACCENT, ACCENT_MUTED, ACCENT_BORDER,
-  SITE_ACCENT,
-  L_BG, L_TEXT, L_TEXT_MUTED, L_TEXT_SUBTLE,
-  COLOR_ERROR, COLOR_WARNING, COLOR_INFO,
+  PUB_APP_ACCENT        as ACCENT,
+  PUB_APP_ACCENT_MUTED  as ACCENT_MUTED,
+  PUB_APP_ACCENT_BORDER as ACCENT_BORDER,
+  PUB_ACCENT            as SITE_ACCENT,
+  PUB_BG                as L_BG,
+  PUB_TEXT              as L_TEXT,
+  PUB_TEXT_MUTED        as L_TEXT_MUTED,
+  PUB_TEXT_SUBTLE       as L_TEXT_SUBTLE,
+  PUB_COLOR_ERROR       as COLOR_ERROR,
+  PUB_COLOR_WARNING     as COLOR_WARNING,
+  PUB_COLOR_INFO        as COLOR_INFO,
+  PUB_MESH_INDIGO, PUB_MESH_TEAL, PUB_FONTS_AND_KEYFRAMES,
   FONT_DISPLAY, FONT_BODY,
   FW_LIGHT, FW_REGULAR, FW_MEDIUM, FW_SEMIBOLD,
   MOBILE_BREAKPOINT,
-} from '../utils/hqConstants';
+} from '../utils/publicConstants';
 import useWindowWidth from '../hooks/useWindowWidth';
 import PublicHeader from '../components/public/PublicHeader';
 import PublicFooter from '../components/public/PublicFooter';
@@ -457,19 +465,7 @@ export default function ProductPage() {
   return (
     <div style={s.root}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap');
-        @keyframes mesh1 {
-          0%,100% { transform:translate(0,0) scale(1); }
-          25%      { transform:translate(60px,-80px) scale(1.08); }
-          50%      { transform:translate(-40px,60px) scale(0.95); }
-          75%      { transform:translate(80px,40px) scale(1.05); }
-        }
-        @keyframes mesh2 {
-          0%,100% { transform:translate(0,0) scale(1); }
-          25%      { transform:translate(-70px,50px) scale(1.06); }
-          50%      { transform:translate(50px,-70px) scale(0.97); }
-          75%      { transform:translate(-30px,-30px) scale(1.04); }
-        }
+        ${PUB_FONTS_AND_KEYFRAMES}
         .feature-row:not(:last-child) { border-bottom:1px solid rgba(0,0,0,0.07); }
         .feature-name-link:hover { opacity: 0.7; }
       `}</style>
@@ -568,12 +564,12 @@ const s = {
   meshWrap: { position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none' },
   mesh1: {
     position: 'absolute', width: '700px', height: '700px', borderRadius: '50%',
-    background: 'radial-gradient(circle, rgba(99,102,241,0.30) 0%, rgba(99,102,241,0.10) 50%, transparent 70%)',
+    background: PUB_MESH_INDIGO,
     top: '-200px', left: '-200px', filter: 'blur(50px)', animation: 'mesh1 24s ease-in-out infinite',
   },
   mesh2: {
     position: 'absolute', width: '600px', height: '600px', borderRadius: '50%',
-    background: 'radial-gradient(circle, rgba(20,184,166,0.25) 0%, rgba(20,184,166,0.08) 50%, transparent 70%)',
+    background: PUB_MESH_TEAL,
     top: '200px', right: '-150px', filter: 'blur(50px)', animation: 'mesh2 28s ease-in-out infinite',
   },
 
