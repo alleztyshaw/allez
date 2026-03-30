@@ -25,7 +25,7 @@ export default function PublicHeader() {
       <nav style={s.nav}>
         <Link to="/product" className="pub-nav-link" style={s.navLink}>Product</Link>
         <Link to="/company" className="pub-nav-link" style={s.navLink}>Company</Link>
-        <Link to="/?signin=true" className="pub-nav-link" style={s.navLink}>Sign In</Link>
+        <Link to="/sign-in" className="pub-nav-link" style={s.navLink}>Sign In</Link>
       </nav>
     </header>
   );

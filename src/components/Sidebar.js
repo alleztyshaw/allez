@@ -162,7 +162,6 @@ export default function Sidebar() {
       width:          '100%', whiteSpace: 'nowrap',
       transition:     'color 0.15s',
     },
-    // Dev mode badge
     devBadge: {
       display:     'flex', alignItems: 'center', gap: '6px',
       margin:      '8px 20px 0',
@@ -183,7 +182,6 @@ export default function Sidebar() {
       color: isDevMode ? SITE_ACCENT : t.TEXT_SUBTLE,
       fontFamily: FONT_BODY, letterSpacing: '0.04em',
     },
-    // "Viewing Demo" indicator — transparent background, X to exit
     viewingDemoBadge: {
       display:      'flex', alignItems: 'center', gap: '6px',
       margin:       '6px 20px 0',
@@ -208,7 +206,6 @@ export default function Sidebar() {
       fontSize: '14px', color: t.TEXT_SUBTLE,
       fontFamily: FONT_BODY, flexShrink: 0,
     },
-    // Switch Role badge — transparent background
     demoBadge: {
       display:     'flex', alignItems: 'center', gap: '6px',
       margin:      '6px 20px 0',
@@ -236,7 +233,6 @@ export default function Sidebar() {
       fontSize: '14px', color: t.TEXT_SUBTLE,
       fontFamily: FONT_BODY, flexShrink: 0,
     },
-    // "Go to Demo" shortcut link
     goDemoButton: {
       display:        'block', padding: '8px 20px',
       fontSize:       '13px', fontWeight: FW_REGULAR,
@@ -293,7 +289,6 @@ export default function Sidebar() {
         </nav>
 
         <div style={s.sidebarBottom}>
-          <Link to="/contact" style={s.bottomLink}>Contact</Link>
           <button style={s.bottomLink} onClick={handleLogout}>Log Out</button>
 
           {/* Dev mode — platform admin only */}

@@ -1,4 +1,7 @@
-import { useState, useEffect } from 'react';
+// src/pages/HomePage.js
+// Public-facing home page at /.
+// Auth is handled entirely at /sign-in — no modal, no auth logic here.
+
 import {
   SITE_ACCENT,
   L_BG, L_TEXT, L_TEXT_MUTED,
@@ -6,61 +9,13 @@ import {
   FW_LIGHT, FW_REGULAR, FW_MEDIUM, FW_SEMIBOLD,
   MOBILE_BREAKPOINT,
 } from '../utils/hqConstants';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { supabase } from '../supabaseClient';
 import useWindowWidth from '../hooks/useWindowWidth';
 import PublicHeader from '../components/public/PublicHeader';
 import PublicFooter from '../components/public/PublicFooter';
 
-export default function Login() {
-  const navigate = useNavigate();
-  const location = useLocation();
+export default function HomePage() {
   const windowWidth = useWindowWidth();
   const isMobile = windowWidth < MOBILE_BREAKPOINT;
-  const wasIdled   = new URLSearchParams(location.search).get('reason') === 'idle';
-  const [showLogin, setShowLogin] = useState(false);
-  const [email,    setEmail]    = useState('');
-  const [password, setPassword] = useState('');
-  const [error,    setError]    = useState('');
-  const [loading,  setLoading]  = useState(false);
-  const [showForgot,      setShowForgot]      = useState(false);
-  const [forgotEmail,     setForgotEmail]     = useState('');
-  const [forgotSent,      setForgotSent]      = useState(false);
-  const [forgotLoading,   setForgotLoading]   = useState(false);
-
-  // Open the login card whenever ?signin=true appears in the URL —
-  // including when the user is already on / and clicks Sign In
-  useEffect(() => {
-    if (new URLSearchParams(location.search).get('signin') === 'true') {
-      setShowLogin(true);
-    }
-  }, [location.search]);
-
-  async function handleForgot(e) {
-    e.preventDefault();
-    setForgotLoading(true);
-    await fetch('/api/reset-password', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: forgotEmail.trim().toLowerCase() }),
-    });
-    // Always show success — don't leak whether email exists
-    setForgotSent(true);
-    setForgotLoading(false);
-  }
-
-  async function handleLogin(e) {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) {
-      setError(error.message);
-      setLoading(false);
-    } else {
-      navigate('/hq/brief');
-    }
-  }
 
   return (
     <div style={s.root}>
@@ -88,10 +43,6 @@ export default function Login() {
           40%      { transform:translate(-80px,30px) scale(1.05); }
           80%      { transform:translate(40px,-60px) scale(0.98); }
         }
-        @keyframes fadeDown {
-          from { opacity:0; transform:translateY(-10px); }
-          to   { opacity:1; transform:translateY(0); }
-        }
         @keyframes fadeIn {
           from { opacity:0; transform:translateY(20px); }
           to   { opacity:1; transform:translateY(0); }
@@ -99,11 +50,6 @@ export default function Login() {
         @keyframes scrollBounce {
           0%,100% { transform:translateY(0); opacity:0.5; }
           50%      { transform:translateY(6px); opacity:1; }
-        }
-        .submit-btn:hover  { filter:brightness(1.06); }
-        .login-input:focus {
-          border-color:#6366f1 !important; outline:none;
-          box-shadow:0 0 0 3px rgba(99,102,241,0.12);
         }
         .value-card:hover {
           background:rgba(255,255,255,0.20) !important;
@@ -121,75 +67,6 @@ export default function Login() {
       </div>
 
       <PublicHeader />
-
-      {wasIdled && <div style={s.idleNotice}>You were signed out due to inactivity. Please sign in again.</div>}
-
-      {/* Login card */}
-      {showLogin && (
-        <div style={{ ...s.cardWrapper, right: isMobile ? '12px' : '48px', left: isMobile ? '12px' : 'auto' }}>
-          <div style={s.card}>
-            <button style={s.closeBtn} onClick={() => { setShowLogin(false); setError(''); setShowForgot(false); setForgotSent(false); }}>✕</button>
-
-            {!showForgot ? (
-              <>
-                <p style={s.cardEyebrow}>Welcome back</p>
-                <h2 style={s.cardTitle}>Sign in</h2>
-                <form onSubmit={handleLogin} style={s.form}>
-                  <div style={s.fieldGroup}>
-                    <label style={s.fieldLabel}>Email</label>
-                    <input className="login-input" type="email" value={email}
-                      onChange={e => setEmail(e.target.value)}
-                      placeholder="you@example.com" required style={s.input} />
-                  </div>
-                  <div style={s.fieldGroup}>
-                    <label style={s.fieldLabel}>Password</label>
-                    <input className="login-input" type="password" value={password}
-                      onChange={e => setPassword(e.target.value)}
-                      placeholder="••••••••" required style={s.input} />
-                  </div>
-                  {error && <p style={s.errorText}>{error}</p>}
-                  <button type="submit" className="submit-btn" disabled={loading} style={s.submitBtn}>
-                    {loading ? 'Signing in…' : 'Sign In →'}
-                  </button>
-                </form>
-                <button style={s.forgotLink} onClick={() => { setShowForgot(true); setForgotEmail(email); setError(''); }}>
-                  Forgot password?
-                </button>
-              </>
-            ) : forgotSent ? (
-              <>
-                <p style={s.cardEyebrow}>Check your inbox</p>
-                <h2 style={s.cardTitle}>Email sent</h2>
-                <p style={{ fontSize: '13px', fontWeight: FW_LIGHT, color: L_TEXT_MUTED, lineHeight: 1.65, margin: '0 0 20px' }}>
-                  If an account exists for that email, you'll receive a reset link shortly.
-                </p>
-                <button style={s.forgotLink} onClick={() => { setShowForgot(false); setForgotSent(false); }}>
-                  ← Back to sign in
-                </button>
-              </>
-            ) : (
-              <>
-                <p style={s.cardEyebrow}>Forgot password</p>
-                <h2 style={s.cardTitle}>Reset</h2>
-                <form onSubmit={handleForgot} style={s.form}>
-                  <div style={s.fieldGroup}>
-                    <label style={s.fieldLabel}>Email</label>
-                    <input className="login-input" type="email" value={forgotEmail}
-                      onChange={e => setForgotEmail(e.target.value)}
-                      placeholder="you@example.com" required style={s.input} />
-                  </div>
-                  <button type="submit" className="submit-btn" disabled={forgotLoading} style={s.submitBtn}>
-                    {forgotLoading ? 'Sending…' : 'Send Reset Link →'}
-                  </button>
-                </form>
-                <button style={s.forgotLink} onClick={() => setShowForgot(false)}>
-                  ← Back to sign in
-                </button>
-              </>
-            )}
-          </div>
-        </div>
-      )}
 
       {/* Hero */}
       <main style={{ ...s.hero, padding: isMobile ? '0 24px 80px' : '0 40px 100px' }}>
@@ -346,50 +223,11 @@ const s = {
     bottom: '-150px', right: '0%', filter: 'blur(45px)', animation: 'mesh4 22s ease-in-out infinite',
   },
 
-  idleNotice: {
-    position: 'fixed', bottom: '32px', left: '50%', transform: 'translateX(-50%)',
-    backgroundColor: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)',
-    borderRadius: '8px', padding: '12px 20px', fontSize: '13px',
-    color: 'rgba(255,255,255,0.6)', fontFamily: FONT_BODY, whiteSpace: 'nowrap', zIndex: 100,
-  },
-
-  cardWrapper: { position: 'fixed', top: '72px', right: '48px', zIndex: 100, animation: 'fadeDown 0.22s ease both' },
-  card: {
-    background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(8px)',
-    WebkitBackdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.2)',
-    borderRadius: '20px', padding: '36px 40px', width: '320px',
-    boxShadow: '0 10px 25px rgba(0,0,0,0.15)', position: 'relative',
-  },
-  closeBtn: { position: 'absolute', top: '16px', right: '18px', background: 'none', border: 'none', fontSize: '13px', color: L_TEXT_MUTED, cursor: 'pointer' },
-  cardEyebrow: { fontSize: '11px', fontWeight: FW_MEDIUM, textTransform: 'uppercase', letterSpacing: '0.12em', color: SITE_ACCENT, margin: '0 0 6px' },
-  cardTitle: { fontFamily: FONT_DISPLAY, fontSize: '26px', fontWeight: FW_SEMIBOLD, color: L_TEXT, margin: '0 0 28px' },
-  form: { display: 'flex', flexDirection: 'column', gap: '14px' },
-  fieldGroup: { display: 'flex', flexDirection: 'column', gap: '5px' },
-  fieldLabel: { fontSize: '11px', fontWeight: FW_MEDIUM, color: L_TEXT_MUTED, letterSpacing: '0.05em', textTransform: 'uppercase' },
-  input: {
-    border: '1px solid rgba(0,0,0,0.12)', borderRadius: '10px', padding: '10px 14px',
-    fontSize: '14px', color: L_TEXT, background: 'rgba(255,255,255,0.6)',
-    fontFamily: FONT_BODY, transition: 'border-color 0.2s, box-shadow 0.2s',
-  },
-  errorText: { fontSize: '12px', color: '#e53e3e', margin: 0 },
-  forgotLink: {
-    background: 'none', border: 'none', padding: '10px 0 0',
-    fontSize: '12px', color: L_TEXT_MUTED, cursor: 'pointer',
-    fontFamily: FONT_BODY, textDecoration: 'underline',
-    textUnderlineOffset: '2px', display: 'block',
-  },
-  submitBtn: {
-    background: 'linear-gradient(135deg, #6366f1 0%, #ec4899 100%)',
-    color: 'white', border: 'none', borderRadius: '10px', padding: '12px',
-    fontSize: '14px', fontWeight: FW_SEMIBOLD, cursor: 'pointer',
-    fontFamily: FONT_BODY, letterSpacing: '0.03em', transition: 'filter 0.2s', marginTop: '4px',
-  },
-
   hero: {
     height: 'calc(100dvh - 64px)', minHeight: 'calc(100svh - 64px)',
     display: 'flex', flexDirection: 'column',
     justifyContent: 'space-between', alignItems: 'center', textAlign: 'center',
-    padding: '0 40px 100px', position: 'relative', zIndex: 1,
+    position: 'relative', zIndex: 1,
   },
   eyebrow: { fontSize: '11px', fontWeight: FW_MEDIUM, textTransform: 'uppercase', letterSpacing: '0.18em', color: 'rgba(26,26,26,0.45)', margin: '0 0 20px' },
   tagline: {
@@ -405,7 +243,7 @@ const s = {
     WebkitBackdropFilter: 'blur(12px)', borderTop: '1px solid rgba(0,0,0,0.04)',
   },
 
-  definitionBlock: { maxWidth: '1100px', margin: '0 auto', padding: '100px 40px 80px' },
+  definitionBlock: { maxWidth: '1100px', margin: '0 auto' },
   phonetic: { display: 'flex', alignItems: 'baseline', flexWrap: 'wrap', marginBottom: '8px' },
   word: { fontFamily: FONT_DISPLAY, fontSize: '52px', fontWeight: FW_LIGHT, color: L_TEXT, letterSpacing: '0.02em' },
   pronunciation: { fontFamily: FONT_BODY, fontSize: '16px', fontWeight: FW_LIGHT, color: 'rgba(26,26,26,0.45)', letterSpacing: '0.04em' },
@@ -415,7 +253,7 @@ const s = {
 
   divider: { height: '1px', background: 'rgba(0,0,0,0.07)', margin: '0 40px' },
 
-  valueBlock: { maxWidth: '1100px', margin: '0 auto', padding: '80px 40px 100px' },
+  valueBlock: { maxWidth: '1100px', margin: '0 auto' },
   valueEyebrow: { fontSize: '11px', fontWeight: FW_MEDIUM, textTransform: 'uppercase', letterSpacing: '0.18em', color: SITE_ACCENT, margin: '0 0 16px' },
   valueTitle: {
     fontFamily: FONT_DISPLAY, fontSize: 'clamp(28px, 3.5vw, 44px)',
@@ -431,8 +269,7 @@ const s = {
   valueCardHeadline: { fontFamily: FONT_DISPLAY, fontSize: '20px', fontWeight: FW_REGULAR, color: L_TEXT, margin: '0 0 12px', letterSpacing: '0.01em', lineHeight: 1.3 },
   valueCardBody: { fontSize: '13px', fontWeight: FW_LIGHT, lineHeight: 1.75, color: 'rgba(26,26,26,0.58)', margin: 0 },
 
-  // Trust section
-  trustBlock: { maxWidth: '1100px', margin: '0 auto', padding: '80px 40px 100px' },
+  trustBlock: { maxWidth: '1100px', margin: '0 auto' },
   trustEyebrow: { fontSize: '11px', fontWeight: FW_MEDIUM, textTransform: 'uppercase', letterSpacing: '0.18em', color: SITE_ACCENT, margin: '0 0 16px' },
   trustTitle: {
     fontFamily: FONT_DISPLAY, fontSize: 'clamp(28px, 3.5vw, 44px)',

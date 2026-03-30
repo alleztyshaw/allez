@@ -2,7 +2,8 @@ import { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { OrgProvider } from './context/OrgContext';
 import { ThemeProvider } from './context/ThemeContext';
-import Login from './pages/Login';
+import HomePage from './pages/HomePage';
+import SignIn from './pages/SignIn';
 import ProductPage from './pages/ProductPage';
 import PlaceholderFeaturePage from './pages/PlaceholderFeaturePage';
 import CompanyPage from './pages/CompanyPage';
@@ -50,14 +51,15 @@ function App() {
           <SearchOverlay />
           <div className="App">
             <Routes>
-              <Route path="/"                element={<Login />} />
+              <Route path="/"                element={<HomePage />} />
+              <Route path="/sign-in"         element={<SignIn />} />
               <Route path="/product"         element={<ProductPage />} />
               <Route path="/product/:feature" element={<PlaceholderFeaturePage />} />
               <Route path="/company"          element={<CompanyPage />} />
               <Route path="/reset-password"  element={<ResetPassword />} />
               <Route path="/signup"          element={<Signup />} />
               <Route path="/welcome"         element={<Welcome />} />
-              <Route path="/contact"         element={<ProtectedLayout><Contact      /></ProtectedLayout>} />
+              <Route path="/contact"         element={<Contact />} />
               <Route path="/hq"              element={<ProtectedLayout><HQ           /></ProtectedLayout>} />
               <Route path="/hq/brief"        element={<ProtectedLayout><DailyBrief   /></ProtectedLayout>} />
               <Route path="/hq/clients"      element={<ProtectedLayout><Clients      /></ProtectedLayout>} />
