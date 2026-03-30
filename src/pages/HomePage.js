@@ -1,12 +1,12 @@
 // src/pages/HomePage.js
 // Public-facing home page at /.
-// Auth is handled entirely at /sign-in — no modal, no auth logic here.
+// Marketing content only — auth lives at /sign-in.
 
 import {
   SITE_ACCENT,
-  L_BG, L_TEXT, L_TEXT_MUTED,
+  L_BG, L_TEXT,
   FONT_DISPLAY, FONT_BODY,
-  FW_LIGHT, FW_REGULAR, FW_MEDIUM, FW_SEMIBOLD,
+  FW_LIGHT, FW_REGULAR, FW_MEDIUM,
   MOBILE_BREAKPOINT,
 } from '../utils/hqConstants';
 import useWindowWidth from '../hooks/useWindowWidth';
@@ -58,7 +58,6 @@ export default function HomePage() {
         .scroll-cue { animation:scrollBounce 2s ease-in-out infinite; }
       `}</style>
 
-      {/* Orbs */}
       <div style={s.meshWrap}>
         <div style={{ ...s.mesh1, width: isMobile ? '500px' : '900px', height: isMobile ? '500px' : '900px' }} />
         <div style={{ ...s.mesh2, width: isMobile ? '400px' : '800px', height: isMobile ? '400px' : '800px' }} />
@@ -88,7 +87,6 @@ export default function HomePage() {
         </div>
       </main>
 
-      {/* Scroll content */}
       <section style={s.scrollSection}>
 
         {/* Definition */}
@@ -153,7 +151,7 @@ export default function HomePage() {
 
         <div style={s.divider} />
 
-        {/* Trust / compliance section */}
+        {/* Trust section */}
         <div style={{ ...s.trustBlock, padding: isMobile ? '48px 24px 64px' : '80px 40px 100px' }}>
           <p style={s.trustEyebrow}>Data security &amp; privacy</p>
           <h2 style={s.trustTitle}>Your client data stays yours.</h2>
@@ -163,22 +161,46 @@ export default function HomePage() {
           <div style={s.trustGrid}>
             {[
               {
-                icon: '🔒',
+                icon: (
+                  <svg width="33" height="33" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="4" y="10" width="14" height="10" rx="2" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
+                    <path d="M7.5 10V7a3.5 3.5 0 017 0v3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    <circle cx="11" cy="15" r="1.25" fill="currentColor"/>
+                  </svg>
+                ),
                 heading: 'Never used for model training.',
                 body: 'Your data is never shared with AI providers for training purposes. What happens in your practice stays in your practice.',
               },
               {
-                icon: '🪪',
+                icon: (
+                  <svg width="33" height="33" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="2" y="6" width="18" height="12" rx="2" stroke="currentColor" strokeWidth="1.5"/>
+                    <circle cx="8" cy="12" r="2.5" stroke="currentColor" strokeWidth="1.5"/>
+                    <path d="M13 10h4M13 12.5h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                  </svg>
+                ),
                 heading: 'Client PII is de-identified before AI processing.',
                 body: 'Before any transcript or note reaches an AI model, client names and identifying details are replaced with anonymized tokens. They are re-identified only when results are returned to you.',
               },
               {
-                icon: '🏛️',
+                icon: (
+                  <svg width="33" height="33" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="3" y="4" width="16" height="5" rx="1.5" stroke="currentColor" strokeWidth="1.5"/>
+                    <rect x="3" y="13" width="16" height="5" rx="1.5" stroke="currentColor" strokeWidth="1.5"/>
+                    <circle cx="16.5" cy="6.5" r="1" fill="currentColor"/>
+                    <circle cx="16.5" cy="15.5" r="1" fill="currentColor"/>
+                  </svg>
+                ),
                 heading: 'Enterprise-grade infrastructure.',
                 body: 'Allez HQ is built on Supabase, hosted on secure cloud infrastructure. Data is encrypted at rest and in transit. Row-level security ensures each firm\'s data is fully isolated.',
               },
               {
-                icon: '📋',
+                icon: (
+                  <svg width="33" height="33" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M11 2L3 5.5v5.5c0 5 3.5 8.5 8 10 4.5-1.5 8-5 8-10V5.5L11 2z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
+                    <path d="M7.5 11l2.5 2.5L15 8.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                ),
                 heading: 'You control your data.',
                 body: 'Client records can be soft-deleted at any time. Nothing is silently retained. Your data is yours — not a training asset, not a product.',
               },
@@ -203,12 +225,12 @@ const s = {
 
   meshWrap: { position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none' },
   mesh1: {
-    position: 'absolute', width: '900px', height: '900px', borderRadius: '50%',
+    position: 'absolute', borderRadius: '50%',
     background: 'radial-gradient(circle, rgba(99,102,241,0.55) 0%, rgba(99,102,241,0.20) 50%, transparent 70%)',
     top: '-350px', left: '-250px', filter: 'blur(40px)', animation: 'mesh1 20s ease-in-out infinite',
   },
   mesh2: {
-    position: 'absolute', width: '800px', height: '800px', borderRadius: '50%',
+    position: 'absolute', borderRadius: '50%',
     background: 'radial-gradient(circle, rgba(236,72,153,0.50) 0%, rgba(236,72,153,0.18) 50%, transparent 70%)',
     top: '-150px', right: '-250px', filter: 'blur(45px)', animation: 'mesh2 24s ease-in-out infinite',
   },
@@ -281,7 +303,7 @@ const s = {
     background: 'rgba(255,255,255,0.22)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
     border: '1px solid rgba(255,255,255,0.40)', borderRadius: '16px', padding: '28px',
   },
-  trustIcon: { fontSize: '22px', display: 'block', marginBottom: '14px' },
+  trustIcon: { display: 'block', color: 'rgba(26,26,26,0.4)', marginBottom: '16px' },
   trustHeading: { fontSize: '14px', fontWeight: FW_MEDIUM, color: L_TEXT, margin: '0 0 10px', lineHeight: 1.4 },
   trustBody: { fontSize: '13px', fontWeight: FW_LIGHT, lineHeight: 1.75, color: 'rgba(26,26,26,0.58)', margin: 0 },
 };
