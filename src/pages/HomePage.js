@@ -16,6 +16,7 @@ import {
 import useWindowWidth from '../hooks/useWindowWidth';
 import PublicHeader from '../components/public/PublicHeader';
 import PublicFooter from '../components/public/PublicFooter';
+import PublicHelmet from '../components/public/PublicHelmet';
 
 export default function HomePage() {
   const windowWidth = useWindowWidth();
@@ -47,6 +48,11 @@ export default function HomePage() {
         {!isMobile && <div style={s.mesh4} />}
       </div>
 
+      <PublicHelmet
+        title="Allez HQ — Practice Management for Modern Advisors"
+        description="The practice management platform that keeps you ahead of every client relationship. AI note-taking, CRM, compliance, and daily briefings — unified for wealth advisors."
+        path="/"
+      />
       <PublicHeader />
 
       {/* Hero */}

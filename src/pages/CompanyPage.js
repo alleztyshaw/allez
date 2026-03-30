@@ -11,6 +11,7 @@ import {
 import useWindowWidth from '../hooks/useWindowWidth';
 import PublicHeader from '../components/public/PublicHeader';
 import PublicFooter from '../components/public/PublicFooter';
+import PublicHelmet from '../components/public/PublicHelmet';
 
 export default function CompanyPage() {
   const windowWidth = useWindowWidth();
@@ -25,6 +26,11 @@ export default function CompanyPage() {
         <div style={s.mesh2} />
       </div>
 
+      <PublicHelmet
+        title="Company — Allez HQ"
+        description="Why we built Allez HQ and the experience behind it. Built by a team with direct experience in advisory practice operations, strategy consulting, and regulated technology."
+        path="/company"
+      />
       <PublicHeader />
 
       <div style={{ ...s.page, padding: isMobile ? '64px 24px' : '100px 40px' }}>

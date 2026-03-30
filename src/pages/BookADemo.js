@@ -16,6 +16,7 @@ import {
 import useWindowWidth from '../hooks/useWindowWidth';
 import PublicHeader from '../components/public/PublicHeader';
 import PublicFooter from '../components/public/PublicFooter';
+import PublicHelmet from '../components/public/PublicHelmet';
 
 const FEATURES = [
   'AI Note-taker',
@@ -88,7 +89,12 @@ export default function BookADemo() {
       <div style={s.root}>
         <style>{PUB_FONTS_AND_KEYFRAMES}</style>
         <div style={s.meshWrap}><div style={s.mesh1} /><div style={s.mesh2} /></div>
-        <PublicHeader />
+        <PublicHelmet
+        title="Book a Demo — Allez HQ"
+        description="Request a demo of Allez HQ with our team."
+        path="/book-a-demo" noindex
+      />
+      <PublicHeader />
         <div style={{ ...s.page, padding: isMobile ? '64px 24px 80px' : '100px 40px 120px' }}>
           <p style={s.eyebrow}>We'll be in touch</p>
           <p style={s.successTitle}>Request received.</p>

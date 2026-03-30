@@ -23,6 +23,7 @@ import {
 import useWindowWidth from '../hooks/useWindowWidth';
 import PublicHeader from '../components/public/PublicHeader';
 import PublicFooter from '../components/public/PublicFooter';
+import PublicHelmet from '../components/public/PublicHelmet';
 
 // ── Mini UI mockups ──────────────────────────────────────────────────────────
 
@@ -475,6 +476,11 @@ export default function ProductPage() {
         <div style={s.mesh2} />
       </div>
 
+      <PublicHelmet
+        title="The Platform — Allez HQ"
+        description="AI note-taking, CRM, pipeline management, compliance, and daily briefings — unified in one platform purpose-built for wealth advisors."
+        path="/product"
+      />
       <PublicHeader />
 
       {/* Hero */}

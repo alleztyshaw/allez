@@ -17,6 +17,7 @@ import {
 import useWindowWidth from '../hooks/useWindowWidth';
 import PublicHeader from '../components/public/PublicHeader';
 import PublicFooter from '../components/public/PublicFooter';
+import PublicHelmet from '../components/public/PublicHelmet';
 
 const APP_URL = process.env.REACT_APP_APP_URL || '/hq/brief';
 
@@ -77,6 +78,11 @@ export default function SignIn() {
         <div style={s.mesh2} />
       </div>
 
+      <PublicHelmet
+        title="Sign In — Allez HQ"
+        description="Sign in to your Allez HQ account."
+        path="/sign-in" noindex
+      />
       <PublicHeader />
 
       {wasIdled && (

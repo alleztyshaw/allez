@@ -12,6 +12,7 @@ import {
 import useWindowWidth from '../hooks/useWindowWidth';
 import PublicHeader from '../components/public/PublicHeader';
 import PublicFooter from '../components/public/PublicFooter';
+import PublicHelmet from '../components/public/PublicHelmet';
 
 const FEATURE_NAMES = {
   'notes':       'AI Note-taker',
@@ -39,6 +40,11 @@ export default function PlaceholderFeaturePage() {
         <div style={s.mesh2} />
       </div>
 
+      <PublicHelmet
+        title={`${featureName} — Allez HQ`}
+        description={`Learn how ${featureName} works in Allez HQ, the practice management platform for wealth advisors.`}
+        path={`/product/${feature}`}
+      />
       <PublicHeader />
 
       <div style={{ ...s.body, padding: isMobile ? '80px 24px 120px' : '120px 40px 160px' }}>

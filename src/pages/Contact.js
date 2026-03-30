@@ -12,6 +12,7 @@ import {
 import useWindowWidth from '../hooks/useWindowWidth';
 import PublicHeader from '../components/public/PublicHeader';
 import PublicFooter from '../components/public/PublicFooter';
+import PublicHelmet from '../components/public/PublicHelmet';
 
 function Contact() {
   const windowWidth = useWindowWidth();
@@ -26,6 +27,11 @@ function Contact() {
         <div style={s.mesh2} />
       </div>
 
+      <PublicHelmet
+        title="Contact — Allez HQ"
+        description="Get in touch with the Allez HQ team for product inquiries, early access, and partnership discussions."
+        path="/contact"
+      />
       <PublicHeader />
 
       <div style={{ ...s.page, padding: isMobile ? '64px 24px' : '100px 40px' }}>

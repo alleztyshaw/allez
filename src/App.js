@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { HelmetProvider } from 'react-helmet-async';
 import { OrgProvider } from './context/OrgContext';
 import { ThemeProvider } from './context/ThemeContext';
 import HomePage from './pages/HomePage';
@@ -46,6 +47,7 @@ function ScrollReset() {
 
 function App() {
   return (
+    <HelmetProvider>
     <ThemeProvider>
       <OrgProvider>
         <Router>
@@ -79,6 +81,7 @@ function App() {
         </Router>
       </OrgProvider>
     </ThemeProvider>
+    </HelmetProvider>
   );
 }
 

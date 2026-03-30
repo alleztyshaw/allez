@@ -16,6 +16,7 @@ import {
 import useWindowWidth from '../hooks/useWindowWidth';
 import PublicHeader from '../components/public/PublicHeader';
 import PublicFooter from '../components/public/PublicFooter';
+import PublicHelmet from '../components/public/PublicHelmet';
 
 // ── Comparison table ─────────────────────────────────────────────────────────
 
@@ -221,6 +222,11 @@ export default function GetStarted() {
         <div style={s.mesh2} />
       </div>
 
+      <PublicHelmet
+        title="Get Started — Allez HQ"
+        description="Explore Allez HQ pricing tiers and book a demo with our team. Currently in early access — we work directly with each new firm from day one."
+        path="/get-started"
+      />
       <PublicHeader />
 
       <div style={{ ...s.page, padding: isMobile ? '64px 24px 80px' : '100px 40px 120px' }}>
