@@ -7,7 +7,7 @@ import { Link, useLocation } from 'react-router-dom';
 import {
   FONT_DISPLAY, FONT_BODY,
   PUB_TEXT_MUTED, PUB_BG, PUB_TEXT, PUB_DIVIDER,
-  FW_LIGHT, FW_MEDIUM, FW_SEMIBOLD,
+  FW_LIGHT, FW_MEDIUM,
   MOBILE_BREAKPOINT,
 } from '../../utils/publicConstants';
 import useWindowWidth from '../../hooks/useWindowWidth';
