@@ -87,10 +87,10 @@ function Dot({ id, activeDot, onDotClick }) {
 // top values align the callout with each dot's row.
 
 const CALLOUT_STYLE = {
-  snapshot: { top: '40px',  right: '36px'  }, // right-side dot → floats left
-  schedule: { top: '84px',  left:  '8px'   }, // left-side dot  → floats right
-  prep:     { top: '136px', right: '36px'  }, // right-side dot → floats left
-  tasks:    { top: '284px', left:  '8px'   }, // left-side dot  → floats right
+  snapshot: { top: '40px',  right: '80px'  }, // right-side dot → floats left
+  schedule: { top: '100px',  left:  '190px'   }, // left-side dot  → floats right
+  prep:     { top: '155px', right: '160px'  }, // right-side dot → floats left
+  tasks:    { top: '350px', left:  '160px'   }, // left-side dot  → floats right
 };
 
 function DesktopCallout({ id, onClose }) {

@@ -258,13 +258,26 @@ function PipelineContent({ status, onDone, isMobile }) {
 
 export default function AnimatedPipelineMockup() {
   const [playKey, setPlayKey] = useState(0);
+  const loopCount = useRef(0);                          // ← tracks how many times we've looped
   const windowWidth = useWindowWidth();
   const isMobile = windowWidth < MOBILE_BREAKPOINT;
 
   return (
-    <AnimatedFeatureVisual onPlay={() => setPlayKey(k => k + 1)}>
+    <AnimatedFeatureVisual onPlay={() => { loopCount.current = 0; setPlayKey(k => k + 1); }}>
       {({ status, onDone }) => (
-        <PipelineContent key={playKey} status={status} onDone={onDone} isMobile={isMobile} />
+        <PipelineContent
+          key={playKey}
+          status={status}
+          onDone={() => {
+            loopCount.current += 1;                     // ← count this completion
+            if (loopCount.current < 3) {
+              setPlayKey(k => k + 1);                   // ← restart: remount PipelineContent
+            } else {
+              onDone();                                  // ← 3rd time: hand off to wrapper → fade out
+            }
+          }}
+          isMobile={isMobile}
+        />
       )}
     </AnimatedFeatureVisual>
   );

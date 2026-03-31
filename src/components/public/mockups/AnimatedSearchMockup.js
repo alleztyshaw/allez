@@ -206,14 +206,23 @@ function SearchContent({ status, onDone }) {
 
 export default function AnimatedSearchMockup() {
   const [playKey, setPlayKey] = useState(0);
+  const loopCount = useRef(0);  
   return (
-    <>
-      <style>{`@keyframes blink { 50% { opacity: 0; } }`}</style>
-      <AnimatedFeatureVisual onPlay={() => setPlayKey(k => k + 1)}>
-        {({ status, onDone }) => (
-          <SearchContent key={playKey} status={status} onDone={onDone} />
-        )}
-      </AnimatedFeatureVisual>
-    </>
+    <AnimatedFeatureVisual onPlay={() => { loopCount.current = 0; setPlayKey(k => k + 1); }}>
+      {({ status, onDone }) => (
+        <SearchContent
+          key={playKey}
+          status={status}
+          onDone={() => {
+            loopCount.current += 1;                     // ← count this completion
+            if (loopCount.current < 3) {
+              setPlayKey(k => k + 1);                   // ← restart: remount SearchContent
+            } else {
+              onDone();                                  // ← 3rd time: hand off to wrapper → fade out
+            }
+          }}
+        />
+      )}
+    </AnimatedFeatureVisual>
   );
 }
