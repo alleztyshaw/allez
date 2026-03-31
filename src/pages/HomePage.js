@@ -166,8 +166,8 @@ export default function HomePage() {
                     <path d="M13 10h4M13 12.5h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
                   </svg>
                 ),
-                heading: 'Client PII is de-identified before AI processing.',
-                body: 'Before any transcript or note reaches an AI model, client names and identifying details are replaced with anonymized tokens. They are re-identified only when results are returned to you.',
+                heading: 'No client data exposed to AI.',
+                body: 'Names, identifiers, and sensitive details are automatically stripped before transcription is analyzed — keeping your client relationships private and your practice protected.',
               },
               {
                 icon: (
@@ -178,8 +178,8 @@ export default function HomePage() {
                     <circle cx="16.5" cy="15.5" r="1" fill="currentColor"/>
                   </svg>
                 ),
-                heading: 'Enterprise-grade infrastructure.',
-                body: 'Allez HQ is built on enterprise-grade cloud infrastructure. Data is encrypted at rest and in transit. Firm-level data isolation ensures your client information is never commingled.',
+                heading: 'The infrastructure compliance expects.',
+                body: 'Every record is encrypted, every user\'s access is scoped by role, and your firm\'s data is never commingled — so you can answer auditor questions confidently.',
               },
               {
                 icon: (
@@ -276,7 +276,7 @@ const s = {
     transition: 'background 0.2s, transform 0.2s',
   },
   valueCardHeadline: { fontFamily: FONT_DISPLAY, fontSize: '20px', fontWeight: FW_REGULAR, color: PUB_TEXT, margin: '0 0 12px', letterSpacing: '0.01em', lineHeight: 1.3 },
-  valueCardBody: { fontSize: '13px', fontWeight: FW_LIGHT, lineHeight: 1.75, color: PUB_TEXT_SUBTLE, margin: 0 },
+  valueCardBody: { fontSize: '13px', fontWeight: FW_LIGHT, lineHeight: 1.75, color: PUB_BODY_MUTED, margin: 0 },
 
   trustBlock: { maxWidth: '1100px', margin: '0 auto' },
   trustEyebrow: { fontSize: '11px', fontWeight: FW_MEDIUM, textTransform: 'uppercase', letterSpacing: '0.18em', color: PUB_ACCENT, margin: '0 0 16px' },
@@ -292,5 +292,5 @@ const s = {
   },
   trustIcon: { display: 'block', color: PUB_TEXT_SUBTLE, marginBottom: '16px' },
   trustHeading: { fontSize: '14px', fontWeight: FW_MEDIUM, color: PUB_TEXT, margin: '0 0 10px', lineHeight: 1.4 },
-  trustBody: { fontSize: '13px', fontWeight: FW_LIGHT, lineHeight: 1.75, color: PUB_TEXT_SUBTLE, margin: 0 },
+  trustBody: { fontSize: '13px', fontWeight: FW_LIGHT, lineHeight: 1.75, color: PUB_BODY_MUTED, margin: 0 },
 };

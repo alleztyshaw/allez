@@ -60,6 +60,8 @@ function PipelineContent({ status, onDone, isMobile }) {
   const timeouts = useRef([]);
 
   useEffect(() => {
+    if (status !== 'playing') return;
+
     timeouts.current.forEach(clearTimeout);
     timeouts.current = [];
     setActiveStage(-1);
@@ -67,8 +69,6 @@ function PipelineContent({ status, onDone, isMobile }) {
     setCheckedSteps(0);
     setShowSteps(false);
     setShowActiveCard(false);
-
-    if (status !== 'playing') return;
 
     STAGES.slice(0, 4).forEach((_, i) => {
       const t = setTimeout(() => {

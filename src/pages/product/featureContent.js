@@ -4,7 +4,7 @@
 
 import AnimatedNotesMockup from '../../components/public/mockups/AnimatedNotesMockup';
 import AIPipelineDiagram from '../../components/public/mockups/AIPipelineDiagram';
-import AnimatedDailyBriefMockup from '../../components/public/mockups/AnimatedDailyBriefMockup';
+import AnnotatedDailyBriefMockup from '../../components/public/mockups/AnnotatedDailyBriefMockup';
 import ClientProfileMockup from '../../components/public/mockups/ClientProfileMockup';
 import AnimatedPipelineMockup from '../../components/public/mockups/AnimatedPipelineMockup';
 import ComplianceDiagram from '../../components/public/mockups/ComplianceDiagram';
@@ -65,7 +65,7 @@ export const FEATURES = {
       'Clients approaching their next review date',
       'Quick-add task flow without leaving the page',
     ],
-    visual: <AnimatedDailyBriefMockup />,
+    visual: <AnnotatedDailyBriefMockup />,
     metaDescription: "Allez Daily Brief surfaces your meetings, tasks, and client touchpoints every morning in one view — informed by the notes and history already in the platform. No assembly required.",
   },
   'clients': {
