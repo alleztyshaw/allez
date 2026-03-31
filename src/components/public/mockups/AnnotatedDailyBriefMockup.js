@@ -81,26 +81,25 @@ function Dot({ id, activeDot, onDotClick }) {
 // Rendered in a fixed-height zone below the mockup on mobile,
 // or as a floating absolute box on desktop anchored to the active dot row.
 
-const CALLOUT_ANCHORS = {
-  snapshot: { top: '48px'  },
-  schedule: { top: '96px'  },
-  prep:     { top: '148px' },
-  tasks:    { top: '294px' },
+// Desktop callout renders inside the MockWindow content area.
+// floatLeft dots (right side of mockup): callout opens leftward toward center.
+// floatRight dots (left side of mockup): callout opens rightward toward center.
+// top values align the callout with each dot's row.
+
+const CALLOUT_STYLE = {
+  snapshot: { top: '40px',  right: '36px'  }, // right-side dot → floats left
+  schedule: { top: '84px',  left:  '8px'   }, // left-side dot  → floats right
+  prep:     { top: '136px', right: '36px'  }, // right-side dot → floats left
+  tasks:    { top: '284px', left:  '8px'   }, // left-side dot  → floats right
 };
 
 function DesktopCallout({ id, onClose }) {
   const dot = DOT_DATA[id];
-  const anchor = CALLOUT_ANCHORS[id];
-  // snapshot and prep are on the right side → callout floats left
-  // schedule and tasks are on the left side → callout floats right
-  const floatLeft = id === 'snapshot' || id === 'prep';
+  const style = CALLOUT_STYLE[id];
   return (
     <div style={{
       position: 'absolute',
-      top: anchor.top,
-      ...(floatLeft
-        ? { right: '100%', marginRight: '12px' }
-        : { left: '100%', marginLeft: '12px' }),
+      ...style,
       width: '220px',
       background: 'rgba(255,255,255,0.75)',
       backdropFilter: 'blur(16px)',
@@ -111,7 +110,6 @@ function DesktopCallout({ id, onClose }) {
       boxShadow: '0 4px 24px rgba(0,0,0,0.09)',
       zIndex: 30,
       animation: 'calloutIn 0.18s ease',
-      pointerEvents: 'auto',
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px', marginBottom: '8px' }}>
         <p style={{ margin: 0, fontSize: '13px', fontWeight: FW_SEMIBOLD, color: PUB_ACCENT, fontFamily: FONT_BODY }}>{dot.label}</p>
@@ -162,16 +160,15 @@ export default function AnnotatedDailyBriefMockup() {
         }
       `}</style>
 
-      {/* Outer wrapper — position relative so desktop callout can escape mockup */}
+      {/* Outer wrapper */}
       <div style={{ position: 'relative' }}>
-
-        {/* Desktop callout — floats outside the mockup bounds */}
-        {!isMobile && activeDot && (
-          <DesktopCallout id={activeDot} onClose={() => setActiveDot(null)} />
-        )}
-
         <MockWindow label="Daily Brief — Tuesday, March 25">
-          <div style={{ padding: '20px 24px' }}>
+          <div style={{ padding: '20px 24px', position: 'relative' }}>
+
+            {/* Desktop callout — inside content area, floats toward center */}
+            {!isMobile && activeDot && (
+              <DesktopCallout id={activeDot} onClose={() => setActiveDot(null)} />
+            )}
 
             {/* Greeting */}
             <p style={{ fontFamily: FONT_DISPLAY, fontSize: '22px', fontWeight: FW_LIGHT, color: L_TEXT, margin: '0 0 4px' }}>
@@ -180,7 +177,7 @@ export default function AnnotatedDailyBriefMockup() {
 
             {/* Summary line + snapshot dot */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '4px', margin: '0 0 20px' }}>
-              <p style={{ fontFamily: FONT_BODY, fontSize: '12px', fontWeight: FW_LIGHT, color: L_TEXT_MUTED, margin: 0, flex: 1 }}>
+              <p style={{ fontFamily: FONT_BODY, fontSize: '12px', fontWeight: FW_LIGHT, color: L_TEXT_MUTED, margin: 0 }}>
                 3 meetings today · 2 tasks due today · 4 clients due for review
               </p>
               <Dot id="snapshot" activeDot={activeDot} onDotClick={handleDotClick} />
