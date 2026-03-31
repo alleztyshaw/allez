@@ -6,15 +6,11 @@ import { Link } from 'react-router-dom';
 import {
   PUB_APP_ACCENT        as ACCENT,
   PUB_APP_ACCENT_MUTED  as ACCENT_MUTED,
-  PUB_APP_ACCENT_BORDER as ACCENT_BORDER,
   PUB_ACCENT            as SITE_ACCENT,
   PUB_BG                as L_BG,
   PUB_TEXT              as L_TEXT,
   PUB_TEXT_MUTED        as L_TEXT_MUTED,
   PUB_TEXT_SUBTLE       as L_TEXT_SUBTLE,
-  PUB_COLOR_ERROR       as COLOR_ERROR,
-  PUB_COLOR_WARNING     as COLOR_WARNING,
-  PUB_COLOR_INFO        as COLOR_INFO,
   PUB_MESH_INDIGO, PUB_MESH_TEAL, PUB_FONTS_AND_KEYFRAMES,
   FONT_DISPLAY, FONT_BODY,
   FW_LIGHT, FW_REGULAR, FW_MEDIUM, FW_SEMIBOLD,
@@ -24,308 +20,18 @@ import useWindowWidth from '../hooks/useWindowWidth';
 import PublicHeader from '../components/public/PublicHeader';
 import PublicFooter from '../components/public/PublicFooter';
 import PublicHelmet from '../components/public/PublicHelmet';
-
-// ── Mini UI mockups ──────────────────────────────────────────────────────────
-
-function MockWindow({ children, label }) {
-  return (
-    <div style={{
-      background: '#ffffff', border: '1px solid rgba(0,0,0,0.10)',
-      borderRadius: '12px', boxShadow: '0 8px 40px rgba(0,0,0,0.12)',
-      overflow: 'hidden', width: '100%',
-    }}>
-      {/* Fake title bar */}
-      <div style={{ background: '#f5f5f3', borderBottom: '1px solid rgba(0,0,0,0.07)', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-        <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#ff5f57', display: 'inline-block' }} />
-        <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#febc2e', display: 'inline-block' }} />
-        <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#28c840', display: 'inline-block' }} />
-        {label && <span style={{ marginLeft: '10px', fontSize: '11px', color: 'rgba(0,0,0,0.35)', fontFamily: FONT_BODY }}>{label}</span>}
-      </div>
-      {children}
-    </div>
-  );
-}
-
-// Daily Brief mockup
-function DailyBriefMockup() {
-  const meetings = [
-    { time: '9:00 AM', name: 'Margaret Chen', type: 'Annual Review', duration: '60 min' },
-    { time: '11:30 AM', name: 'Robert Sullivan', type: 'Portfolio Review', duration: '45 min' },
-    { time: '2:00 PM', name: 'Priya Patel', type: 'Quarterly Check-in', duration: '30 min' },
-  ];
-  return (
-    <MockWindow label="Daily Brief — Tuesday, March 25">
-      <div style={{ padding: '20px 24px' }}>
-        <p style={{ fontFamily: FONT_DISPLAY, fontSize: '22px', fontWeight: FW_LIGHT, color: L_TEXT, margin: '0 0 4px' }}>
-          Good morning.
-        </p>
-        <p style={{ fontFamily: FONT_BODY, fontSize: '12px', fontWeight: FW_LIGHT, color: L_TEXT_MUTED, margin: '0 0 20px' }}>
-          3 meetings today · 2 tasks overdue · 4 clients due for review
-        </p>
-        <p style={{ fontSize: '10px', fontWeight: FW_SEMIBOLD, textTransform: 'uppercase', letterSpacing: '0.1em', color: L_TEXT_MUTED, margin: '0 0 10px', fontFamily: FONT_BODY }}>Today's Schedule</p>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          {meetings.map(m => (
-            <div key={m.name} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 12px', background: '#fafaf8', border: '1px solid rgba(0,0,0,0.06)', borderRadius: '8px' }}>
-              <span style={{ fontSize: '11px', fontWeight: FW_MEDIUM, color: L_TEXT_MUTED, fontFamily: FONT_BODY, minWidth: '62px' }}>{m.time}</span>
-              <div style={{ flex: 1 }}>
-                <p style={{ margin: 0, fontSize: '13px', fontWeight: FW_MEDIUM, color: L_TEXT, fontFamily: FONT_BODY }}>{m.name}</p>
-                <p style={{ margin: 0, fontSize: '11px', fontWeight: FW_LIGHT, color: L_TEXT_MUTED, fontFamily: FONT_BODY }}>{m.type} · {m.duration}</p>
-              </div>
-              <span style={{ fontSize: '10px', fontWeight: FW_SEMIBOLD, padding: '2px 8px', borderRadius: '999px', background: ACCENT_MUTED, color: ACCENT, fontFamily: FONT_BODY }}>Prep brief</span>
-            </div>
-          ))}
-        </div>
-        <p style={{ fontSize: '10px', fontWeight: FW_SEMIBOLD, textTransform: 'uppercase', letterSpacing: '0.1em', color: L_TEXT_MUTED, margin: '16px 0 10px', fontFamily: FONT_BODY }}>Overdue Tasks</p>
-        {[
-          { client: 'James Kowalski', task: 'Send estate planning summary' },
-          { client: 'Catherine Liu', task: 'Follow up on rebalance proposal' },
-        ].map(t => (
-          <div key={t.task} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 12px', marginBottom: '6px', background: 'rgba(248,113,113,0.06)', border: '1px solid rgba(248,113,113,0.15)', borderRadius: '8px' }}>
-            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: COLOR_ERROR, flexShrink: 0 }} />
-            <div style={{ flex: 1 }}>
-              <p style={{ margin: 0, fontSize: '12px', fontWeight: FW_MEDIUM, color: L_TEXT, fontFamily: FONT_BODY }}>{t.task}</p>
-              <p style={{ margin: 0, fontSize: '11px', color: L_TEXT_MUTED, fontFamily: FONT_BODY }}>{t.client}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-    </MockWindow>
-  );
-}
-
-// Client profile mockup
-function ClientProfileMockup() {
-  return (
-    <MockWindow label="Client — Margaret Chen">
-      <div style={{ padding: '20px 24px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
-          <div>
-            <p style={{ fontFamily: FONT_DISPLAY, fontSize: '28px', fontWeight: FW_LIGHT, color: L_TEXT, margin: '0 0 4px', lineHeight: 1.1 }}>Margaret Chen</p>
-            <p style={{ fontSize: '12px', color: L_TEXT_MUTED, fontFamily: FONT_BODY, fontWeight: FW_LIGHT, margin: 0 }}>margaret.chen@email.com · (415) 882-3301</p>
-          </div>
-          <span style={{ fontSize: '10px', fontWeight: FW_SEMIBOLD, padding: '3px 10px', borderRadius: '999px', background: ACCENT_MUTED, color: ACCENT, fontFamily: FONT_BODY, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Active</span>
-        </div>
-        <p style={{ fontSize: '10px', fontWeight: FW_SEMIBOLD, textTransform: 'uppercase', letterSpacing: '0.1em', color: L_TEXT_MUTED, margin: '0 0 8px', fontFamily: FONT_BODY }}>Assigned Advisors</p>
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
-          <span style={{ padding: '4px 12px', background: ACCENT_MUTED, border: `1px solid ${ACCENT_BORDER}`, borderRadius: '8px', fontSize: '12px', color: L_TEXT, fontFamily: FONT_BODY }}>T. Shaw <span style={{ fontSize: '10px', color: ACCENT, marginLeft: '4px' }}>Primary</span></span>
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-          {[
-            ['AUM', '$3.2M'], ['Asset Level', '$2M – $5M'],
-            ['Risk Tolerance', 'Moderate'], ['Tax Bracket', '32%'],
-            ['Communication', 'Quarterly'], ['Next Review', '05/10/2026'],
-          ].map(([label, value]) => (
-            <div key={label} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 10px', background: '#fafaf8', borderRadius: '6px', border: '1px solid rgba(0,0,0,0.05)' }}>
-              <span style={{ fontSize: '11px', color: L_TEXT_MUTED, fontFamily: FONT_BODY }}>{label}</span>
-              <span style={{ fontSize: '11px', color: L_TEXT, fontWeight: FW_MEDIUM, fontFamily: FONT_BODY }}>{value}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-    </MockWindow>
-  );
-}
-
-// AI Notes output mockup
-function AINoteMockup() {
-  return (
-    <MockWindow label="AI Note — Margaret Chen · Annual Review">
-      <div style={{ padding: '20px 24px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-          <div>
-            <p style={{ margin: '0 0 2px', fontSize: '15px', fontWeight: FW_MEDIUM, color: L_TEXT, fontFamily: FONT_BODY }}>Annual Review – March 2026</p>
-            <p style={{ margin: 0, fontSize: '11px', color: L_TEXT_MUTED, fontFamily: FONT_BODY }}>03/25/2026 · AI Note</p>
-          </div>
-          <span style={{ fontSize: '10px', fontWeight: FW_SEMIBOLD, padding: '2px 9px', borderRadius: '999px', background: 'rgba(167,139,250,0.12)', color: '#a78bfa', border: '1px solid rgba(167,139,250,0.3)', fontFamily: FONT_BODY, letterSpacing: '0.06em' }}>AI</span>
-        </div>
-        <p style={{ fontSize: '10px', fontWeight: FW_SEMIBOLD, textTransform: 'uppercase', letterSpacing: '0.1em', color: ACCENT, margin: '0 0 8px', fontFamily: FONT_BODY }}>Summary</p>
-        <p style={{ fontSize: '12px', fontWeight: FW_LIGHT, lineHeight: 1.65, color: L_TEXT, margin: '0 0 16px', fontFamily: FONT_BODY }}>
-          Reviewed full portfolio allocation. Client pleased with bond ladder performance. Discussed rebalancing equities from 58% to 55% given approaching retirement horizon.
-        </p>
-        <p style={{ fontSize: '10px', fontWeight: FW_SEMIBOLD, textTransform: 'uppercase', letterSpacing: '0.1em', color: ACCENT, margin: '0 0 8px', fontFamily: FONT_BODY }}>Action Items</p>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '16px' }}>
-          {['Prepare rebalancing proposal by April 1', 'Send updated RMD projection for 2026'].map(item => (
-            <div key={item} style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
-              <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: ACCENT, flexShrink: 0, marginTop: '5px' }} />
-              <span style={{ fontSize: '12px', fontWeight: FW_LIGHT, color: L_TEXT, fontFamily: FONT_BODY }}>{item}</span>
-            </div>
-          ))}
-        </div>
-        <div style={{ display: 'flex', gap: '8px', padding: '10px 12px', background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.25)', borderRadius: '8px', alignItems: 'flex-start' }}>
-          <span style={{ fontSize: '14px', flexShrink: 0 }}>⚠️</span>
-          <div>
-            <p style={{ margin: '0 0 2px', fontSize: '11px', fontWeight: FW_SEMIBOLD, color: COLOR_WARNING, fontFamily: FONT_BODY }}>Compliance flag · Medium</p>
-            <p style={{ margin: 0, fontSize: '11px', fontWeight: FW_LIGHT, color: L_TEXT_MUTED, fontFamily: FONT_BODY }}>Performance comparison referenced without full benchmark disclosure.</p>
-          </div>
-        </div>
-      </div>
-    </MockWindow>
-  );
-}
-
-// Search overlay mockup
-function SearchMockup() {
-  return (
-    <MockWindow label="Global Search">
-      <div style={{ padding: '0' }}>
-        <div style={{ padding: '14px 16px', borderBottom: '1px solid rgba(0,0,0,0.07)', display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
-            <circle cx="9" cy="9" r="6" stroke={L_TEXT_MUTED} strokeWidth="1.5"/>
-            <path d="M13.5 13.5L17 17" stroke={L_TEXT_MUTED} strokeWidth="1.5" strokeLinecap="round"/>
-          </svg>
-          <span style={{ fontSize: '13px', color: L_TEXT, fontFamily: FONT_BODY }}>chen</span>
-          <span style={{ marginLeft: 'auto', fontSize: '10px', color: L_TEXT_SUBTLE, fontFamily: FONT_BODY, border: '1px solid rgba(0,0,0,0.1)', borderRadius: '4px', padding: '1px 5px' }}>Esc</span>
-        </div>
-        {[
-          { group: 'Clients', items: [{ label: 'Margaret Chen', sub: 'Active · $3.2M AUM' }, { label: 'David Chen', sub: 'Prospect · Lead stage' }] },
-          { group: 'Notes', items: [{ label: 'Annual Review – Margaret Chen', sub: 'Mar 25, 2026 · Meeting' }] },
-        ].map(group => (
-          <div key={group.group}>
-            <p style={{ fontSize: '9px', fontWeight: FW_SEMIBOLD, textTransform: 'uppercase', letterSpacing: '0.12em', color: L_TEXT_SUBTLE, margin: 0, padding: '10px 16px 4px', fontFamily: FONT_BODY }}>{group.group}</p>
-            {group.items.map((item, i) => (
-              <div key={item.label} style={{ padding: '8px 16px', background: i === 0 && group.group === 'Clients' ? ACCENT_MUTED : 'transparent', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
-                  <p style={{ margin: 0, fontSize: '12px', fontWeight: FW_MEDIUM, color: L_TEXT, fontFamily: FONT_BODY }}>{item.label}</p>
-                  <p style={{ margin: 0, fontSize: '10px', color: L_TEXT_MUTED, fontFamily: FONT_BODY }}>{item.sub}</p>
-                </div>
-                <span style={{ fontSize: '10px', color: ACCENT, fontFamily: FONT_BODY }}>→</span>
-              </div>
-            ))}
-          </div>
-        ))}
-        <div style={{ padding: '8px 16px 12px' }}>
-          <div style={{ height: '1px', background: 'rgba(0,0,0,0.05)', marginBottom: '8px' }} />
-          <p style={{ margin: 0, fontSize: '10px', color: L_TEXT_SUBTLE, fontFamily: FONT_BODY }}>Press ↑↓ to navigate · Enter to open</p>
-        </div>
-      </div>
-    </MockWindow>
-  );
-}
-
-// ── Workflow diagrams ────────────────────────────────────────────────────────
-
-function AIPipelineDiagram() {
-  const steps = [
-    { icon: '🎙️', label: 'Transcript', sub: 'Record, paste, or upload' },
-    { icon: '🪪', label: 'De-identify', sub: 'PII replaced with tokens' },
-    { icon: '✦', label: 'AI Processing', sub: 'Structured extraction' },
-    { icon: '🔄', label: 'Re-identify', sub: 'Tokens restored' },
-    { icon: '📄', label: 'Structured Note', sub: 'Summary + action items' },
-  ];
-  return (
-    <div style={{ padding: '32px', background: '#ffffff', border: '1px solid rgba(0,0,0,0.08)', borderRadius: '12px', boxShadow: '0 4px 24px rgba(0,0,0,0.08)' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap', gap: '4px' }}>
-        {steps.map((step, i) => (
-          <div key={step.label} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '96px' }}>
-              <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: i === 2 ? 'rgba(167,139,250,0.12)' : '#f5f5f3', border: `1px solid ${i === 2 ? 'rgba(167,139,250,0.3)' : 'rgba(0,0,0,0.07)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', marginBottom: '8px' }}>
-                {step.icon}
-              </div>
-              <p style={{ margin: '0 0 2px', fontSize: '11px', fontWeight: FW_SEMIBOLD, color: L_TEXT, fontFamily: FONT_BODY, textAlign: 'center' }}>{step.label}</p>
-              <p style={{ margin: 0, fontSize: '10px', color: L_TEXT_MUTED, fontFamily: FONT_BODY, textAlign: 'center', lineHeight: 1.4 }}>{step.sub}</p>
-            </div>
-            {i < steps.length - 1 && (
-              <div style={{ width: '24px', height: '1px', background: 'rgba(0,0,0,0.15)', position: 'relative', flexShrink: 0 }}>
-                <div style={{ position: 'absolute', right: '-4px', top: '-3px', width: 0, height: 0, borderTop: '4px solid transparent', borderBottom: '4px solid transparent', borderLeft: '5px solid rgba(0,0,0,0.2)' }} />
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function ComplianceDiagram() {
-  return (
-    <div style={{ padding: '28px', background: '#ffffff', border: '1px solid rgba(0,0,0,0.08)', borderRadius: '12px', boxShadow: '0 4px 24px rgba(0,0,0,0.08)' }}>
-      <p style={{ fontSize: '10px', fontWeight: FW_SEMIBOLD, textTransform: 'uppercase', letterSpacing: '0.1em', color: L_TEXT_MUTED, margin: '0 0 20px', fontFamily: FONT_BODY }}>Compliance scan flow</p>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-        <div style={{ padding: '12px 16px', background: '#fafaf8', border: '1px solid rgba(0,0,0,0.07)', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <span style={{ fontSize: '16px' }}>📝</span>
-          <div>
-            <p style={{ margin: 0, fontSize: '12px', fontWeight: FW_MEDIUM, color: L_TEXT, fontFamily: FONT_BODY }}>AI note processed</p>
-            <p style={{ margin: 0, fontSize: '11px', color: L_TEXT_MUTED, fontFamily: FONT_BODY }}>Full text submitted for scan</p>
-          </div>
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'center' }}>
-          <div style={{ width: 0, height: 0, borderLeft: '6px solid transparent', borderRight: '6px solid transparent', borderTop: '8px solid rgba(0,0,0,0.15)' }} />
-        </div>
-        <div style={{ padding: '12px 16px', background: 'rgba(167,139,250,0.06)', border: '1px solid rgba(167,139,250,0.2)', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <span style={{ fontSize: '16px' }}>✦</span>
-          <div>
-            <p style={{ margin: 0, fontSize: '12px', fontWeight: FW_MEDIUM, color: L_TEXT, fontFamily: FONT_BODY }}>Compliance engine</p>
-            <p style={{ margin: 0, fontSize: '11px', color: L_TEXT_MUTED, fontFamily: FONT_BODY }}>Securities mentions · promissory language · risk signals</p>
-          </div>
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'center' }}>
-          <div style={{ width: 0, height: 0, borderLeft: '6px solid transparent', borderRight: '6px solid transparent', borderTop: '8px solid rgba(0,0,0,0.15)' }} />
-        </div>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <div style={{ flex: 1, padding: '10px 12px', background: ACCENT_MUTED, border: `1px solid ${ACCENT_BORDER}`, borderRadius: '8px', textAlign: 'center' }}>
-            <p style={{ margin: 0, fontSize: '11px', fontWeight: FW_SEMIBOLD, color: ACCENT, fontFamily: FONT_BODY }}>✓ Clear</p>
-            <p style={{ margin: 0, fontSize: '10px', color: L_TEXT_MUTED, fontFamily: FONT_BODY }}>No flags</p>
-          </div>
-          <div style={{ flex: 1, padding: '10px 12px', background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.25)', borderRadius: '8px', textAlign: 'center' }}>
-            <p style={{ margin: 0, fontSize: '11px', fontWeight: FW_SEMIBOLD, color: COLOR_WARNING, fontFamily: FONT_BODY }}>⚠ Medium</p>
-            <p style={{ margin: 0, fontSize: '10px', color: L_TEXT_MUTED, fontFamily: FONT_BODY }}>Review needed</p>
-          </div>
-          <div style={{ flex: 1, padding: '10px 12px', background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.25)', borderRadius: '8px', textAlign: 'center' }}>
-            <p style={{ margin: 0, fontSize: '11px', fontWeight: FW_SEMIBOLD, color: COLOR_ERROR, fontFamily: FONT_BODY }}>✕ High</p>
-            <p style={{ margin: 0, fontSize: '10px', color: L_TEXT_MUTED, fontFamily: FONT_BODY }}>Flagged</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function PipelineDiagram() {
-  const stages = ['Lead', 'Proposal', 'Agreement', 'Onboarding', 'Active'];
-  const active = 2;
-  return (
-    <div style={{ padding: '28px', background: '#ffffff', border: '1px solid rgba(0,0,0,0.08)', borderRadius: '12px', boxShadow: '0 4px 24px rgba(0,0,0,0.08)' }}>
-      <p style={{ fontSize: '10px', fontWeight: FW_SEMIBOLD, textTransform: 'uppercase', letterSpacing: '0.1em', color: L_TEXT_MUTED, margin: '0 0 20px', fontFamily: FONT_BODY }}>Prospect pipeline</p>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0', marginBottom: '24px', overflowX: 'auto' }}>
-        {stages.map((stage, i) => (
-          <div key={stage} style={{ display: 'flex', alignItems: 'center', flex: 1, minWidth: 0 }}>
-            <div style={{ flex: 1, textAlign: 'center' }}>
-              <div style={{
-                padding: '7px 4px', borderRadius: '6px', fontSize: '11px', fontWeight: i <= active ? FW_SEMIBOLD : FW_REGULAR,
-                fontFamily: FONT_BODY, whiteSpace: 'nowrap',
-                background: i < active ? ACCENT_MUTED : i === active ? ACCENT : '#f5f5f3',
-                color: i < active ? ACCENT : i === active ? '#fff' : L_TEXT_MUTED,
-                border: `1px solid ${i <= active ? ACCENT_BORDER : 'rgba(0,0,0,0.07)'}`,
-              }}>
-                {stage}
-              </div>
-            </div>
-            {i < stages.length - 1 && (
-              <div style={{ width: '12px', flexShrink: 0, height: '1px', background: i < active ? ACCENT : 'rgba(0,0,0,0.1)' }} />
-            )}
-          </div>
-        ))}
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        {[
-          { name: 'Daniel Kim', stage: 'Agreement', time: '3 weeks', value: '$2M–$5M' },
-          { name: 'Amanda Walsh', stage: 'Proposal', time: '1 week', value: '$2M–$5M' },
-          { name: 'Rebecca Sterling', stage: 'Onboarding', time: '5 weeks', value: '$5M–$10M' },
-        ].map(p => (
-          <div key={p.name} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', background: '#fafaf8', border: '1px solid rgba(0,0,0,0.06)', borderRadius: '8px' }}>
-            <div>
-              <p style={{ margin: 0, fontSize: '12px', fontWeight: FW_MEDIUM, color: L_TEXT, fontFamily: FONT_BODY }}>{p.name}</p>
-              <p style={{ margin: 0, fontSize: '10px', color: L_TEXT_MUTED, fontFamily: FONT_BODY }}>{p.value} · In pipeline {p.time}</p>
-            </div>
-            <span style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '999px', background: ACCENT_MUTED, color: ACCENT, fontWeight: FW_SEMIBOLD, fontFamily: FONT_BODY }}>{p.stage}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
+import AINoteMockup from '../components/public/mockups/AINoteMockup';
+import DailyBriefMockup from '../components/public/mockups/DailyBriefMockup';
+import ClientProfileMockup from '../components/public/mockups/ClientProfileMockup';
+import SearchMockup from '../components/public/mockups/SearchMockup';
+import AIPipelineDiagram from '../components/public/mockups/AIPipelineDiagram';
+import ComplianceDiagram from '../components/public/mockups/ComplianceDiagram';
+import PipelineDiagram from '../components/public/mockups/PipelineDiagram';
+import TeamDiagram from '../components/public/mockups/TeamDiagram';
 
 // ── Feature sections ─────────────────────────────────────────────────────────
+
+// Note: all mockup components imported from src/components/public/mockups/
 
 const FEATURES = [
   {
@@ -428,25 +134,7 @@ const FEATURES = [
       'Resend invite for pending members',
       'Advisor assignment per client — primary and secondary',
     ],
-    visual: (
-      <div style={{ padding: '28px', background: '#ffffff', border: '1px solid rgba(0,0,0,0.08)', borderRadius: '12px', boxShadow: '0 4px 24px rgba(0,0,0,0.08)' }}>
-        <p style={{ fontSize: '10px', fontWeight: FW_SEMIBOLD, textTransform: 'uppercase', letterSpacing: '0.1em', color: L_TEXT_MUTED, margin: '0 0 16px', fontFamily: FONT_BODY }}>Role hierarchy</p>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          {[
-            { role: 'Admin', access: 'Full access · Team management · Billing', color: ACCENT },
-            { role: 'Manager', access: 'Full access · No billing', color: ACCENT },
-            { role: 'Advisor', access: 'Assigned clients · Write access', color: COLOR_INFO },
-            { role: 'Associate', access: 'Assigned clients · Read only', color: COLOR_INFO },
-            { role: 'Compliance', access: 'All clients · Read only · Audit log', color: COLOR_WARNING },
-          ].map(r => (
-            <div key={r.role} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '9px 12px', background: '#fafaf8', border: '1px solid rgba(0,0,0,0.06)', borderRadius: '8px' }}>
-              <span style={{ fontSize: '10px', fontWeight: FW_SEMIBOLD, padding: '2px 10px', borderRadius: '999px', background: `${r.color}18`, color: r.color, border: `1px solid ${r.color}30`, fontFamily: FONT_BODY, minWidth: '74px', textAlign: 'center' }}>{r.role}</span>
-              <span style={{ fontSize: '12px', color: L_TEXT_MUTED, fontFamily: FONT_BODY, fontWeight: FW_LIGHT }}>{r.access}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-    ),
+    visual: <TeamDiagram />,
     visualType: 'diagram',
   },
 ];

@@ -6,10 +6,16 @@ import { ThemeProvider } from './context/ThemeContext';
 import HomePage from './pages/HomePage';
 import SignIn from './pages/SignIn';
 import ProductPage from './pages/ProductPage';
-import PlaceholderFeaturePage from './pages/PlaceholderFeaturePage';
 import CompanyPage from './pages/CompanyPage';
 import GetStarted from './pages/GetStarted';
 import BookADemo from './pages/BookADemo';
+import NotesPage from './pages/product/NotesPage';
+import DailyBriefPage from './pages/product/DailyBriefPage';
+import ClientProfilesPage from './pages/product/ClientProfilesPage';
+import CRMPage from './pages/product/CRMPage';
+import CompliancePage from './pages/product/CompliancePage';
+import SearchPage from './pages/product/SearchPage';
+import TeamPage from './pages/product/TeamPage';
 import ResetPassword from './pages/ResetPassword';
 import Signup from './pages/Signup';
 import Contact from './pages/Contact';
@@ -58,7 +64,13 @@ function App() {
               <Route path="/"                element={<HomePage />} />
               <Route path="/sign-in"         element={<SignIn />} />
               <Route path="/product"         element={<ProductPage />} />
-              <Route path="/product/:feature" element={<PlaceholderFeaturePage />} />
+              <Route path="/product/notes"       element={<NotesPage />} />
+              <Route path="/product/daily-brief" element={<DailyBriefPage />} />
+              <Route path="/product/clients"     element={<ClientProfilesPage />} />
+              <Route path="/product/crm"         element={<CRMPage />} />
+              <Route path="/product/compliance"  element={<CompliancePage />} />
+              <Route path="/product/search"      element={<SearchPage />} />
+              <Route path="/product/team"        element={<TeamPage />} />
               <Route path="/company"          element={<CompanyPage />} />
               <Route path="/get-started"      element={<GetStarted />} />
               <Route path="/book-a-demo"      element={<BookADemo />} />
