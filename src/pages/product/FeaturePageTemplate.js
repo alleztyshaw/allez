@@ -123,7 +123,7 @@ export default function FeaturePageTemplate({ slug }) {
         <div style={s.divider} />
 
         {/* Prev / Next */}
-        <div style={{ ...s.featureNav, flexDirection: isMobile ? 'column' : 'row' }}>
+        <div style={{ ...s.featureNav, flexDirection: 'row' }}>
           <div style={s.featureNavLeft}>
             {prevFeature && (
               <Link to={`/product/${prevSlug}`} className="nav-link" style={s.featureNavLink}>
@@ -134,7 +134,7 @@ export default function FeaturePageTemplate({ slug }) {
           </div>
           <div style={s.featureNavRight}>
             {nextFeature && (
-              <Link to={`/product/${nextSlug}`} className="nav-link" style={{ ...s.featureNavLink, alignItems: isMobile ? 'flex-start' : 'flex-end' }}>
+              <Link to={`/product/${nextSlug}`} className="nav-link" style={{ ...s.featureNavLink, alignItems: 'flex-end' }}>
                 <span style={s.featureNavDir}>Next →</span>
                 <span style={s.featureNavName}>{nextFeature.name}</span>
               </Link>

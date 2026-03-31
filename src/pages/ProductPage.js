@@ -24,7 +24,7 @@ import ClientProfileMockup from '../components/public/mockups/ClientProfileMocku
 import SearchMockup from '../components/public/mockups/SearchMockup';
 import AIPipelineDiagram from '../components/public/mockups/AIPipelineDiagram';
 import ComplianceDiagram from '../components/public/mockups/ComplianceDiagram';
-import PipelineDiagram from '../components/public/mockups/PipelineDiagram';
+import CRMClientsMockup from '../components/public/mockups/CRMClientsMockup';
 import TeamDiagram from '../components/public/mockups/TeamDiagram';
 
 // ── Feature sections ─────────────────────────────────────────────────────────
@@ -89,8 +89,8 @@ const FEATURES = [
       'Smart meeting scheduling pre-filled from last meeting + frequency',
       'Client CSV import — migrate from any CRM in minutes',
     ],
-    visual: <PipelineDiagram />,
-    visualType: 'diagram',
+    visual: <CRMClientsMockup />,
+    visualType: 'mockup',
   },
   {
     slug: 'compliance',
