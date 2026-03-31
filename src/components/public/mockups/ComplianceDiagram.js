@@ -8,7 +8,7 @@ import {
   PUB_TEXT as L_TEXT,
   PUB_TEXT_MUTED as L_TEXT_MUTED,
   FONT_BODY,
-  FW_LIGHT, FW_MEDIUM, FW_SEMIBOLD,
+  FW_MEDIUM, FW_SEMIBOLD,
 } from '../../../utils/publicConstants';
 
 const NoteIcon = () => (

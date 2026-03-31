@@ -5,7 +5,7 @@ import {
   PUB_COLOR_INFO as COLOR_INFO,
   PUB_TEXT_MUTED as L_TEXT_MUTED,
   FONT_BODY,
-  FW_LIGHT, FW_MEDIUM, FW_SEMIBOLD,
+  FW_LIGHT, FW_SEMIBOLD,
 } from '../../../utils/publicConstants';
 
 export default function TeamDiagram() {

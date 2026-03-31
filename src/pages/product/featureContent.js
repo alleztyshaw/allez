@@ -2,16 +2,12 @@
 // Single source of truth for all feature page content.
 // Visuals are imported from mockups — no duplication with ProductPage.
 
-import AINoteMockup from '../../components/public/mockups/AINoteMockup';
 import AnimatedNotesMockup from '../../components/public/mockups/AnimatedNotesMockup';
 import AIPipelineDiagram from '../../components/public/mockups/AIPipelineDiagram';
-import DailyBriefMockup from '../../components/public/mockups/DailyBriefMockup';
 import AnimatedDailyBriefMockup from '../../components/public/mockups/AnimatedDailyBriefMockup';
 import ClientProfileMockup from '../../components/public/mockups/ClientProfileMockup';
-import PipelineDiagram from '../../components/public/mockups/PipelineDiagram';
 import AnimatedPipelineMockup from '../../components/public/mockups/AnimatedPipelineMockup';
 import ComplianceDiagram from '../../components/public/mockups/ComplianceDiagram';
-import SearchMockup from '../../components/public/mockups/SearchMockup';
 import AnimatedSearchMockup from '../../components/public/mockups/AnimatedSearchMockup';
 import TeamDiagram from '../../components/public/mockups/TeamDiagram';
 

@@ -114,8 +114,7 @@ function PipelineContent({ status, onDone }) {
     return () => timeouts.current.forEach(clearTimeout);
   }, [status, onDone]);
 
-  const isOnboarding = activeStage === 3;
-  const isActive     = activeStage === 4;
+  const isActive = activeStage === 4;
 
   return (
     <div style={{ padding: '28px', background: '#ffffff', border: '1px solid rgba(0,0,0,0.08)', borderRadius: '12px', boxShadow: '0 4px 24px rgba(0,0,0,0.08)' }}>
@@ -128,10 +127,9 @@ function PipelineContent({ status, onDone }) {
         {STAGES.map((stage, i) => {
           const isCurrentActive = i === activeStage;
           const isFilled = i <= litUpTo && !isCurrentActive;
-          const color = isCurrentActive && i === 4 ? EMERALD : ACCENT;
           const borderColor = isCurrentActive && i === 4 ? `${EMERALD}60` : ACCENT_BORDER;
           const bgColor = isCurrentActive
-            ? (i === 4 ? EMERALD : ACCENT)
+            ? ACCENT
             : isFilled ? ACCENT_MUTED : '#f5f5f3';
           const textColor = isCurrentActive
             ? '#fff'

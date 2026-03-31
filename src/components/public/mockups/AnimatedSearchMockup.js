@@ -27,7 +27,6 @@ const PROFILE_LINGER = 1200;
 
 export default function AnimatedSearchMockup() {
   const [status,           setStatus]           = useState('idle'); // idle | playing | done
-  const [playKey,          setPlayKey]           = useState(0);
   const [typedChars,       setTypedChars]        = useState(0);
   const [showClients,      setShowClients]       = useState(false);
   const [showNotes,        setShowNotes]         = useState(false);

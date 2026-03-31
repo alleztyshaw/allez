@@ -5,15 +5,13 @@
 import { Link } from 'react-router-dom';
 import {
   PUB_APP_ACCENT        as ACCENT,
-  PUB_APP_ACCENT_MUTED  as ACCENT_MUTED,
   PUB_ACCENT            as SITE_ACCENT,
   PUB_BG                as L_BG,
   PUB_TEXT              as L_TEXT,
-  PUB_TEXT_MUTED        as L_TEXT_MUTED,
   PUB_TEXT_SUBTLE       as L_TEXT_SUBTLE,
   PUB_MESH_INDIGO, PUB_MESH_TEAL, PUB_FONTS_AND_KEYFRAMES,
   FONT_DISPLAY, FONT_BODY,
-  FW_LIGHT, FW_REGULAR, FW_MEDIUM, FW_SEMIBOLD,
+FW_LIGHT, FW_REGULAR, FW_MEDIUM,
   MOBILE_BREAKPOINT,
 } from '../utils/publicConstants';
 import useWindowWidth from '../hooks/useWindowWidth';
