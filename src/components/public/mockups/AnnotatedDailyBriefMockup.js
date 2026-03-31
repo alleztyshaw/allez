@@ -2,7 +2,7 @@
 // Interactive annotated Daily Brief. Dots are rendered inline with
 // the elements they annotate — no absolute positioning guesswork.
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import MockWindow from './MockWindow';
 import {
   PUB_APP_ACCENT as ACCENT,
@@ -39,12 +39,17 @@ const DOT_DATA = {
 };
 
 // ── Inline dot ────────────────────────────────────────────────────────────────
+//
+// The `dotRef` prop lets the parent store a reference to this button element.
+// We need that reference later to measure where on screen the button lives
+// so we can anchor the mobile callout right below it.
 
-function Dot({ id, activeDot, onDotClick }) {
+function Dot({ id, activeDot, onDotClick, dotRef }) {
   const isActive = activeDot === id;
   const color = isActive ? EMERALD : 'rgba(99,102,241,0.55)';
   return (
     <button
+      ref={dotRef}
       onClick={e => { e.stopPropagation(); onDotClick(id); }}
       aria-label={DOT_DATA[id].label}
       style={{
@@ -78,19 +83,14 @@ function Dot({ id, activeDot, onDotClick }) {
 }
 
 // ── Desktop callout ───────────────────────────────────────────────────────────
-// Rendered in a fixed-height zone below the mockup on mobile,
-// or as a floating absolute box on desktop anchored to the active dot row.
-
-// Desktop callout renders inside the MockWindow content area.
-// floatLeft dots (right side of mockup): callout opens leftward toward center.
-// floatRight dots (left side of mockup): callout opens rightward toward center.
-// top values align the callout with each dot's row.
+// Rendered inside the MockWindow content area as an absolutely-positioned box.
+// top/left/right values were manually tuned to float toward the center of the mockup.
 
 const CALLOUT_STYLE = {
-  snapshot: { top: '40px',  right: '80px'  }, // right-side dot → floats left
-  schedule: { top: '100px',  left:  '190px'   }, // left-side dot  → floats right
-  prep:     { top: '155px', right: '160px'  }, // right-side dot → floats left
-  tasks:    { top: '350px', left:  '160px'   }, // left-side dot  → floats right
+  snapshot: { top: '40px',  right: '80px'  },
+  schedule: { top: '100px', left:  '190px' },
+  prep:     { top: '155px', right: '160px' },
+  tasks:    { top: '350px', left:  '160px' },
 };
 
 function DesktopCallout({ id, onClose }) {
@@ -120,6 +120,56 @@ function DesktopCallout({ id, onClose }) {
   );
 }
 
+// ── Mobile callout ────────────────────────────────────────────────────────────
+//
+// Rendered with `position: fixed` so it escapes the MockWindow's scroll/overflow
+// context and lands exactly on screen. We receive the viewport coordinates of the
+// tapped dot (top + center-x) and place the callout 8px below it, clamping
+// horizontally so it never bleeds off the screen edge.
+
+function MobileCallout({ id, anchorRect, onClose }) {
+  const dot = DOT_DATA[id];
+
+  // anchorRect is the getBoundingClientRect() result of the dot button.
+  // We want the callout to start 8px below the bottom of the dot,
+  // horizontally centered on the dot's center point.
+  const top  = anchorRect.bottom + 8;
+  const left = anchorRect.left + anchorRect.width / 2;
+
+  // The callout is 260px wide. We shift it left by half (130px) to center it
+  // on the dot, then clamp so it stays at least 16px from either screen edge.
+  const CALLOUT_WIDTH = 260;
+  const EDGE_MARGIN   = 16;
+  const clampedLeft = Math.min(
+    Math.max(left - CALLOUT_WIDTH / 2, EDGE_MARGIN),
+    window.innerWidth - CALLOUT_WIDTH - EDGE_MARGIN
+  );
+
+  return (
+    <div style={{
+      position: 'fixed',
+      top,
+      left: clampedLeft,
+      width: `${CALLOUT_WIDTH}px`,
+      background: 'rgba(255,255,255,0.92)',
+      backdropFilter: 'blur(16px)',
+      WebkitBackdropFilter: 'blur(16px)',
+      border: '1px solid rgba(0,0,0,0.09)',
+      borderRadius: '10px',
+      padding: '14px 16px',
+      boxShadow: '0 4px 24px rgba(0,0,0,0.12)',
+      zIndex: 9999,
+      animation: 'calloutIn 0.18s ease',
+    }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px', marginBottom: '8px' }}>
+        <p style={{ margin: 0, fontSize: '13px', fontWeight: FW_SEMIBOLD, color: PUB_ACCENT, fontFamily: FONT_BODY }}>{dot.label}</p>
+        <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, lineHeight: 1, color: L_TEXT_MUTED, fontSize: '16px', flexShrink: 0 }}>×</button>
+      </div>
+      <p style={{ margin: 0, fontSize: '12px', fontWeight: FW_LIGHT, lineHeight: 1.7, color: L_TEXT_MUTED, fontFamily: FONT_BODY }}>{dot.copy}</p>
+    </div>
+  );
+}
+
 // ── Mock data ─────────────────────────────────────────────────────────────────
 
 const MEETINGS = [
@@ -136,15 +186,47 @@ const TASKS = [
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function AnnotatedDailyBriefMockup() {
-  const [activeDot, setActiveDot] = useState(null);
+  const [activeDot, setActiveDot]       = useState(null);
+  // anchorRect stores the bounding box of the last tapped dot so MobileCallout
+  // knows where to render itself on screen.
+  const [anchorRect, setAnchorRect]     = useState(null);
+
+  // dotRefs is a plain object (not state) that maps each dot id → its DOM node.
+  // useRef wraps it so the value persists across renders without triggering re-renders.
+  const dotRefs = useRef({});
+
   const windowWidth = useWindowWidth();
-  const isMobile = windowWidth < MOBILE_BREAKPOINT;
+  const isMobile    = windowWidth < MOBILE_BREAKPOINT;
 
   function handleDotClick(id) {
-    setActiveDot(prev => prev === id ? null : id);
+    if (activeDot === id) {
+      // Tapping the same dot a second time dismisses the callout.
+      setActiveDot(null);
+      setAnchorRect(null);
+      return;
+    }
+    setActiveDot(id);
+    // Read the dot button's position in the viewport at the moment of the tap.
+    // getBoundingClientRect() returns { top, bottom, left, right, width, height }
+    // relative to the visible screen — perfect for fixed positioning.
+    if (dotRefs.current[id]) {
+      setAnchorRect(dotRefs.current[id].getBoundingClientRect());
+    }
   }
 
-  const activeDotData = activeDot ? DOT_DATA[activeDot] : null;
+  // Dismiss the callout when the user scrolls — otherwise the fixed callout
+  // drifts away from its dot as the page moves.
+  useEffect(() => {
+    if (!isMobile || !activeDot) return;
+    const dismiss = () => { setActiveDot(null); setAnchorRect(null); };
+    window.addEventListener('scroll', dismiss, { passive: true });
+    return () => window.removeEventListener('scroll', dismiss);
+  }, [isMobile, activeDot]);
+
+  function dismissCallout() {
+    setActiveDot(null);
+    setAnchorRect(null);
+  }
 
   return (
     <div>
@@ -160,6 +242,11 @@ export default function AnnotatedDailyBriefMockup() {
         }
       `}</style>
 
+      {/* Mobile callout — rendered fixed to the viewport, anchored to the tapped dot */}
+      {isMobile && activeDot && anchorRect && (
+        <MobileCallout id={activeDot} anchorRect={anchorRect} onClose={dismissCallout} />
+      )}
+
       {/* Outer wrapper */}
       <div style={{ position: 'relative' }}>
         <MockWindow label="Daily Brief — Tuesday, March 25">
@@ -167,7 +254,7 @@ export default function AnnotatedDailyBriefMockup() {
 
             {/* Desktop callout — inside content area, floats toward center */}
             {!isMobile && activeDot && (
-              <DesktopCallout id={activeDot} onClose={() => setActiveDot(null)} />
+              <DesktopCallout id={activeDot} onClose={dismissCallout} />
             )}
 
             {/* Greeting */}
@@ -180,7 +267,8 @@ export default function AnnotatedDailyBriefMockup() {
               <p style={{ fontFamily: FONT_BODY, fontSize: '12px', fontWeight: FW_LIGHT, color: L_TEXT_MUTED, margin: 0 }}>
                 3 meetings today · 2 tasks due today · 4 clients due for review
               </p>
-              <Dot id="snapshot" activeDot={activeDot} onDotClick={handleDotClick} />
+              <Dot id="snapshot" activeDot={activeDot} onDotClick={handleDotClick}
+                dotRef={el => { dotRefs.current['snapshot'] = el; }} />
             </div>
 
             {/* TODAY'S SCHEDULE label + schedule dot */}
@@ -188,7 +276,8 @@ export default function AnnotatedDailyBriefMockup() {
               <p style={{ fontSize: '10px', fontWeight: FW_SEMIBOLD, textTransform: 'uppercase', letterSpacing: '0.1em', color: L_TEXT_MUTED, margin: 0, fontFamily: FONT_BODY }}>
                 Today's Schedule
               </p>
-              <Dot id="schedule" activeDot={activeDot} onDotClick={handleDotClick} />
+              <Dot id="schedule" activeDot={activeDot} onDotClick={handleDotClick}
+                dotRef={el => { dotRefs.current['schedule'] = el; }} />
             </div>
 
             {/* Meeting cards */}
@@ -200,11 +289,27 @@ export default function AnnotatedDailyBriefMockup() {
                     <p style={{ margin: 0, fontSize: '13px', fontWeight: FW_MEDIUM, color: L_TEXT, fontFamily: FONT_BODY }}>{m.name}</p>
                     <p style={{ margin: 0, fontSize: '11px', fontWeight: FW_LIGHT, color: L_TEXT_MUTED, fontFamily: FONT_BODY }}>{m.type} · {m.duration}</p>
                   </div>
-                  {/* Prep dot only on first card, to the left of the pill */}
-                  {i === 0 && <Dot id="prep" activeDot={activeDot} onDotClick={handleDotClick} />}
-                  <span style={{ fontSize: '10px', fontWeight: FW_SEMIBOLD, padding: '2px 8px', borderRadius: '999px', background: ACCENT_MUTED, color: ACCENT, fontFamily: FONT_BODY, flexShrink: 0 }}>Prep brief</span>
-                  {/* Spacer pill for other rows to maintain alignment */}
-                  {i > 0 && <span style={{ width: '27px', flexShrink: 0 }} />}
+
+                  {/*
+                    ── RIGHT-END GROUP ──────────────────────────────────────────
+                    The dot and the "Prep brief" pill are wrapped together in a
+                    single flex container. Every row renders this same container,
+                    so the pill is always flush-right and the columns stay aligned.
+
+                    Row 0 (first meeting): show the annotation dot, then the pill.
+                    Rows 1+               : show an invisible 27px spacer where the
+                                           dot would be, then the pill — keeping the
+                                           pill in exactly the same horizontal slot.
+                  */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+                    {i === 0
+                      ? <Dot id="prep" activeDot={activeDot} onDotClick={handleDotClick}
+                          dotRef={el => { dotRefs.current['prep'] = el; }} />
+                      : <span style={{ width: '27px', flexShrink: 0 }} />
+                    }
+                    <span style={{ fontSize: '10px', fontWeight: FW_SEMIBOLD, padding: '2px 8px', borderRadius: '999px', background: ACCENT_MUTED, color: ACCENT, fontFamily: FONT_BODY, flexShrink: 0 }}>Prep brief</span>
+                  </div>
+
                 </div>
               ))}
             </div>
@@ -214,7 +319,8 @@ export default function AnnotatedDailyBriefMockup() {
               <p style={{ fontSize: '10px', fontWeight: FW_SEMIBOLD, textTransform: 'uppercase', letterSpacing: '0.1em', color: L_TEXT_MUTED, margin: 0, fontFamily: FONT_BODY }}>
                 Due Today
               </p>
-              <Dot id="tasks" activeDot={activeDot} onDotClick={handleDotClick} />
+              <Dot id="tasks" activeDot={activeDot} onDotClick={handleDotClick}
+                dotRef={el => { dotRefs.current['tasks'] = el; }} />
             </div>
 
             {/* Task rows */}
@@ -231,31 +337,6 @@ export default function AnnotatedDailyBriefMockup() {
           </div>
         </MockWindow>
       </div>
-
-      {/* Mobile callout zone */}
-      {isMobile && (
-        <div style={{
-          minHeight: '80px', marginTop: '12px',
-          padding: activeDotData ? '14px 16px' : '12px 16px',
-          background: 'rgba(255,255,255,0.75)',
-          backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
-          border: '1px solid rgba(0,0,0,0.08)',
-          borderRadius: '10px',
-          transition: 'all 0.2s ease',
-        }}>
-          {activeDotData ? (
-            <>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '6px' }}>
-                <p style={{ margin: 0, fontSize: '13px', fontWeight: FW_SEMIBOLD, color: PUB_ACCENT, fontFamily: FONT_BODY }}>{activeDotData.label}</p>
-                <button onClick={() => setActiveDot(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, lineHeight: 1, color: L_TEXT_MUTED, fontSize: '16px' }}>×</button>
-              </div>
-              <p style={{ margin: 0, fontSize: '12px', fontWeight: FW_LIGHT, lineHeight: 1.7, color: L_TEXT_MUTED, fontFamily: FONT_BODY }}>{activeDotData.copy}</p>
-            </>
-          ) : (
-            <p style={{ margin: 0, fontSize: '11px', color: L_TEXT_MUTED, fontFamily: FONT_BODY, fontStyle: 'italic' }}>Tap a dot to learn more</p>
-          )}
-        </div>
-      )}
     </div>
   );
 }
