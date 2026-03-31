@@ -27,9 +27,8 @@ const NOTE_FLAG_DELAY     = 2800;  // compliance flag
 const HOLD_BEFORE_DONE    = 1200;  // hold on completed note before done
 
 // ── Soundwave bars ───────────────────────────────────────────────────────────
-// 12 bars with pre-defined height patterns so the animation feels organic
+// 14 bars with pre-defined height patterns so the animation feels organic
 
-const BAR_COUNT   = 14;
 const BAR_HEIGHTS = [0.4, 0.7, 0.5, 0.9, 0.6, 1.0, 0.8, 0.5, 0.9, 0.6, 0.7, 0.4, 0.8, 0.5];
 
 function Soundwave({ active }) {
@@ -134,7 +133,6 @@ function NotesContent({ status, onDone }) {
   const isRecording  = phase === PHASE.RECORDING;
   const isProcessing = phase === PHASE.PROCESSING;
   const isNote       = phase === PHASE.NOTE;
-  const isReady      = phase === PHASE.READY;
 
   // ── Recording UI ─────────────────────────────────────────────────────────
 
@@ -152,7 +150,7 @@ function NotesContent({ status, onDone }) {
       {/* Record / processing button */}
       <button style={{
         display: 'flex', alignItems: 'center', gap: '8px',
-        padding: '10px 20px', borderRadius: '10px', border: 'none',
+        padding: '10px 20px', borderRadius: '10px',
         background: isRecording
           ? 'rgba(239,68,68,0.10)'
           : isProcessing
