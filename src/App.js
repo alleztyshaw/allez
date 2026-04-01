@@ -21,6 +21,7 @@ import Signup from './pages/Signup';
 import Contact from './pages/Contact';
 import PrivacyPolicy from './pages/legal/PrivacyPolicy';
 import TermsOfService from './pages/legal/TermsOfService';
+import SecurityPage from './pages/SecurityPage';
 import Clients from './pages/Clients';
 import ClientDetail from './pages/ClientDetail';
 import Notes from './pages/Notes';
@@ -82,6 +83,7 @@ function App() {
               <Route path="/contact"                   element={<Contact />} />
               <Route path="/legal/privacy-policy"      element={<PrivacyPolicy />} />
               <Route path="/legal/terms-of-service"    element={<TermsOfService />} />
+              <Route path="/security"                  element={<SecurityPage />} />
               <Route path="/hq"              element={<ProtectedLayout><HQ           /></ProtectedLayout>} />
               <Route path="/hq/brief"        element={<ProtectedLayout><DailyBrief   /></ProtectedLayout>} />
               <Route path="/hq/clients"      element={<ProtectedLayout><Clients      /></ProtectedLayout>} />
