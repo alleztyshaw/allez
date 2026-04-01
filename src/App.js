@@ -19,6 +19,8 @@ import TeamPage from './pages/product/TeamPage';
 import ResetPassword from './pages/ResetPassword';
 import Signup from './pages/Signup';
 import Contact from './pages/Contact';
+import PrivacyPolicy from './pages/legal/PrivacyPolicy';
+import TermsOfService from './pages/legal/TermsOfService';
 import Clients from './pages/Clients';
 import ClientDetail from './pages/ClientDetail';
 import Notes from './pages/Notes';
@@ -61,23 +63,25 @@ function App() {
           <SearchOverlay />
           <div className="App">
             <Routes>
-              <Route path="/"                element={<HomePage />} />
-              <Route path="/sign-in"         element={<SignIn />} />
-              <Route path="/product"         element={<ProductPage />} />
-              <Route path="/product/notes"       element={<NotesPage />} />
-              <Route path="/product/daily-brief" element={<DailyBriefPage />} />
-              <Route path="/product/clients"     element={<ClientProfilesPage />} />
-              <Route path="/product/crm"         element={<CRMPage />} />
-              <Route path="/product/compliance"  element={<CompliancePage />} />
-              <Route path="/product/search"      element={<SearchPage />} />
-              <Route path="/product/team"        element={<TeamPage />} />
-              <Route path="/company"          element={<CompanyPage />} />
-              <Route path="/get-started"      element={<GetStarted />} />
-              <Route path="/book-a-demo"      element={<BookADemo />} />
-              <Route path="/reset-password"  element={<ResetPassword />} />
-              <Route path="/signup"          element={<Signup />} />
-              <Route path="/welcome"         element={<Welcome />} />
-              <Route path="/contact"         element={<Contact />} />
+              <Route path="/"                          element={<HomePage />} />
+              <Route path="/sign-in"                   element={<SignIn />} />
+              <Route path="/product"                   element={<ProductPage />} />
+              <Route path="/product/notes"             element={<NotesPage />} />
+              <Route path="/product/daily-brief"       element={<DailyBriefPage />} />
+              <Route path="/product/clients"           element={<ClientProfilesPage />} />
+              <Route path="/product/crm"               element={<CRMPage />} />
+              <Route path="/product/compliance"        element={<CompliancePage />} />
+              <Route path="/product/search"            element={<SearchPage />} />
+              <Route path="/product/team"              element={<TeamPage />} />
+              <Route path="/company"                   element={<CompanyPage />} />
+              <Route path="/get-started"               element={<GetStarted />} />
+              <Route path="/book-a-demo"               element={<BookADemo />} />
+              <Route path="/reset-password"            element={<ResetPassword />} />
+              <Route path="/signup"                    element={<Signup />} />
+              <Route path="/welcome"                   element={<Welcome />} />
+              <Route path="/contact"                   element={<Contact />} />
+              <Route path="/legal/privacy-policy"      element={<PrivacyPolicy />} />
+              <Route path="/legal/terms-of-service"    element={<TermsOfService />} />
               <Route path="/hq"              element={<ProtectedLayout><HQ           /></ProtectedLayout>} />
               <Route path="/hq/brief"        element={<ProtectedLayout><DailyBrief   /></ProtectedLayout>} />
               <Route path="/hq/clients"      element={<ProtectedLayout><Clients      /></ProtectedLayout>} />
