@@ -48,17 +48,10 @@ function Contact() {
           </p>
         </div>
 
-        <div style={{ ...s.optionsGrid, gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr' }}>
-          <div style={s.optionCard}>
-            <p style={s.optionLabel}>Email</p>
-            <p style={s.optionValue}>hello@allezhq.com</p>
-            <p style={s.optionNote}>For product inquiries, early access, and partnership discussions.</p>
-          </div>
-          <div style={s.optionCard}>
-            <p style={s.optionLabel}>Phone</p>
-            <p style={s.optionValue}>Coming soon</p>
-            <p style={s.optionNote}>We're a small team. Email is the best way to reach us right now.</p>
-          </div>
+        <div style={s.optionCard}>
+          <p style={s.optionLabel}>Email</p>
+          <p style={s.optionValue}>hello@allezhq.com</p>
+          <p style={s.optionNote}>For product inquiries, early access, and partnership discussions.</p>
         </div>
 
       </div>
@@ -103,11 +96,10 @@ const s = {
     fontSize: '16px', lineHeight: 1.8, fontWeight: FW_LIGHT,
     maxWidth: '520px', margin: 0, color: PUB_BODY_MUTED,
   },
-  optionsGrid: { display: 'grid', gap: '16px', marginBottom: '48px' },
   optionCard: {
     border: `1px solid ${PUB_BORDER}`, borderRadius: '12px', padding: '28px',
     background: PUB_CARD_BG, backdropFilter: 'blur(8px)',
-    WebkitBackdropFilter: 'blur(8px)',
+    WebkitBackdropFilter: 'blur(8px)', marginBottom: '48px',
   },
   optionLabel: {
     fontSize: '10px', fontWeight: FW_SEMIBOLD, textTransform: 'uppercase',

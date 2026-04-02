@@ -227,6 +227,11 @@ export default function BookADemo() {
 
           {error && <p style={s.errorText}>{error}</p>}
 
+          <p style={s.reassurance}>
+            After you submit, someone from our team will reach out within one business day
+            to schedule a walkthrough tailored to your practice.
+          </p>
+
           <button type="submit" className="submit-btn" disabled={loading} style={s.submitBtn}>
             {loading ? 'Sending…' : 'Request a Demo'}
           </button>
@@ -302,6 +307,10 @@ const s = {
     background: 'rgba(99,102,241,0.10)', border: '1px solid rgba(99,102,241,0.35)', color: PUB_ACCENT,
   },
   errorText: { fontSize: '13px', color: '#e53e3e', margin: 0 },
+  reassurance: {
+    fontSize: '13px', fontWeight: FW_LIGHT, lineHeight: 1.65,
+    color: PUB_TEXT_SUBTLE, margin: 0,
+  },
   submitBtn: {
     background: PUB_GRADIENT, color: 'white', border: 'none', borderRadius: '10px',
     padding: '14px 32px', fontSize: '14px', fontWeight: FW_SEMIBOLD, cursor: 'pointer',
