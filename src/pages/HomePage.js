@@ -2,8 +2,9 @@
 // Public-facing home page at /.
 // Marketing content only — auth lives at /sign-in.
 
+import { Link } from 'react-router-dom';
 import {
-  PUB_BG, PUB_TEXT, PUB_ACCENT,
+  PUB_BG, PUB_TEXT, PUB_ACCENT, PUB_LINK,
   PUB_TEXT_MUTED, PUB_BODY_MUTED, PUB_BODY_SUBTLE, PUB_TEXT_SUBTLE,
   PUB_DIVIDER, PUB_CARD_BG_LG, PUB_CARD_BORDER_LG, PUB_CARD_BG_SM, PUB_CARD_BORDER_SM,
   PUB_SCROLL_SECTION_BG,
@@ -39,6 +40,7 @@ export default function HomePage() {
           transform:translateY(-2px);
         }
         .scroll-cue { animation:scrollBounce 2s ease-in-out infinite; }
+        .section-link:hover { opacity: 0.6; }
       `}</style>
 
       <div style={s.meshWrap}>
@@ -98,34 +100,34 @@ export default function HomePage() {
 
         {/* Value section */}
         <div style={{ ...s.valueBlock, padding: isMobile ? '48px 24px 64px' : '80px 40px 100px' }}>
-          <p style={s.valueEyebrow}>Built in partnership with working advisors</p>
+          <p style={s.valueEyebrow}>A platform to serve every client at the highest level</p>
           <h2 style={s.valueTitle}>
             Your clients deserve an advisor<br />
             who's always prepared.
           </h2>
           <p style={s.valueSubtitle}>
-            Allez HQ connects your client data, meeting notes, tasks, and
-            compliance workflow into a single platform — so the intelligence
-            you've built over years of relationships is always at your fingertips,
-            not buried in three different tools.
+            Allez HQ is a unified practice management platform with AI note-taking, client records,
+            task management, and compliance in one place. The full picture of every client
+            relationship — their history, their goals, what matters to them — held together
+            and always within reach.
           </p>
           <div style={s.valueGrid}>
             {[
               {
                 headline: 'Walk into every meeting prepared.',
-                body: 'AI-generated briefs pull from your notes, open tasks, and client history. You know the relationship before you say hello.',
+                body: 'Your Daily Brief surfaces client context, recent notes, and open tasks before you say hello. So every detail is organized and ready when you need it.',
               },
               {
-                headline: 'Never let a relationship go cold.',
-                body: 'Cadence signals flag clients who are overdue for contact. Your book stays warm — not by memory, but by design.',
+                headline: 'Know every client beyond the portfolio.',
+                body: 'Birthdays, family milestones, life goals, personal preferences — Allez keeps the full context of each relationship organized so the details that make clients feel genuinely known are always at hand.',
               },
               {
-                headline: 'From transcript to action items in seconds.',
-                body: 'Record or paste a meeting transcript and the platform surfaces decisions made, next steps, and compliance signals automatically.',
+                headline: 'Reach clients before they have to ask.',
+                body: 'Cadence signals surface the right moment to connect with each client. You stay ahead of every touchpoint — not responding to the calendar, but leading the relationship.',
               },
               {
-                headline: 'One platform, not four.',
-                body: 'CRM, notes, task management, and compliance — natively unified. No context-switching. No data falling between tools.',
+                headline: 'One system. Every relationship, complete.',
+                body: 'Notes, records, tasks, and compliance in a single platform means nothing gets lost between tools. The relationship stays whole.',
               },
             ].map(item => (
               <div key={item.headline} className="value-card" style={s.valueCard}>
@@ -134,6 +136,9 @@ export default function HomePage() {
               </div>
             ))}
           </div>
+          <Link to="/product" className="section-link" style={s.sectionLink}>
+            Explore the platform →
+          </Link>
         </div>
 
         <div style={s.divider} />
@@ -199,6 +204,9 @@ export default function HomePage() {
               </div>
             ))}
           </div>
+          <a href="/security" className="section-link" style={s.sectionLink}>
+            How we handle your data →
+          </a>
         </div>
 
         <PublicFooter />
@@ -268,8 +276,8 @@ const s = {
     fontFamily: FONT_DISPLAY, fontSize: 'clamp(28px, 3.5vw, 44px)',
     fontWeight: FW_LIGHT, color: PUB_TEXT, margin: '0 0 20px', lineHeight: 1.2, letterSpacing: '0.01em',
   },
-  valueSubtitle: { fontSize: '15px', fontWeight: FW_LIGHT, lineHeight: 1.75, color: PUB_BODY_MUTED, maxWidth: '600px', margin: '0 0 56px' },
-  valueGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '16px' },
+  valueSubtitle: { fontSize: '15px', fontWeight: FW_LIGHT, lineHeight: 1.75, color: PUB_BODY_MUTED, margin: '0 0 56px' },
+  valueGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '16px', marginBottom: '32px' },
   valueCard: {
     background: PUB_CARD_BG_LG, backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
     border: `1px solid ${PUB_CARD_BORDER_LG}`, borderRadius: '16px', padding: '28px',
@@ -284,8 +292,8 @@ const s = {
     fontFamily: FONT_DISPLAY, fontSize: 'clamp(28px, 3.5vw, 44px)',
     fontWeight: FW_LIGHT, color: PUB_TEXT, margin: '0 0 16px', lineHeight: 1.2, letterSpacing: '0.01em',
   },
-  trustSubtitle: { fontSize: '15px', fontWeight: FW_LIGHT, lineHeight: 1.75, color: PUB_BODY_MUTED, maxWidth: '520px', margin: '0 0 48px' },
-  trustGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '16px' },
+  trustSubtitle: { fontSize: '15px', fontWeight: FW_LIGHT, lineHeight: 1.75, color: PUB_BODY_MUTED, margin: '0 0 48px' },
+  trustGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '16px', marginBottom: '32px' },
   trustCard: {
     background: PUB_CARD_BG_SM, backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
     border: `1px solid ${PUB_CARD_BORDER_SM}`, borderRadius: '16px', padding: '28px',
@@ -293,4 +301,10 @@ const s = {
   trustIcon: { display: 'block', color: PUB_TEXT_SUBTLE, marginBottom: '16px' },
   trustHeading: { fontSize: '14px', fontWeight: FW_MEDIUM, color: PUB_TEXT, margin: '0 0 10px', lineHeight: 1.4 },
   trustBody: { fontSize: '13px', fontWeight: FW_LIGHT, lineHeight: 1.75, color: PUB_BODY_MUTED, margin: 0 },
+
+  sectionLink: {
+    display: 'inline-block', fontSize: '15px', fontWeight: FW_MEDIUM,
+    color: PUB_LINK, textDecoration: 'none', letterSpacing: '0.02em',
+    fontFamily: FONT_BODY, transition: 'opacity 0.2s',
+  },
 };

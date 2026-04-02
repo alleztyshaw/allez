@@ -22,6 +22,7 @@ export const PUB_TEXT        = '#1a1a1a';
 export const PUB_TEXT_MUTED  = 'rgba(26,26,26,0.55)';
 export const PUB_TEXT_SUBTLE = 'rgba(26,26,26,0.35)';
 export const PUB_ACCENT      = '#6366f1';  // indigo — primary brand accent
+export const PUB_LINK        = '#1a9e5f';  // emerald — inline link color, AA contrast on PUB_BG
 
 // ── Body text opacity variants ───────────────────────────────────────────────
 

@@ -245,9 +245,9 @@ export default function GetStarted() {
 
         <div style={s.divider} />
 
-        {/* Pricing + comparison table */}
+        {/* Plans + comparison table */}
         <div style={s.pricingBlock}>
-          <p style={s.sectionEyebrow}>Pricing</p>
+          <p style={s.sectionEyebrow}>Plans</p>
           <p style={s.pricingIntro}>
             Allez HQ is available in two tiers. Starter is designed for solo advisors
             and small teams looking for a unified platform to manage client relationships
