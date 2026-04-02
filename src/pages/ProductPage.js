@@ -18,6 +18,7 @@ import useWindowWidth from '../hooks/useWindowWidth';
 import PublicHeader from '../components/public/PublicHeader';
 import PublicFooter from '../components/public/PublicFooter';
 import PublicHelmet from '../components/public/PublicHelmet';
+import FloatingDemoCTA from '../components/public/FloatingDemoCTA';
 import AINoteMockup from '../components/public/mockups/AINoteMockup';
 import DailyBriefMockup from '../components/public/mockups/DailyBriefMockup';
 import ClientProfileMockup from '../components/public/mockups/ClientProfileMockup';
@@ -246,6 +247,8 @@ export default function ProductPage() {
 
         <PublicFooter />
       </div>
+
+      <FloatingDemoCTA />
     </div>
   );
 }
