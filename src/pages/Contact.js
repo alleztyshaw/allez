@@ -1,8 +1,9 @@
 // src/pages/Contact.js
 // Public-facing contact page at /contact.
 
+import { Link } from 'react-router-dom';
 import {
-  PUB_BG, PUB_TEXT, PUB_TEXT_MUTED, PUB_ACCENT,
+  PUB_BG, PUB_TEXT, PUB_ACCENT,
   PUB_BODY_MUTED, PUB_BORDER, PUB_CARD_BG,
   PUB_MESH_INDIGO, PUB_MESH_TEAL, PUB_FONTS_AND_KEYFRAMES,
   FONT_DISPLAY, FONT_BODY,
@@ -54,6 +55,12 @@ function Contact() {
           <p style={s.optionNote}>For product inquiries, early access, and partnership discussions.</p>
         </div>
 
+        <p style={s.demoPrompt}>
+          Ready to see the platform?{' '}
+          <Link to="/book-a-demo" style={s.demoLink}>Book a demo</Link>
+          {' '}and we'll be in touch within one business day.
+        </p>
+
       </div>
 
       <PublicFooter />
@@ -83,7 +90,7 @@ const s = {
     flex: 1, position: 'relative', zIndex: 1,
     maxWidth: '800px', margin: '0 auto', width: '100%',
   },
-  headlineBlock: { marginBottom: '56px' },
+  headlineBlock: { marginBottom: '48px' },
   eyebrow: {
     fontSize: '11px', fontWeight: FW_SEMIBOLD, textTransform: 'uppercase',
     letterSpacing: '0.18em', color: PUB_ACCENT, margin: '0 0 20px',
@@ -94,12 +101,13 @@ const s = {
   },
   subtitle: {
     fontSize: '16px', lineHeight: 1.8, fontWeight: FW_LIGHT,
-    maxWidth: '520px', margin: 0, color: PUB_BODY_MUTED,
+    margin: 0, color: PUB_BODY_MUTED,
   },
   optionCard: {
     border: `1px solid ${PUB_BORDER}`, borderRadius: '12px', padding: '28px',
     background: PUB_CARD_BG, backdropFilter: 'blur(8px)',
-    WebkitBackdropFilter: 'blur(8px)', marginBottom: '48px',
+    WebkitBackdropFilter: 'blur(8px)', marginBottom: '32px',
+    maxWidth: '400px',
   },
   optionLabel: {
     fontSize: '10px', fontWeight: FW_SEMIBOLD, textTransform: 'uppercase',
@@ -111,6 +119,14 @@ const s = {
   },
   optionNote: {
     fontSize: '13px', lineHeight: 1.6, fontWeight: FW_LIGHT,
-    margin: 0, color: PUB_TEXT_MUTED,
+    margin: 0, color: PUB_BODY_MUTED,
+  },
+  demoPrompt: {
+    fontSize: '14px', fontWeight: FW_LIGHT, lineHeight: 1.7,
+    color: PUB_BODY_MUTED, margin: 0,
+  },
+  demoLink: {
+    color: PUB_ACCENT, textDecoration: 'none', fontWeight: FW_MEDIUM,
+    fontFamily: FONT_BODY,
   },
 };
