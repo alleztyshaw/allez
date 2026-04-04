@@ -303,7 +303,7 @@ const s = {
   trustBody: { fontSize: '13px', fontWeight: FW_LIGHT, lineHeight: 1.75, color: PUB_BODY_MUTED, margin: 0 },
 
   sectionLink: {
-    display: 'inline-block', fontSize: '15px', fontWeight: FW_MEDIUM,
+    display: 'inline-block', fontSize: '15px', fontWeight: FW_REGULAR,
     color: PUB_LINK, textDecoration: 'none', letterSpacing: '0.02em',
     fontFamily: FONT_BODY, transition: 'opacity 0.2s',
   },

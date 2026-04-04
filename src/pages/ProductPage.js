@@ -9,6 +9,7 @@ import {
   PUB_BG                as L_BG,
   PUB_TEXT              as L_TEXT,
   PUB_TEXT_SUBTLE       as L_TEXT_SUBTLE,
+  PUB_LINK,
   PUB_MESH_INDIGO, PUB_MESH_TEAL, PUB_FONTS_AND_KEYFRAMES,
   FONT_DISPLAY, FONT_BODY,
 FW_LIGHT, FW_REGULAR, FW_MEDIUM,
@@ -50,6 +51,7 @@ const FEATURES = [
     visualType: 'mockup',
     diagram: <AIPipelineDiagram />,
     diagramLabel: 'How the AI pipeline works',
+    linkText: 'Inside the AI Note-taker',
   },
   {
     slug: 'daily-brief',
@@ -64,6 +66,7 @@ const FEATURES = [
     ],
     visual: <DailyBriefMockup />,
     visualType: 'mockup',
+    linkText: 'Inside the Daily Brief',
   },
   {
     slug: 'clients',
@@ -78,6 +81,7 @@ const FEATURES = [
     ],
     visual: <ClientProfileMockup />,
     visualType: 'mockup',
+    linkText: 'Explore Client Profiles',
   },
   {
     slug: 'crm',
@@ -92,6 +96,7 @@ const FEATURES = [
     ],
     visual: <CRMClientsMockup />,
     visualType: 'mockup',
+    linkText: 'Explore CRM & Pipeline',
   },
   {
     slug: 'compliance',
@@ -107,6 +112,7 @@ const FEATURES = [
     ],
     visual: <ComplianceDiagram />,
     visualType: 'diagram',
+    linkText: 'See compliance in practice',
   },
   {
     slug: 'search',
@@ -121,6 +127,7 @@ const FEATURES = [
     ],
     visual: <SearchMockup />,
     visualType: 'mockup',
+    linkText: 'See Global Search',
   },
   {
     slug: 'team',
@@ -135,6 +142,7 @@ const FEATURES = [
     ],
     visual: <TeamDiagram />,
     visualType: 'diagram',
+    linkText: 'Inside Team & Access Control',
   },
 ];
 
@@ -156,6 +164,7 @@ export default function ProductPage() {
         ${PUB_FONTS_AND_KEYFRAMES}
         .feature-row:not(:last-child) { border-bottom:1px solid rgba(0,0,0,0.07); }
         .feature-name-link:hover { opacity: 0.7; }
+        .feature-link:hover { opacity: 0.6; }
       `}</style>
 
       <div style={s.meshWrap}>
@@ -214,6 +223,13 @@ export default function ProductPage() {
                     </li>
                   ))}
                 </ul>
+                <Link
+                  to={`/product/${f.slug}`}
+                  className="feature-link"
+                  style={s.featureLink}
+                >
+                  {f.linkText} →
+                </Link>
               </div>
               {/* Right: visual */}
               <div style={s.featureRight}>
@@ -297,7 +313,11 @@ const s = {
   featureList: { listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: '10px' },
   featureListItem: { display: 'flex', alignItems: 'flex-start', gap: '10px', fontSize: '13px', fontWeight: FW_LIGHT, lineHeight: 1.65, color: 'rgba(26,26,26,0.65)' },
   bullet: { display: 'inline-block', width: '4px', height: '4px', borderRadius: '50%', background: ACCENT, flexShrink: 0, marginTop: '7px' },
-  featureRight: {},
+  featureLink: {
+    display: 'inline-block', marginTop: '20px', fontSize: '15px',
+    fontWeight: FW_REGULAR, color: PUB_LINK, textDecoration: 'none',
+    fontFamily: FONT_BODY, letterSpacing: '0.02em', transition: 'opacity 0.2s',
+  },
 
   whyBlock: { maxWidth: '1100px', margin: '0 auto', padding: '80px 40px 100px' },
   whyGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '40px 48px', marginTop: '8px' },
