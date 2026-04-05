@@ -12,6 +12,7 @@ import useWindowWidth from '../hooks/useWindowWidth';
 import PublicHeader from '../components/public/PublicHeader';
 import PublicFooter from '../components/public/PublicFooter';
 import PublicHelmet from '../components/public/PublicHelmet';
+import PublicBottomCTA from '../components/public/PublicBottomCTA';
 
 export default function CompanyPage() {
   const windowWidth = useWindowWidth();
@@ -101,6 +102,7 @@ export default function CompanyPage() {
 
       </div>
 
+      <PublicBottomCTA />
       <PublicFooter />
     </div>
   );

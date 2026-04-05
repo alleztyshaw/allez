@@ -9,6 +9,7 @@ import ProductPage from './pages/ProductPage';
 import CompanyPage from './pages/CompanyPage';
 import GetStarted from './pages/GetStarted';
 import BookADemo from './pages/BookADemo';
+import StayInTouch from './pages/StayInTouch';
 import NotesPage from './pages/product/NotesPage';
 import DailyBriefPage from './pages/product/DailyBriefPage';
 import ClientProfilesPage from './pages/product/ClientProfilesPage';
@@ -77,6 +78,7 @@ function App() {
               <Route path="/company"                   element={<CompanyPage />} />
               <Route path="/get-started"               element={<GetStarted />} />
               <Route path="/book-a-demo"               element={<BookADemo />} />
+              <Route path="/stay-in-touch"             element={<StayInTouch />} />
               <Route path="/reset-password"            element={<ResetPassword />} />
               <Route path="/signup"                    element={<Signup />} />
               <Route path="/welcome"                   element={<Welcome />} />

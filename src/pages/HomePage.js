@@ -18,6 +18,7 @@ import useWindowWidth from '../hooks/useWindowWidth';
 import PublicHeader from '../components/public/PublicHeader';
 import PublicFooter from '../components/public/PublicFooter';
 import PublicHelmet from '../components/public/PublicHelmet';
+import PublicBottomCTA from '../components/public/PublicBottomCTA';
 
 export default function HomePage() {
   const windowWidth = useWindowWidth();
@@ -209,6 +210,7 @@ export default function HomePage() {
           </a>
         </div>
 
+        <PublicBottomCTA />
         <PublicFooter />
       </section>
     </div>
@@ -303,7 +305,7 @@ const s = {
   trustBody: { fontSize: '13px', fontWeight: FW_LIGHT, lineHeight: 1.75, color: PUB_BODY_MUTED, margin: 0 },
 
   sectionLink: {
-    display: 'inline-block', fontSize: '15px', fontWeight: FW_REGULAR,
+    display: 'inline-block', fontSize: '15px', fontWeight: FW_MEDIUM,
     color: PUB_LINK, textDecoration: 'none', letterSpacing: '0.02em',
     fontFamily: FONT_BODY, transition: 'opacity 0.2s',
   },
