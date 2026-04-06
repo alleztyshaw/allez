@@ -1,6 +1,6 @@
 import {
-  FONT_BODY, FW_LIGHT, FW_REGULAR, FW_MEDIUM,
-  ACCENT_LIGHT, L_TEXT_MUTED, L_BORDER,
+  FONT_BODY, FW_REGULAR, FW_MEDIUM,
+  ACCENT_LIGHT, L_TEXT_MUTED,
   L_SURFACE, COLOR_ERROR, INDIGO,
 } from '../../utils/hqConstants';
 import useWindowWidth from '../../hooks/useWindowWidth';
@@ -165,7 +165,7 @@ const styles = {
     background:    'none',
     border:        'none',
     fontFamily:    FONT_BODY,
-    fontSize:      '16px',
+    fontSize:      '15px',
     fontWeight:    FW_REGULAR,
     color:         L_TEXT_MUTED,
     textDecoration: 'underline',
@@ -194,7 +194,7 @@ const styles = {
     border:        'none',
     cursor:        'pointer',
     fontFamily:    FONT_BODY,
-    fontSize:      '16px',
+    fontSize:      '15px',
     fontWeight:    FW_REGULAR,
     color:         L_TEXT_MUTED,
     padding:       0,
