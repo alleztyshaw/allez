@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react';
-import { FONT_BODY, FW_LIGHT, L_TEXT, L_TEXT_MUTED } from '../../utils/hqConstants';
+import {
+  FONT_BODY, FONT_DISPLAY, FW_LIGHT,
+  L_TEXT_MUTED, AI_COLOR,
+  ONBOARDING_HEADLINE_GRADIENT,
+} from '../../utils/hqConstants';
 
-// Duration constants — all in ms
-const HEADLINE_DELAY    = 300;   // pause before headline starts
-const HEADLINE_DURATION = 1500;  // left-to-right fade across the text
-const SUBTEXT_DELAY     = 2000;  // pause before subtext appears
-const SUBTEXT_DURATION  = 800;   // subtext fade in duration
-const CTA_DELAY         = 3200;  // pause before continue prompt appears
+const HEADLINE_DELAY    = 100;
+const HEADLINE_DURATION = 3000;
+const SUBTEXT_DELAY     = 2000;
+const SUBTEXT_DURATION  = 800;
+const CTA_DELAY         = 3000;
 
 export default function WelcomeStep({ isFlowB, orgName, onNext }) {
   const [headlineVisible, setHeadlineVisible] = useState(false);
@@ -23,9 +26,25 @@ export default function WelcomeStep({ isFlowB, orgName, onNext }) {
   return (
     <div style={styles.wrap}>
 
-      {/* Headline — "Welcome to Allez." fades in left to right via clip-path */}
+      {/* Gradient text requires background-clip technique */}
+      <style>{`
+        .allez-welcome-headline {
+          background: ${ONBOARDING_HEADLINE_GRADIENT};
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+        }
+        .allez-welcome-cta {
+          background: ${ONBOARDING_HEADLINE_GRADIENT};
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+        }
+      `}</style>
+
       <div style={styles.headlineWrap}>
         <h1
+          className="allez-welcome-headline"
           style={{
             ...styles.headline,
             clipPath:   headlineVisible ? 'inset(0 0% 0 0)' : 'inset(0 100% 0 0)',
@@ -34,11 +53,10 @@ export default function WelcomeStep({ isFlowB, orgName, onNext }) {
                          opacity   ${HEADLINE_DURATION * 0.4}ms ease`,
           }}
         >
-          Welcome to Allez.
+          Welcome to Allez HQ
         </h1>
       </div>
 
-      {/* Subtext — Flow B only */}
       {isFlowB && orgName && (
         <p
           style={{
@@ -53,16 +71,15 @@ export default function WelcomeStep({ isFlowB, orgName, onNext }) {
         </p>
       )}
 
-      {/* Continue prompt */}
       <div
         style={{
           ...styles.ctaWrap,
           opacity:    ctaVisible ? 1 : 0,
-          transition: `opacity 600ms ease`,
+          transition: 'opacity 600ms ease',
         }}
       >
         <button style={styles.cta} onClick={onNext}>
-          Continue
+          <span className="allez-welcome-cta">Get started</span>
           <span style={styles.arrow} />
         </button>
       </div>
@@ -82,53 +99,58 @@ const styles = {
     padding:        '0 24px',
     boxSizing:      'border-box',
     textAlign:      'center',
+    position:       'relative',
   },
   headlineWrap: {
-    overflow: 'hidden', // clips the left-to-right reveal cleanly
+    width:     '100%',
+    maxWidth:  '90vw',
+    textAlign: 'center',
   },
   headline: {
-    fontFamily:    FONT_BODY,
+    fontFamily:    FONT_DISPLAY,
     fontSize:      'clamp(36px, 6vw, 72px)',
     fontWeight:    FW_LIGHT,
-    fontStyle:     'italic',
-    color:         L_TEXT,
+    fontStyle:     'normal',
     margin:        0,
     letterSpacing: '-0.01em',
     lineHeight:    1.1,
-    whiteSpace:    'nowrap',
   },
   subtext: {
-    fontFamily:  FONT_BODY,
-    fontSize:    'clamp(16px, 2vw, 22px)',
-    fontWeight:  FW_LIGHT,
-    fontStyle:   'italic',
-    color:       L_TEXT_MUTED,
-    margin:      '16px 0 0',
+    fontFamily:    FONT_BODY,
+    fontSize:      'clamp(16px, 2vw, 22px)',
+    fontWeight:    FW_LIGHT,
+    fontStyle:     'italic',
+    color:         L_TEXT_MUTED,
+    margin:        '16px 0 0',
     letterSpacing: '0.01em',
   },
   ctaWrap: {
-    marginTop: '48px',
+    position:  'absolute',
+    top:       '66%',
+    left:      '50%',
+    transform: 'translateX(-50%)',
   },
   cta: {
-    display:     'inline-flex',
-    alignItems:  'center',
-    gap:         '10px',
-    background:  'none',
-    border:      'none',
-    cursor:      'pointer',
-    fontFamily:  FONT_BODY,
-    fontSize:    '15px',
-    fontWeight:  '400',
-    color:       L_TEXT_MUTED,
-    padding:     0,
+    display:       'inline-flex',
+    alignItems:    'center',
+    gap:           '10px',
+    background:    'none',
+    border:        'none',
+    cursor:        'pointer',
+    fontFamily:    FONT_DISPLAY,
+    fontSize:      '22px',
+    fontWeight:    FW_LIGHT,
+    fontStyle:     'normal',
+    padding:       0,
     letterSpacing: '0.02em',
+    whiteSpace:    'nowrap',
   },
   arrow: {
-    display:     'inline-block',
-    width:       0,
-    height:      0,
-    borderTop:   '5px solid transparent',
-    borderBottom:'5px solid transparent',
-    borderLeft:  `7px solid ${L_TEXT_MUTED}`,
+    display:      'inline-block',
+    width:        0,
+    height:       0,
+    borderTop:    '7px solid transparent',
+    borderBottom: '7px solid transparent',
+    borderLeft:   `9px solid ${AI_COLOR}`,
   },
 };

@@ -30,7 +30,7 @@ const ORIENTATION_STEPS = [
   {
     key:       'brief',
     eyebrow:   'Daily Brief',
-    headline:  "The advisors your clients tell their friends about don't wait to be asked.",
+    headline:  "Act before you're asked.",
     body:      "Allez surfaces who deserves a call this week, what's coming up, and where to focus — so you can be proactive without having to think about it.",
     feature:   'Daily Brief — your week, before it begins.',
     illustration: 'brief',

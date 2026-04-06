@@ -1,9 +1,10 @@
 import {
-  FONT_BODY, FW_LIGHT, FW_REGULAR, FW_MEDIUM,
-  ACCENT_LIGHT, INDIGO, AMBER, ONBOARDING_ICON_FILL,
+  FONT_BODY, FONT_DISPLAY, FW_LIGHT, FW_REGULAR, FW_MEDIUM,
+  ACCENT_LIGHT, INDIGO,
   L_TEXT, L_TEXT_MUTED,
 } from '../../utils/hqConstants';
 import useWindowWidth from '../../hooks/useWindowWidth';
+import DailyBriefIllustration from './DailyBriefIllustration';
 
 const DOT_ACTIVE   = ACCENT_LIGHT;
 const DOT_INACTIVE = 'transparent';
@@ -35,77 +36,40 @@ function NotesIllustration() {
 
 function ProfilesIllustration() {
   return (
-    <svg viewBox="0 0 240 222" width="100%" style={{ maxWidth: 320 }}
-      fill="none" stroke={INDIGO} strokeWidth="1.8"
-      strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="120" cy="111" r="97" strokeWidth="1.4"/>
-      <circle cx="46" cy="48" r="28" fill={ONBOARDING_ICON_FILL}/>
-      <line x1="28" y1="63" x2="64" y2="63"/>
-      <line x1="28" y1="30" x2="28" y2="63"/>
-      <polyline points="30,61 37,55 43,59 49,47 55,52 61,41 65,36" strokeWidth="2.2"/>
-      <circle cx="194" cy="48" r="28" fill={ONBOARDING_ICON_FILL}/>
-      <circle cx="204" cy="32" r="5"/>
-      <path d="M198 57C198 45 201 41 204 41C207 41 210 45 210 57"/>
-      <circle cx="184" cy="35" r="4"/>
-      <path d="M180 57C180 47 182 44 184 44C186 44 188 47 188 57"/>
-      <circle cx="195" cy="41" r="3" fill={ONBOARDING_ICON_FILL}/>
-      <path d="M192 57C192 52 194 50 195 50C196 50 198 52 198 57"
-        fill={ONBOARDING_ICON_FILL} stroke={INDIGO}/>
-      <circle cx="46" cy="174" r="28" fill={ONBOARDING_ICON_FILL}/>
-      <rect x="28" y="160" width="36" height="28" rx="2"/>
-      <line x1="28" y1="169" x2="64" y2="169"/>
-      <line x1="37" y1="156" x2="37" y2="162"/>
-      <line x1="55" y1="156" x2="55" y2="162"/>
-      <line x1="34" y1="176" x2="58" y2="176"/>
-      <line x1="34" y1="182" x2="58" y2="182"/>
-      <circle cx="194" cy="174" r="28" fill={ONBOARDING_ICON_FILL}/>
-      <path d="M179 183 L192 176 L211 176 Q218 176 218 170 L218 162 Q218 156 212 156
-               L188 156 Q183 156 183 162 L183 176 Z"/>
-      <path d="M215 190 L207 181 L193 181 Q187 181 187 175 L187 167 Q187 160 193 160
-               L212 160 Q217 160 217 166 L217 181 Z" fill={ONBOARDING_ICON_FILL}/>
-      <circle cx="120" cy="100" r="18"/>
-      <path d="M94 143C100 131 108 127 120 127C132 127 140 131 146 143"/>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="60 60 380 380" width="100%" style={{ maxWidth: 340 }} fill="none">
+      {/* Ring with gaps at icon positions */}
+      <g stroke={INDIGO} strokeWidth="1.8" strokeLinecap="round" fill="none">
+        <path d="M 395.0,182.4 A 160,160 0 0,1 395.0,317.6"/>
+        <path d="M 317.6,395.0 A 160,160 0 0,1 182.4,395.0"/>
+        <path d="M 105.0,317.6 A 160,160 0 0,1 105.0,182.4"/>
+        <path d="M 182.4,105.0 A 160,160 0 0,1 317.6,105.0"/>
+      </g>
+      {/* Central figure */}
+      <g transform="translate(205,205) scale(3.75)" fill={INDIGO}>
+        <path d="M12,12c3.309,0,6-2.691,6-6S15.309,0,12,0,6,2.691,6,6s2.691,6,6,6Zm0-11c2.757,0,5,2.243,5,5s-2.243,5-5,5-5-2.243-5-5S9.243,1,12,1Zm9,22v.5c0,.276-.224,.5-.5,.5s-.5-.224-.5-.5v-.5c0-4.411-3.589-8-8-8s-8,3.589-8,8v.5c0,.276-.224,.5-.5,.5s-.5-.224-.5-.5v-.5c0-4.962,4.038-9,9-9s9,4.038,9,9Z"/>
+      </g>
+      {/* Top-left: chart-histogram */}
+      <g transform="translate(115,115) scale(1.833)" fill={INDIGO}>
+        <path d="m24,23.524c0,.276-.225.5-.5.5h0l-20-.024c-1.929,0-3.5-1.57-3.5-3.5V.5C0,.224.224,0,.5,0s.5.224.5.5v20c0,1.378,1.122,2.5,2.5,2.5l20.001.024c.275,0,.499.225.499.5ZM5,12.524v6.976c0,.276.224.5.5.5s.5-.224.5-.5v-6.976c0-.276-.224-.5-.5-.5s-.5.224-.5.5Zm5-2v8.976c0,.276.224.5.5.5s.5-.224.5-.5v-8.976c0-.276-.224-.5-.5-.5s-.5.224-.5.5Zm5,3v5.976c0,.276.224.5.5.5s.5-.224.5-.5v-5.976c0-.276-.224-.5-.5-.5s-.5.224-.5.5Zm5-4.024v10c0,.276.224.5.5.5s.5-.224.5-.5v-10c0-.276-.224-.5-.5-.5s-.5.224-.5.5Zm-15.5-.5c.128,0,.256-.049.354-.146l4.474-4.474c.371-.371.974-.371,1.345,0l2.948,2.949c.762.759,1.998.759,2.76,0L22.854.854c.195-.195.195-.512,0-.707s-.512-.195-.707,0l-6.474,6.474c-.371.371-.975.371-1.346,0l-2.948-2.948c-.761-.761-1.998-.761-2.759,0l-4.474,4.474c-.195.195-.195.512,0,.707.098.098.226.146.354.146Z"/>
+      </g>
+      {/* Top-right: users-alt */}
+      <g transform="translate(341,115) scale(1.833)" fill={INDIGO}>
+        <path d="m17.979,23.359c.078.265-.073.542-.339.62-.047.014-.094.021-.141.021-.217,0-.416-.141-.479-.359-.631-2.144-2.695-3.641-5.021-3.641s-4.39,1.497-5.021,3.641c-.077.266-.357.416-.62.339-.266-.078-.417-.355-.339-.62.754-2.567,3.213-4.359,5.979-4.359s5.226,1.792,5.979,4.359Zm6-9c-.754-2.567-3.213-4.359-5.979-4.359-.276,0-.5.224-.5.5s.224.5.5.5c2.325,0,4.39,1.497,5.021,3.641.063.219.263.359.479.359.047,0,.094-.007.141-.021.266-.078.417-.355.339-.62Zm-17.479-3.859c0-.276-.224-.5-.5-.5C3.233,10,.774,11.792.021,14.359c-.078.265.073.542.339.62.047.014.094.021.141.021.217,0,.416-.141.479-.359.631-2.144,2.695-3.641,5.021-3.641.276,0,.5-.224.5-.5Zm5.5-1.5c2.206,0,4,1.794,4,4s-1.794,4-4,4-4-1.794-4-4,1.794-4,4-4Zm-3,4c0,1.654,1.346,3,3,3s3-1.346,3-3-1.346-3-3-3-3,1.346-3,3Zm5-9c0-2.206,1.794-4,4-4s4,1.794,4,4-1.794,4-4,4-4-1.794-4-4Zm1,0c0,1.654,1.346,3,3,3s3-1.346,3-3-1.346-3-3-3-3,1.346-3,3Zm-13,0C2,1.794,3.794,0,6,0s4,1.794,4,4-1.794,4-4,4-4-1.794-4-4Zm1,0c0,1.654,1.346,3,3,3s3-1.346,3-3-1.346-3-3-3-3,1.346-3,3Z"/>
+      </g>
+      {/* Bottom-left: messages */}
+      <g transform="translate(115,341) scale(1.833)" fill={INDIGO}>
+        <path d="m19.5,3.998h-1.528C17.723,1.751,15.812-.002,13.5-.002H4.5C2.019-.002,0,2.017,0,4.498v13.854c0,.609.333,1.166.871,1.453.244.131.511.195.777.195.319,0,.638-.093.914-.277l3.524-2.349c.409,2.063,2.233,3.623,4.414,3.623h6.849l4.089,2.726c.276.185.594.277.914.277.266,0,.533-.064.777-.195.537-.287.871-.844.871-1.453v-13.854c0-2.481-2.019-4.5-4.5-4.5ZM2.007,18.892c-.203.135-.45.148-.665.032-.214-.114-.342-.328-.342-.571V4.498c0-1.93,1.57-3.5,3.5-3.5h9c1.93,0,3.5,1.57,3.5,3.5v8c0,1.93-1.57,3.5-3.5,3.5h-6.937c-.154,0-.285.054-.345.087l-4.211,2.806Zm20.993,3.461c0,.243-.128.457-.342.571-.214.115-.463.102-.665-.032l-4.215-2.81c-.082-.055-.179-.084-.277-.084h-7c-1.76,0-3.221-1.306-3.464-3h6.464c2.481,0,4.5-2.019,4.5-4.5v-7.5h1.5c1.93,0,3.5,1.57,3.5,3.5v13.854Z"/>
+      </g>
+      {/* Bottom-right: calendar-lines */}
+      <g transform="translate(341,341) scale(1.833)" fill={INDIGO}>
+        <path d="M19.5,2h-1.5V.5c0-.276-.224-.5-.5-.5s-.5,.224-.5,.5v1.5H7V.5c0-.276-.224-.5-.5-.5s-.5,.224-.5,.5v1.5h-1.5C2.019,2,0,4.019,0,6.5v13c0,2.481,2.019,4.5,4.5,4.5h15c2.481,0,4.5-2.019,4.5-4.5V6.5c0-2.481-2.019-4.5-4.5-4.5ZM4.5,3h15c1.93,0,3.5,1.57,3.5,3.5v1.5H1v-1.5c0-1.93,1.57-3.5,3.5-3.5Zm15,20H4.5c-1.93,0-3.5-1.57-3.5-3.5V9H23v10.5c0,1.93-1.57,3.5-3.5,3.5Zm-.5-9.5c0,.276-.224,.5-.5,.5H5.5c-.276,0-.5-.224-.5-.5s.224-.5,.5-.5h13c.276,0,.5,.224,.5,.5Zm-7,5c0,.276-.224,.5-.5,.5H5.5c-.276,0-.5-.224-.5-.5s.224-.5,.5-.5h6c.276,0,.5,.224,.5,.5Z"/>
+      </g>
     </svg>
   );
 }
 
 function BriefIllustration() {
-  return (
-    <svg viewBox="200 80 900 500" width="100%" style={{ maxWidth: 340 }}
-      fill="none" stroke={AMBER} strokeWidth="4"
-      strokeLinecap="round" strokeLinejoin="round">
-      <path d="M285 212C286 205 281 201 278 196C274 189 269 182 263 176C254 166 244 160 230 161C215 162 203 169 193 180C178 195 171 215 168 236C167 242 167 247 168 253"/>
-      <path d="M398 259C401 251 401 243 400 236C399 221 395 208 387 195C376 181 364 170 346 168C334 167 324 171 315 178C306 187 300 198 296 210"/>
-      <path d="M460 370C476 355 490 339 496 317C500 299 494 284 478 274C459 264 440 263 420 269C416 270 412 271 408 274"/>
-      <path d="M452 473C446 488 437 502 434 518C433 522 432 526 434 530C437 537 446 541 454 539C465 538 474 527 475 515C475 501 470 489 460 480C458 477 455 474 452 472"/>
-      <path d="M186 516C183 521 183 527 184 533C185 553 194 570 208 585C222 597 237 604 255 607C275 611 294 608 312 599C330 588 343 574 350 554"/>
-      <path d="M161 260C155 252 146 250 137 251C115 254 99 266 88 286C81 299 82 313 88 327"/>
-      <path d="M285 212C286 205 296 210 296 210"/>
-      <path d="M408 274C401 251 398 259 398 259"/>
-      <path d="M147 373C147 370 147 368 147 365C145 347 150 332 160 317C162 316 163 314 163 311"/>
-      <path d="M452 472C457 452 457 452 460 480"/>
-      <line x1="466" y1="377" x2="1239" y2="377"/>
-      <line x1="635" y1="377" x2="635" y2="295"/>
-      <line x1="824" y1="377" x2="824" y2="222"/>
-      <line x1="1012" y1="377" x2="1012" y2="237"/>
-      <ellipse cx="622" cy="268" rx="10" ry="6" transform="rotate(-30 622 268)"/>
-      <ellipse cx="648" cy="290" rx="10" ry="6" transform="rotate(-30 648 290)"/>
-      <path d="M628 272 C636 278 638 284 642 288"/>
-      <rect x="793" y="222" width="62" height="54" rx="3"/>
-      <line x1="793" y1="238" x2="855" y2="238"/>
-      <line x1="813" y1="212" x2="813" y2="226"/>
-      <line x1="835" y1="212" x2="835" y2="226"/>
-      <line x1="803" y1="252" x2="845" y2="252"/>
-      <line x1="803" y1="264" x2="838" y2="264"/>
-      <rect x="975" y="222" width="74" height="50" rx="2"/>
-      <line x1="975" y1="244" x2="1049" y2="244"/>
-      <line x1="987" y1="210" x2="987" y2="224"/>
-      <line x1="1037" y1="210" x2="1037" y2="224"/>
-      <circle cx="1085" cy="218" r="14"/>
-      <path d="M1063 280C1063 256 1070 248 1085 248C1100 248 1107 256 1107 280"/>
-      <line x1="1070" y1="256" x2="1049" y2="244"/>
-    </svg>
-  );
+  return <DailyBriefIllustration />;
 }
 
 const ILLUSTRATIONS = {
@@ -164,7 +128,7 @@ export default function OrientationStep({ content, dotIndex, isFirst, onNext, on
 
         <div style={{
           ...styles.illustrationPanel,
-          maxWidth: isMobile ? '280px' : '360px',
+          maxWidth: isMobile ? '420px' : '540px',
         }}>
           {ILLUSTRATIONS[illustration]}
         </div>
@@ -225,38 +189,38 @@ const styles = {
   copyPanel: {
     display:       'flex',
     flexDirection: 'column',
-    flex:          '1 1 0',
+    flex:          '2 1 0',
   },
   eyebrow: {
     fontFamily:    FONT_BODY,
-    fontSize:      '11px',
+    fontSize:      '13px',
     fontWeight:    FW_MEDIUM,
     color:         ACCENT_LIGHT,
     letterSpacing: '0.1em',
     textTransform: 'uppercase',
-    margin:        '0 0 12px',
+    margin:        '0 0 16px',
   },
   headline: {
-    fontFamily:    FONT_BODY,
-    fontSize:      'clamp(20px, 2.5vw, 30px)',
+    fontFamily:    FONT_DISPLAY,
+    fontSize:      'clamp(26px, 3vw, 42px)',
     fontWeight:    FW_LIGHT,
-    fontStyle:     'italic',
+    fontStyle:     'normal',
     color:         L_TEXT,
-    margin:        '0 0 16px',
-    lineHeight:    1.3,
-    letterSpacing: '-0.01em',
+    margin:        '0 0 24px',
+    lineHeight:    1.25,
+    letterSpacing: '0.01em',
   },
   body: {
     fontFamily: FONT_BODY,
-    fontSize:   'clamp(14px, 1.5vw, 16px)',
+    fontSize:   'clamp(16px, 1.6vw, 19px)',
     fontWeight: FW_REGULAR,
     color:      L_TEXT_MUTED,
-    lineHeight: 1.7,
-    margin:     '0 0 20px',
+    lineHeight: 1.75,
+    margin:     '0 0 28px',
   },
   feature: {
     fontFamily:    FONT_BODY,
-    fontSize:      '13px',
+    fontSize:      '15px',
     fontWeight:    FW_MEDIUM,
     color:         L_TEXT,
     margin:        0,
