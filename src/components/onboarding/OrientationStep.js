@@ -220,7 +220,7 @@ const styles = {
   },
   feature: {
     fontFamily:    FONT_BODY,
-    fontSize:      '15px',
+    fontSize:      '16px',
     fontWeight:    FW_MEDIUM,
     color:         L_TEXT,
     margin:        0,
@@ -250,7 +250,7 @@ const styles = {
     border:        'none',
     cursor:        'pointer',
     fontFamily:    FONT_BODY,
-    fontSize:      '15px',
+    fontSize:      '16px',
     fontWeight:    FW_REGULAR,
     color:         L_TEXT_MUTED,
     padding:       0,
