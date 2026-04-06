@@ -167,7 +167,6 @@ export default function OnboardingPage() {
   // ── Derived ────────────────────────────────────────────────────────────────
   const currentStep = steps[stepIdx];
   const isFirst     = stepIdx === 0;
-  const isLast      = stepIdx === steps.length - 1;
 
   // Orientation dot index (0–2) — which of the three orientation screens we're on
   const orientationIdx = currentStep?.startsWith('orientation-')

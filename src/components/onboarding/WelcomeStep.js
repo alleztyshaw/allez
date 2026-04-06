@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { FONT_BODY, FW_LIGHT, L_TEXT, L_TEXT_MUTED, ACCENT_LIGHT } from '../../utils/hqConstants';
+import { FONT_BODY, FW_LIGHT, L_TEXT, L_TEXT_MUTED } from '../../utils/hqConstants';
 
 // Duration constants — all in ms
 const HEADLINE_DELAY    = 300;   // pause before headline starts
