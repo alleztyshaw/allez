@@ -34,18 +34,26 @@ import Welcome from './pages/Welcome';
 import Settings from './pages/Settings';
 import Orgs from './pages/Orgs';
 import AuditLog from './pages/AuditLog';
+import OnboardingPage from './pages/OnboardingPage';
+import OnboardingGate from './components/onboarding/OnboardingGate';
 import StandardLayout from './components/StandardLayout';
 import MobilePreviewLayout from './components/MobilePreviewLayout';
 import SearchOverlay from './components/SearchOverlay';
 import { useOrg } from './context/OrgContext';
 import './App.css';
 
-// Thin router — delegates to the appropriate layout based on dev mode state
+// Thin router — delegates to the appropriate layout based on dev mode state.
+// OnboardingGate intercepts any /hq/* route and redirects to /onboarding
+// if the current user has not completed onboarding.
 function ProtectedLayout({ children }) {
   const { devMobileOverride } = useOrg();
-  return devMobileOverride
-    ? <MobilePreviewLayout>{children}</MobilePreviewLayout>
-    : <StandardLayout>{children}</StandardLayout>;
+  return (
+    <OnboardingGate>
+      {devMobileOverride
+        ? <MobilePreviewLayout>{children}</MobilePreviewLayout>
+        : <StandardLayout>{children}</StandardLayout>}
+    </OnboardingGate>
+  );
 }
 
 // Resets scroll on every navigation — covers all routes including pre-auth pages
@@ -86,6 +94,7 @@ function App() {
               <Route path="/legal/privacy-policy"      element={<PrivacyPolicy />} />
               <Route path="/legal/terms-of-service"    element={<TermsOfService />} />
               <Route path="/security"                  element={<SecurityPage />} />
+              <Route path="/onboarding"                element={<OnboardingPage />} />
               <Route path="/hq"              element={<ProtectedLayout><HQ           /></ProtectedLayout>} />
               <Route path="/hq/brief"        element={<ProtectedLayout><DailyBrief   /></ProtectedLayout>} />
               <Route path="/hq/clients"      element={<ProtectedLayout><Clients      /></ProtectedLayout>} />

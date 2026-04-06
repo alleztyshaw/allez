@@ -31,6 +31,13 @@ export const COLOR_ERROR   = '#f87171'; // red — destructive actions, errors, 
 export const COLOR_WARNING = '#fbbf24'; // amber — caution, overdue, pending
 export const COLOR_INFO    = '#60a5fa'; // blue — informational, updates, neutral changes
 
+// --- ONBOARDING ---
+export const ONBOARDING_BG_START   = '#F7F9FC'; // Gradient start — off-white
+export const ONBOARDING_BG_END     = '#D8EAF5'; // Gradient end — light blue
+export const ONBOARDING_ICON_FILL  = '#EEF4FB'; // Icon circle fill in orientation illustrations
+export const INDIGO                = '#4F46E5'; // Profiles illustration stroke
+export const AMBER                 = '#D97706'; // Daily Brief illustration stroke
+
 // --- SITE ACCENT — Allez HQ public/marketing pages (allezhq.com) ---
 export const SITE_ACCENT        = '#667eea'; // Purple — portfolio brand colour
 export const SITE_ACCENT_HOVER  = '#5a6fd6';
