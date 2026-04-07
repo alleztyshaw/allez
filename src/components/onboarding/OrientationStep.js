@@ -98,7 +98,7 @@ function ProgressDots({ dotIndex }) {
 
 // ─── OrientationStep ──────────────────────────────────────────────────────────
 export default function OrientationStep({ content, dotIndex, isFirst, onNext, onBack }) {
-  const { width } = useWindowWidth();
+  const width    = useWindowWidth();
   const isMobile  = width < 1024;
 
   const { eyebrow, headline, body, feature, illustration } = content;

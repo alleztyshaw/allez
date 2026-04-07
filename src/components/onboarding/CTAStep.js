@@ -188,9 +188,11 @@ const styles = {
     lineHeight:  1.5,
   },
   nav: {
-    display:   'flex',
-    alignItems: 'center',
+    display:        'flex',
+    alignItems:     'center',
     justifyContent: 'center',
+    marginTop:      'auto',
+    paddingTop:     '32px',
   },
   navBtn: {
     display:       'inline-flex',
