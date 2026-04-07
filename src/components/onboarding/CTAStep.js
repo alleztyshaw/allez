@@ -4,7 +4,6 @@ import {
   L_SURFACE, COLOR_ERROR,
   ONBOARDING_HEADLINE_GRADIENT,
 } from '../../utils/hqConstants';
-import useWindowWidth from '../../hooks/useWindowWidth';
 
 // Small inline mic icon — line drawing style matching illustration language
 function MicIcon() {
@@ -20,8 +19,6 @@ function MicIcon() {
 }
 
 export default function CTAStep({ saving, saveError, onNote, onApp, onBack }) {
-  const width    = useWindowWidth();
-  const isMobile = width < 900;
 
   return (
     <div style={styles.wrap}>
@@ -101,8 +98,7 @@ const styles = {
     alignItems:     'center',
     justifyContent: 'center',
     width:          '100%',
-    minHeight:      '100vh',
-    minHeight:      '100dvh',
+    minHeight: '100dvh',
     padding:        '60px 24px 80px',
     boxSizing:      'border-box',
     gap:            '32px',
