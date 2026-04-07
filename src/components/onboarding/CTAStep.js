@@ -1,7 +1,8 @@
 import {
-  FONT_BODY, FW_REGULAR, FW_MEDIUM,
+  FONT_BODY, FONT_DISPLAY, FW_LIGHT, FW_REGULAR, FW_MEDIUM,
   ACCENT_LIGHT, L_TEXT_MUTED,
-  L_SURFACE, COLOR_ERROR, INDIGO,
+  L_SURFACE, COLOR_ERROR,
+  ONBOARDING_HEADLINE_GRADIENT,
 } from '../../utils/hqConstants';
 import useWindowWidth from '../../hooks/useWindowWidth';
 
@@ -25,9 +26,18 @@ export default function CTAStep({ saving, saveError, onNote, onApp, onBack }) {
   return (
     <div style={styles.wrap}>
 
+      <style>{`
+        .cta-headline {
+          background: ${ONBOARDING_HEADLINE_GRADIENT};
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+        }
+      `}</style>
+
       <div style={styles.inner}>
 
-        <h2 style={styles.headline}>You're ready.</h2>
+        <h2 className="cta-headline" style={styles.headline}>You're ready</h2>
         <p style={styles.subtext}>Where would you like to start?</p>
 
         {/* Primary CTA */}
@@ -108,19 +118,20 @@ const styles = {
     width:          '100%',
   },
   headline: {
-    fontFamily:    FONT_BODY,
+    fontFamily:    FONT_DISPLAY,
     fontSize:      'clamp(28px, 4vw, 48px)',
-    fontWeight:    '700',
-    fontStyle:     'italic',
-    color:         INDIGO,
+    fontWeight:    FW_LIGHT,
+    fontStyle:     'normal',
+    color:         'transparent',
     margin:        '0 0 20px',
-    letterSpacing: '-0.01em',
+    letterSpacing: '0.02em',
     lineHeight:    1.1,
   },
   subtext: {
-    fontFamily:  FONT_BODY,
-    fontSize:    '16px',
-    fontWeight:  FW_REGULAR,
+    fontFamily:  FONT_DISPLAY,
+    fontSize:    'clamp(16px, 2vw, 22px)',
+    fontWeight:  FW_LIGHT,
+    fontStyle:   'italic',
     color:       L_TEXT_MUTED,
     margin:      '0 0 48px',
     lineHeight:  1.5,
@@ -130,8 +141,8 @@ const styles = {
     alignItems:     'center',
     justifyContent: 'center',
     gap:            '10px',
-    width:          '100%',
-    padding:        '16px 28px',
+    width:          'auto',
+    padding:        '16px 40px',
     background:     ACCENT_LIGHT,
     border:         'none',
     borderRadius:   '10px',
@@ -141,6 +152,7 @@ const styles = {
     color:          L_SURFACE,
     letterSpacing:  '0.01em',
     transition:     'background 200ms ease',
+    whiteSpace:     'nowrap',
   },
   dividerWrap: {
     display:    'flex',
