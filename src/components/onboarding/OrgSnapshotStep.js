@@ -5,11 +5,9 @@ import {
 } from '../../utils/hqConstants';
 import useWindowWidth from '../../hooks/useWindowWidth';
 
-// ─── Icon SVGs — stroke matches L_TEXT_MUTED so numbers pop ──────────────────
-
 function ColleaguesIcon() {
   return (
-    <svg viewBox="0 0 48 48" width="78" height="78" fill="none"
+    <svg viewBox="0 0 48 48" width="52" height="52" fill="none"
       stroke={L_TEXT_MUTED} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="24" cy="14" r="6" />
       <path d="M12 38c0-7 5-11 12-11s12 4 12 11" />
@@ -23,7 +21,7 @@ function ColleaguesIcon() {
 
 function ClientsIcon() {
   return (
-    <svg viewBox="0 0 48 48" width="78" height="78" fill="none"
+    <svg viewBox="0 0 48 48" width="52" height="52" fill="none"
       stroke={L_TEXT_MUTED} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="24" cy="16" r="7" />
       <path d="M10 42c0-8 6-13 14-13s14 5 14 13" />
@@ -33,7 +31,7 @@ function ClientsIcon() {
 
 function NotesIcon() {
   return (
-    <svg viewBox="0 0 48 48" width="78" height="78" fill="none"
+    <svg viewBox="0 0 48 48" width="52" height="52" fill="none"
       stroke={L_TEXT_MUTED} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
       <rect x="10" y="8" width="28" height="34" rx="3" />
       <line x1="16" y1="18" x2="32" y2="18" />
@@ -43,8 +41,7 @@ function NotesIcon() {
   );
 }
 
-// ─── Stat tile ────────────────────────────────────────────────────────────────
-function StatTile({ icon, count, label, softMessage }) {
+function StatTile({ icon, count, label, softMessage, isMobile }) {
   const hasCount = count > 0;
   const show     = hasCount || softMessage;
   if (!show) return null;
@@ -53,7 +50,7 @@ function StatTile({ icon, count, label, softMessage }) {
     <div style={styles.tile}>
       <div style={styles.iconWrap}>{icon}</div>
       {hasCount
-        ? <span style={styles.count}>{count}</span>
+        ? <span style={{ ...styles.count, fontSize: isMobile ? 'clamp(40px, 10vw, 64px)' : 'clamp(64px, 8vw, 96px)' }}>{count}</span>
         : <span style={styles.soft}>{softMessage}</span>
       }
       {hasCount && <span style={styles.label}>{label}</span>}
@@ -61,7 +58,6 @@ function StatTile({ icon, count, label, softMessage }) {
   );
 }
 
-// ─── OrgSnapshotStep ─────────────────────────────────────────────────────────
 export default function OrgSnapshotStep({ snapshot, onNext, onBack }) {
   const width    = useWindowWidth();
   const isMobile = width < 900;
@@ -70,8 +66,6 @@ export default function OrgSnapshotStep({ snapshot, onNext, onBack }) {
 
   return (
     <div style={styles.wrap}>
-
-      {/* Gradient headline text */}
       <style>{`
         .snapshot-headline {
           background: ${ONBOARDING_HEADLINE_GRADIENT};
@@ -81,7 +75,7 @@ export default function OrgSnapshotStep({ snapshot, onNext, onBack }) {
         }
       `}</style>
 
-      {/* Top third — headline */}
+      {/* Headline */}
       <div style={styles.topZone}>
         <h2 className="snapshot-headline" style={styles.headline}>
           Your team is already here
@@ -89,45 +83,37 @@ export default function OrgSnapshotStep({ snapshot, onNext, onBack }) {
         <div style={styles.rule} />
       </div>
 
-      {/* Middle third — stats spread full width */}
-      <div style={{
-        ...styles.middleZone,
-        flexDirection: isMobile ? 'column' : 'row',
-        gap:           isMobile ? '48px' : '0',
-      }}>
-
+      {/* Stats — always horizontal, scale down on mobile */}
+      <div style={styles.middleZone}>
         {colleagues > 0 && (
           <div style={styles.tile}>
             <div style={styles.iconWrap}><ColleaguesIcon /></div>
-            <span style={styles.count}>{colleagues}</span>
-            <span style={styles.label}>
-              {colleagues === 1 ? 'colleague' : 'colleagues'}
-            </span>
+            <span style={{ ...styles.count, fontSize: isMobile ? 'clamp(40px, 10vw, 64px)' : 'clamp(64px, 8vw, 96px)' }}>{colleagues}</span>
+            <span style={styles.label}>{colleagues === 1 ? 'colleague' : 'colleagues'}</span>
           </div>
         )}
-
         <StatTile
           icon={<ClientsIcon />}
           count={clients}
           label={clients === 1 ? 'client' : 'clients'}
           softMessage={clients === 0 ? 'Your client roster is on its way' : null}
+          isMobile={isMobile}
         />
-
         <StatTile
           icon={<NotesIcon />}
           count={notes}
           label={notes === 1 ? 'note' : 'notes'}
           softMessage={notes === 0 ? 'Your first note is just around the corner' : null}
+          isMobile={isMobile}
         />
-
       </div>
 
-      {/* Bottom third — context line */}
+      {/* Context */}
       <div style={styles.bottomZone}>
         <p style={styles.context}>A running start, from day one</p>
       </div>
 
-      {/* Nav pinned to bottom */}
+      {/* Nav — inline flow, not absolute, so it never overlaps */}
       <div style={styles.nav}>
         <button style={styles.navBtn} onClick={onBack}>
           <span style={styles.arrowLeft} />
@@ -148,28 +134,26 @@ const styles = {
     display:        'flex',
     flexDirection:  'column',
     alignItems:     'center',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     width:          '100%',
-    height:         '100vh',
-    padding:        '0',
+    minHeight:      '100vh',
+    minHeight:      '100dvh',
+    padding:        '60px 24px 80px',
     boxSizing:      'border-box',
-    position:       'relative',
+    gap:            '0',
   },
   topZone: {
     display:        'flex',
     flexDirection:  'column',
     alignItems:     'center',
-    justifyContent: 'flex-end',
-    flex:           '1 0 0',
     width:          '100%',
     paddingBottom:  '40px',
-    paddingTop:     '80px',
   },
   headline: {
     fontFamily:    FONT_DISPLAY,
-    fontSize:      'clamp(28px, 3.5vw, 52px)',
+    fontSize:      'clamp(22px, 3.5vw, 52px)',
     fontWeight:    FW_LIGHT,
-    color:         'transparent', // overridden by gradient class
+    color:         'transparent',
     margin:        '0 0 32px',
     letterSpacing: '0.02em',
     lineHeight:    1.2,
@@ -182,13 +166,14 @@ const styles = {
   },
   middleZone: {
     display:        'flex',
+    flexDirection:  'row',
     alignItems:     'flex-start',
     justifyContent: 'space-around',
-    flex:           '1 0 0',
     width:          '100%',
     maxWidth:       '1000px',
-    padding:        '0 40px',
+    padding:        '0 16px',
     boxSizing:      'border-box',
+    marginBottom:   '40px',
   },
   tile: {
     display:        'flex',
@@ -201,7 +186,6 @@ const styles = {
   },
   count: {
     fontFamily:    FONT_DISPLAY,
-    fontSize:      'clamp(64px, 8vw, 96px)',
     fontWeight:    FW_LIGHT,
     color:         INDIGO,
     lineHeight:    1,
@@ -210,47 +194,41 @@ const styles = {
   },
   soft: {
     fontFamily:  FONT_BODY,
-    fontSize:    '15px',
+    fontSize:    '13px',
     fontWeight:  FW_REGULAR,
     color:       L_TEXT_MUTED,
-    maxWidth:    '160px',
+    maxWidth:    '100px',
     textAlign:   'center',
-    lineHeight:  1.5,
+    lineHeight:  1.4,
   },
   label: {
     fontFamily:    FONT_BODY,
-    fontSize:      '16px',
+    fontSize:      '13px',
     fontWeight:    FW_REGULAR,
     color:         L_TEXT_MUTED,
     letterSpacing: '0.04em',
     textTransform: 'uppercase',
   },
   bottomZone: {
-    display:        'flex',
-    flexDirection:  'column',
-    alignItems:     'center',
-    justifyContent: 'flex-start',
-    flex:           '1 0 0',
-    paddingTop:     '40px',
+    display:    'flex',
+    alignItems: 'center',
+    marginBottom: '40px',
   },
   context: {
     fontFamily:    FONT_DISPLAY,
-    fontSize:      'clamp(18px, 2vw, 26px)',
+    fontSize:      'clamp(16px, 2vw, 26px)',
     fontWeight:    FW_LIGHT,
     fontStyle:     'italic',
     color:         L_TEXT_MUTED,
     margin:        0,
     letterSpacing: '0.01em',
+    textAlign:     'center',
   },
   nav: {
     display:        'flex',
     alignItems:     'center',
     justifyContent: 'center',
     gap:            '32px',
-    position:       'absolute',
-    bottom:         '48px',
-    left:           '50%',
-    transform:      'translateX(-50%)',
   },
   navBtn: {
     display:       'inline-flex',

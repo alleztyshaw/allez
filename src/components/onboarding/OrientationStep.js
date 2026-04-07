@@ -99,7 +99,7 @@ function ProgressDots({ dotIndex }) {
 // ─── OrientationStep ──────────────────────────────────────────────────────────
 export default function OrientationStep({ content, dotIndex, isFirst, onNext, onBack }) {
   const { width } = useWindowWidth();
-  const isMobile  = width < 900;
+  const isMobile  = width < 1024;
 
   const { eyebrow, headline, body, feature, illustration } = content;
 
@@ -159,8 +159,9 @@ const styles = {
     alignItems:     'center',
     justifyContent: 'center',
     width:          '100%',
-    height:         '100vh',
-    padding:        '0 40px',
+    minHeight:      '100vh',
+    minHeight:      '100dvh',
+    padding:        '80px 32px 100px',
     boxSizing:      'border-box',
     position:       'relative',
   },
@@ -220,7 +221,7 @@ const styles = {
   },
   feature: {
     fontFamily:    FONT_BODY,
-    fontSize:      '16px',
+    fontSize:      '15px',
     fontWeight:    FW_MEDIUM,
     color:         L_TEXT,
     margin:        0,
@@ -250,7 +251,7 @@ const styles = {
     border:        'none',
     cursor:        'pointer',
     fontFamily:    FONT_BODY,
-    fontSize:      '16px',
+    fontSize:      '15px',
     fontWeight:    FW_REGULAR,
     color:         L_TEXT_MUTED,
     padding:       0,

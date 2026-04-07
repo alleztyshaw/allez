@@ -95,7 +95,8 @@ const styles = {
     alignItems:     'center',
     justifyContent: 'center',
     width:          '100%',
-    height:         '100vh',
+    minHeight:      '100vh',
+    minHeight:      '100dvh',
     padding:        '0 24px',
     boxSizing:      'border-box',
     textAlign:      'center',
@@ -129,6 +130,7 @@ const styles = {
     top:       '66%',
     left:      '50%',
     transform: 'translateX(-50%)',
+    width:     'max-content',
   },
   cta: {
     display:       'inline-flex',

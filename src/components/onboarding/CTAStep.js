@@ -83,10 +83,7 @@ export default function CTAStep({ saving, saveError, onNote, onApp, onBack }) {
       </div>
 
       {/* Back nav */}
-      <div style={{
-        ...styles.nav,
-        bottom: isMobile ? '32px' : '48px',
-      }}>
+      <div style={styles.nav}>
         <button style={styles.navBtn} onClick={onBack} disabled={saving}>
           <span style={styles.arrowLeft} />
           Go back
@@ -104,10 +101,11 @@ const styles = {
     alignItems:     'center',
     justifyContent: 'center',
     width:          '100%',
-    height:         '100vh',
-    padding:        '0 24px',
+    minHeight:      '100vh',
+    minHeight:      '100dvh',
+    padding:        '60px 24px 80px',
     boxSizing:      'border-box',
-    position:       'relative',
+    gap:            '32px',
   },
   inner: {
     display:        'flex',
@@ -194,9 +192,9 @@ const styles = {
     lineHeight:  1.5,
   },
   nav: {
-    position:  'absolute',
-    left:      '50%',
-    transform: 'translateX(-50%)',
+    display:   'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   navBtn: {
     display:       'inline-flex',
