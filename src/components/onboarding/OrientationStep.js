@@ -128,7 +128,7 @@ export default function OrientationStep({ content, dotIndex, isFirst, onNext, on
 
         <div style={{
           ...styles.illustrationPanel,
-          maxWidth: isMobile ? '420px' : '540px',
+          maxWidth: isMobile ? '260px' : '320px',
         }}>
           {ILLUSTRATIONS[illustration]}
         </div>
@@ -231,8 +231,8 @@ const styles = {
     alignItems:     'center',
     justifyContent: 'center',
     flex:           '1 1 0',
-    maxHeight:      '45vh',
-    overflow:       'hidden',
+    width:          '100%',
+    maxWidth:       '320px',
   },
   nav: {
     display:        'flex',
