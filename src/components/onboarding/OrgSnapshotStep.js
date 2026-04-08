@@ -75,45 +75,43 @@ export default function OrgSnapshotStep({ snapshot, onNext, onBack }) {
         }
       `}</style>
 
-      {/* Headline */}
-      <div style={styles.topZone}>
+      {/* Single centered content block */}
+      <div style={styles.contentBlock}>
+
         <h2 className="snapshot-headline" style={styles.headline}>
           Your team is already here
         </h2>
         <div style={styles.rule} />
-      </div>
 
-      {/* Stats — always horizontal, scale down on mobile */}
-      <div style={styles.middleZone}>
-        {colleagues > 0 && (
-          <div style={styles.tile}>
-            <div style={styles.iconWrap}><ColleaguesIcon /></div>
-            <span style={{ ...styles.count, fontSize: isMobile ? 'clamp(40px, 10vw, 64px)' : 'clamp(64px, 8vw, 96px)' }}>{colleagues}</span>
-            <span style={styles.label}>{colleagues === 1 ? 'colleague' : 'colleagues'}</span>
-          </div>
-        )}
-        <StatTile
-          icon={<ClientsIcon />}
-          count={clients}
-          label={clients === 1 ? 'client' : 'clients'}
-          softMessage={clients === 0 ? 'Your client roster is on its way' : null}
-          isMobile={isMobile}
-        />
-        <StatTile
-          icon={<NotesIcon />}
-          count={notes}
-          label={notes === 1 ? 'note' : 'notes'}
-          softMessage={notes === 0 ? 'Your first note is just around the corner' : null}
-          isMobile={isMobile}
-        />
-      </div>
+        <div style={styles.middleZone}>
+          {colleagues > 0 && (
+            <div style={styles.tile}>
+              <div style={styles.iconWrap}><ColleaguesIcon /></div>
+              <span style={{ ...styles.count, fontSize: isMobile ? 'clamp(40px, 10vw, 64px)' : 'clamp(64px, 8vw, 96px)' }}>{colleagues}</span>
+              <span style={styles.label}>{colleagues === 1 ? 'colleague' : 'colleagues'}</span>
+            </div>
+          )}
+          <StatTile
+            icon={<ClientsIcon />}
+            count={clients}
+            label={clients === 1 ? 'client' : 'clients'}
+            softMessage={clients === 0 ? 'Your client roster is on its way' : null}
+            isMobile={isMobile}
+          />
+          <StatTile
+            icon={<NotesIcon />}
+            count={notes}
+            label={notes === 1 ? 'note' : 'notes'}
+            softMessage={notes === 0 ? 'Your first note is just around the corner' : null}
+            isMobile={isMobile}
+          />
+        </div>
 
-      {/* Context */}
-      <div style={styles.bottomZone}>
         <p style={styles.context}>A running start, from day one</p>
+
       </div>
 
-      {/* Nav — inline flow, not absolute, so it never overlaps */}
+      {/* Nav floats to bottom */}
       <div style={styles.nav}>
         <button style={styles.navBtn} onClick={onBack}>
           <span style={styles.arrowLeft} />
@@ -139,15 +137,15 @@ const styles = {
     padding:        '0 24px',
     boxSizing:      'border-box',
   },
-  topZone: {
+  contentBlock: {
     display:        'flex',
     flexDirection:  'column',
     alignItems:     'center',
-    width:          '100%',
-    flex:           '1 1 auto',
     justifyContent: 'center',
-    paddingBottom:  '24px',
-    paddingTop:     '60px',
+    flex:           '1 1 auto',
+    width:          '100%',
+    maxWidth:       '1000px',
+    gap:            '0',
   },
   headline: {
     fontFamily:    FONT_DISPLAY,
@@ -160,9 +158,10 @@ const styles = {
     textAlign:     'center',
   },
   rule: {
-    width:      '128px',
-    height:     '1px',
-    background: L_TEXT_MUTED,
+    width:        '128px',
+    height:       '1px',
+    background:   L_TEXT_MUTED,
+    marginBottom: '40px',
   },
   middleZone: {
     display:        'flex',
@@ -170,7 +169,6 @@ const styles = {
     alignItems:     'flex-start',
     justifyContent: 'space-around',
     width:          '100%',
-    maxWidth:       '1000px',
     padding:        '0 16px',
     boxSizing:      'border-box',
     marginBottom:   '40px',
@@ -209,11 +207,6 @@ const styles = {
     letterSpacing: '0.04em',
     textTransform: 'uppercase',
   },
-  bottomZone: {
-    display:    'flex',
-    alignItems: 'center',
-    marginBottom: '40px',
-  },
   context: {
     fontFamily:    FONT_DISPLAY,
     fontSize:      'clamp(16px, 2vw, 26px)',
@@ -229,6 +222,7 @@ const styles = {
     alignItems:     'center',
     justifyContent: 'center',
     gap:            '32px',
+    marginTop:      'auto',
     padding:        '24px 0 40px',
     width:          '100%',
     flexShrink:     0,

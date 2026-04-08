@@ -79,9 +79,9 @@ const ILLUSTRATIONS = {
 };
 
 // ─── Progress dots ────────────────────────────────────────────────────────────
-function ProgressDots({ dotIndex }) {
+function ProgressDots({ dotIndex, isMobile }) {
   return (
-    <div style={styles.dots}>
+    <div style={{ ...styles.dots, padding: isMobile ? '16px 0 20px' : '32px 0 24px' }}>
       {[0, 1, 2].map(i => (
         <div
           key={i}
@@ -106,7 +106,7 @@ export default function OrientationStep({ content, dotIndex, isFirst, onNext, on
   return (
     <div style={styles.wrap}>
 
-      <ProgressDots dotIndex={dotIndex} />
+      <ProgressDots dotIndex={dotIndex} isMobile={isMobile} />
 
       <div style={{
         ...styles.inner,
@@ -237,6 +237,7 @@ const styles = {
     alignItems:     'center',
     justifyContent: 'center',
     gap:            '32px',
+    marginTop:      'auto',
     padding:        '24px 0 40px',
     width:          '100%',
     flexShrink:     0,

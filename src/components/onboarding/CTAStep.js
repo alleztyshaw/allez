@@ -191,6 +191,7 @@ const styles = {
     display:        'flex',
     alignItems:     'center',
     justifyContent: 'center',
+    marginTop:      'auto',
     padding:        '24px 0 40px',
     width:          '100%',
     flexShrink:     0,
