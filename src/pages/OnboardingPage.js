@@ -7,9 +7,6 @@ import OrgSnapshotStep   from '../components/onboarding/OrgSnapshotStep';
 import OrientationStep   from '../components/onboarding/OrientationStep';
 import CTAStep           from '../components/onboarding/CTAStep';
 
-// ─── Orientation content ────────────────────────────────────────────────────
-// Three screens sharing the same OrientationStep template.
-// Illustrations are keyed strings — each step component renders the right SVG.
 const ORIENTATION_STEPS = [
   {
     key:       'notes',
@@ -37,9 +34,6 @@ const ORIENTATION_STEPS = [
   },
 ];
 
-// ─── Step index helpers ──────────────────────────────────────────────────────
-// Flow A: welcome → orientation(x3) → cta
-// Flow B: welcome → snapshot → orientation(x3) → cta
 function buildSteps(isFlowB) {
   const steps = ['welcome'];
   if (isFlowB) steps.push('snapshot');
@@ -51,22 +45,16 @@ function buildSteps(isFlowB) {
 export default function OnboardingPage() {
   const navigate = useNavigate();
 
-  // ── Auth + org state ───────────────────────────────────────────────────────
-  const [member,   setMember]   = useState(null);   // current user's org_members row
+  const [member,   setMember]   = useState(null);
   const [orgName,  setOrgName]  = useState('');
-  const [snapshot, setSnapshot] = useState(null);   // { colleagues, clients, notes }
+  const [snapshot, setSnapshot] = useState(null);
   const [loading,  setLoading]  = useState(true);
-
-  // ── Flow + step state ──────────────────────────────────────────────────────
-  const [isFlowB, setIsFlowB] = useState(false);
-  const [steps,   setSteps]   = useState(buildSteps(false));
-  const [stepIdx, setStepIdx] = useState(0);
-
-  // ── Flag write state ───────────────────────────────────────────────────────
+  const [isFlowB,  setIsFlowB]  = useState(false);
+  const [steps,    setSteps]    = useState(buildSteps(false));
+  const [stepIdx,  setStepIdx]  = useState(0);
   const [saving,    setSaving]    = useState(false);
   const [saveError, setSaveError] = useState(false);
 
-  // ── Load everything on mount ───────────────────────────────────────────────
   useEffect(() => {
     let cancelled = false;
 
@@ -76,7 +64,6 @@ export default function OnboardingPage() {
 
       const userId = session.user.id;
 
-      // Fetch the current user's org_members row
       const { data: memberRow, error: memberErr } = await supabase
         .from('org_members')
         .select('id, org_id, first_name, onboarding_complete')
@@ -86,14 +73,12 @@ export default function OnboardingPage() {
       if (cancelled) return;
 
       if (memberErr || !memberRow) {
-        // No org row — show a graceful holding screen (handled in render)
         setLoading(false);
         return;
       }
 
       setMember(memberRow);
 
-      // Fetch org name
       const { data: orgRow } = await supabase
         .from('organizations')
         .select('name')
@@ -102,7 +87,6 @@ export default function OnboardingPage() {
 
       if (!cancelled && orgRow) setOrgName(orgRow.name);
 
-      // Flow detection — any clients OR notes in this org = Flow B
       const [{ count: clientCount }, { count: noteCount }] = await Promise.all([
         supabase.from('clients').select('id', { count: 'exact', head: true }).eq('org_id', memberRow.org_id),
         supabase.from('notes').select('id',   { count: 'exact', head: true }).eq('org_id', memberRow.org_id),
@@ -114,7 +98,6 @@ export default function OnboardingPage() {
       setIsFlowB(flowB);
       setSteps(buildSteps(flowB));
 
-      // If Flow B, fetch the access-scoped snapshot
       if (flowB) {
         const [{ count: colleagues }, { count: clients }, { count: notes }] = await Promise.all([
           supabase.from('org_members')
@@ -140,11 +123,9 @@ export default function OnboardingPage() {
     return () => { cancelled = true; };
   }, [navigate]);
 
-  // ── Step navigation ────────────────────────────────────────────────────────
   function next() { setStepIdx(i => Math.min(i + 1, steps.length - 1)); }
   function back() { setStepIdx(i => Math.max(i - 1, 0)); }
 
-  // ── Complete onboarding — write flag + navigate ────────────────────────────
   async function complete(destination) {
     if (!member) return;
     setSaving(true);
@@ -164,16 +145,12 @@ export default function OnboardingPage() {
     navigate(destination, { replace: true });
   }
 
-  // ── Derived ────────────────────────────────────────────────────────────────
-  const currentStep = steps[stepIdx];
-  const isFirst     = stepIdx === 0;
-
-  // Orientation dot index (0–2) — which of the three orientation screens we're on
+  const currentStep    = steps[stepIdx];
+  const isFirst        = stepIdx === 0;
   const orientationIdx = currentStep?.startsWith('orientation-')
     ? parseInt(currentStep.split('-')[1], 10)
     : null;
 
-  // ── Loading ────────────────────────────────────────────────────────────────
   if (loading) {
     return (
       <div style={styles.container}>
@@ -182,7 +159,6 @@ export default function OnboardingPage() {
     );
   }
 
-  // ── No org row — holding screen ────────────────────────────────────────────
   if (!member) {
     return (
       <div style={styles.container}>
@@ -197,26 +173,17 @@ export default function OnboardingPage() {
     );
   }
 
-  // ── Main render ────────────────────────────────────────────────────────────
   return (
     <div style={styles.container}>
       <div style={styles.gradient} />
       <div style={styles.content}>
 
         {currentStep === 'welcome' && (
-          <WelcomeStep
-            isFlowB={isFlowB}
-            orgName={orgName}
-            onNext={next}
-          />
+          <WelcomeStep isFlowB={isFlowB} orgName={orgName} onNext={next} />
         )}
 
         {currentStep === 'snapshot' && (
-          <OrgSnapshotStep
-            snapshot={snapshot}
-            onNext={next}
-            onBack={back}
-          />
+          <OrgSnapshotStep snapshot={snapshot} onNext={next} onBack={back} />
         )}
 
         {currentStep?.startsWith('orientation-') && (
@@ -247,32 +214,29 @@ export default function OnboardingPage() {
 const styles = {
   container: {
     position:   'relative',
-    minHeight:  '100vh',
+    minHeight:  '100dvh',
     width:      '100%',
-    display:    'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
     overflow:   'hidden',
   },
   gradient: {
-    position:   'absolute',
-    inset:      0,
+    position: 'fixed',
+    inset:    0,
     background: `linear-gradient(135deg, ${ONBOARDING_BG_START} 0%, ${ONBOARDING_BG_END} 100%)`,
-    zIndex:     0,
+    zIndex:   0,
   },
   content: {
-    position: 'relative',
-    zIndex:   1,
-    width:    '100%',
-    height:   '100vh',
-    display:  'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
+    position:   'relative',
+    zIndex:     1,
+    width:      '100%',
+    minHeight:  '100dvh',
   },
   holdingWrap: {
-    position:  'relative',
-    zIndex:    1,
-    textAlign: 'center',
+    position:       'absolute',
+    top:            '50%',
+    left:           '50%',
+    transform:      'translate(-50%, -50%)',
+    zIndex:         1,
+    textAlign:      'center',
   },
   holdingText: {
     fontFamily: "'DM Sans', sans-serif",
