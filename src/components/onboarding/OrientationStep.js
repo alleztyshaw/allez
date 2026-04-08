@@ -81,7 +81,7 @@ const ILLUSTRATIONS = {
 // ─── Progress dots ────────────────────────────────────────────────────────────
 function ProgressDots({ dotIndex, isMobile }) {
   return (
-    <div style={{ ...styles.dots, padding: isMobile ? '16px 0 20px' : '32px 0 24px' }}>
+    <div style={{ ...styles.dots, padding: isMobile ? '8px 0 20px' : '32px 0 24px' }}>
       {[0, 1, 2].map(i => (
         <div
           key={i}
