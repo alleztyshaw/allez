@@ -14,7 +14,7 @@ const DOT_BORDER   = ACCENT_LIGHT;
 
 function NotesIllustration() {
   return (
-    <svg viewBox="0 0 240 188" width="100%" style={{ maxWidth: 320 }}
+    <svg viewBox="0 0 240 188" width="100%" style={{ maxWidth: 320, maxHeight: '30vh' }}
       fill="none" stroke={ACCENT_LIGHT} strokeWidth="1.8"
       strokeLinecap="round" strokeLinejoin="round">
       <rect x="108" y="12" width="24" height="50" rx="12"/>
@@ -36,7 +36,7 @@ function NotesIllustration() {
 
 function ProfilesIllustration() {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="60 60 380 380" width="100%" style={{ maxWidth: 340 }} fill="none">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="60 60 380 380" width="100%" style={{ maxWidth: 340, maxHeight: '30vh' }} fill="none">
       {/* Ring with gaps at icon positions */}
       <g stroke={INDIGO} strokeWidth="1.8" strokeLinecap="round" fill="none">
         <path d="M 395.0,182.4 A 160,160 0 0,1 395.0,317.6"/>
