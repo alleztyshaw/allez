@@ -14,7 +14,7 @@ const DOT_BORDER   = ACCENT_LIGHT;
 
 function NotesIllustration() {
   return (
-    <svg viewBox="0 0 240 188" width="100%" style={{ maxWidth: 320, maxHeight: '30vh' }}
+    <svg viewBox="0 0 240 188" width="100%" style={{ maxWidth: 320, maxHeight: '25vh' }}
       fill="none" stroke={ACCENT_LIGHT} strokeWidth="1.8"
       strokeLinecap="round" strokeLinejoin="round">
       <rect x="108" y="12" width="24" height="50" rx="12"/>
@@ -36,7 +36,7 @@ function NotesIllustration() {
 
 function ProfilesIllustration() {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="60 60 380 380" width="100%" style={{ maxWidth: 340, maxHeight: '30vh' }} fill="none">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="60 60 380 380" width="100%" style={{ maxWidth: 340, maxHeight: '25vh' }} fill="none">
       {/* Ring with gaps at icon positions */}
       <g stroke={INDIGO} strokeWidth="1.8" strokeLinecap="round" fill="none">
         <path d="M 395.0,182.4 A 160,160 0 0,1 395.0,317.6"/>
@@ -108,32 +108,36 @@ export default function OrientationStep({ content, dotIndex, isFirst, onNext, on
 
       <ProgressDots dotIndex={dotIndex} isMobile={isMobile} />
 
-      <div style={{
-        ...styles.inner,
-        flexDirection: isMobile ? 'column' : 'row',
-        gap:           isMobile ? '40px' : '80px',
-      }}>
-
-        <div style={{
-          ...styles.copyPanel,
-          alignItems: isMobile ? 'center' : 'flex-start',
-          textAlign:  isMobile ? 'center' : 'left',
-          maxWidth:   isMobile ? '480px' : '400px',
-        }}>
-          <p style={styles.eyebrow}>{eyebrow}</p>
-          <h2 style={styles.headline}>{headline}</h2>
-          <p style={styles.body}>{body}</p>
-          <p style={styles.feature}>{feature}</p>
+      {isMobile ? (
+        <div style={styles.mobileBlock}>
+          <div style={{ ...styles.copyPanel, flex: '0 0 auto', alignItems: 'center', textAlign: 'center' }}>
+            <p style={styles.eyebrow}>{eyebrow}</p>
+            <h2 style={styles.headline}>{headline}</h2>
+            <p style={styles.body}>{body}</p>
+            <p style={styles.feature}>{feature}</p>
+          </div>
+          <div style={{
+            ...styles.illustrationPanel,
+            flex:      '0 0 auto',
+            maxWidth:  '240px',
+            marginTop: illustration === 'brief' ? '24px' : '0',
+          }}>
+            {ILLUSTRATIONS[illustration]}
+          </div>
         </div>
-
-        <div style={{
-          ...styles.illustrationPanel,
-          maxWidth: isMobile ? '260px' : '320px',
-        }}>
-          {ILLUSTRATIONS[illustration]}
+      ) : (
+        <div style={{ ...styles.inner, flexDirection: 'row', gap: '80px' }}>
+          <div style={{ ...styles.copyPanel, alignItems: 'flex-start', textAlign: 'left', maxWidth: '400px' }}>
+            <p style={styles.eyebrow}>{eyebrow}</p>
+            <h2 style={styles.headline}>{headline}</h2>
+            <p style={styles.body}>{body}</p>
+            <p style={styles.feature}>{feature}</p>
+          </div>
+          <div style={{ ...styles.illustrationPanel, maxWidth: '320px' }}>
+            {ILLUSTRATIONS[illustration]}
+          </div>
         </div>
-
-      </div>
+      )}
 
       <div style={styles.nav}>
         {!isFirst && (
@@ -176,6 +180,15 @@ const styles = {
     borderRadius: '50%',
     border:       `1.5px solid ${DOT_BORDER}`,
     transition:   'background 300ms ease',
+  },
+  mobileBlock: {
+    display:        'flex',
+    flexDirection:  'column',
+    alignItems:     'center',
+    justifyContent: 'center',
+    flex:           '1 1 auto',
+    gap:            '28px',
+    width:          '100%',
   },
   inner: {
     display:        'flex',
