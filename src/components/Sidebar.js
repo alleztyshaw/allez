@@ -23,6 +23,7 @@ export default function Sidebar() {
 
   const {
     isAdmin, isPlatformAdmin, orgLoading, userRole,
+    orgId,
     isDevMode, devMobileOverride,
     isDemoOrg, isDemoMode, demoRoleOverride,
     isOrgSwitched,
@@ -68,7 +69,9 @@ export default function Sidebar() {
     ...(!orgLoading && isAdmin                                ? [{ to: '/hq/team',  label: 'Team'      }] : []),
     ...(!orgLoading && (isAdmin || userRole === 'compliance') ? [{ to: '/hq/audit', label: 'Audit Log' }] : []),
     { to: '/hq/settings', label: 'Settings' },
-    ...(!orgLoading && isPlatformAdmin ? [{ to: '/hq/orgs', label: 'Orgs' }] : []),
+    ...(!orgLoading && (isPlatformAdmin || isAdmin)
+      ? [{ to: isPlatformAdmin ? '/hq/orgs' : `/hq/orgs/${orgId}`, label: 'Org' }]
+      : []),
   ];
 
   const s = {

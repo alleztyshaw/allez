@@ -33,6 +33,7 @@ import Team from './pages/Team';
 import Welcome from './pages/Welcome';
 import Settings from './pages/Settings';
 import Orgs from './pages/Orgs';
+import OrgDetail from './pages/OrgDetail';
 import AuditLog from './pages/AuditLog';
 import OnboardingPage from './pages/OnboardingPage';
 import OnboardingGate from './components/onboarding/OnboardingGate';
@@ -104,6 +105,7 @@ function App() {
               <Route path="/hq/team"         element={<ProtectedLayout><Team         /></ProtectedLayout>} />
               <Route path="/hq/settings"     element={<ProtectedLayout><Settings     /></ProtectedLayout>} />
               <Route path="/hq/orgs"         element={<ProtectedLayout><Orgs         /></ProtectedLayout>} />
+              <Route path="/hq/orgs/:orgId"  element={<ProtectedLayout><OrgDetail    /></ProtectedLayout>} />
               <Route path="/hq/audit"        element={<ProtectedLayout><AuditLog     /></ProtectedLayout>} />
             </Routes>
           </div>

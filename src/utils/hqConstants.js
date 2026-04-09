@@ -254,6 +254,13 @@ export const BRIEF_ROLES       = ['admin', 'manager', 'advisor'];
 export const ORG_ADMIN_ROLES   = ['admin'];
 export const ROLE_OPTIONS      = ['admin', 'manager', 'advisor', 'associate', 'compliance'];
 
+// ============================================================
+// ORG TIERS & STATUSES
+// ============================================================
+
+export const PLAN_OPTIONS       = ['Free', 'Starter', 'Pro', 'Pathfinder'];
+export const ORG_STATUS_OPTIONS = ['onboarding', 'active', 'inactive'];
+
 export const FOOTER_TEXT = '© 2026 Allez HQ · All rights reserved · Built for wealth management professionals';
 
 // ============================================================
