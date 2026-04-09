@@ -99,7 +99,7 @@ export function Dropdown({ options = [], value, onChange, placeholder = 'Select.
     position: 'absolute',
     inset: 0,
     background: t.SURFACE,
-    opacity:0.9,
+    opacity: 9,
     backdropFilter: 'blur(16px)',
     WebkitBackdropFilter: 'blur(16px)',
     zIndex: 0,
@@ -146,6 +146,23 @@ export function Dropdown({ options = [], value, onChange, placeholder = 'Select.
         {/* Trigger pill */}
         <div style={trigger} onClick={() => setOpen(o => !o)}>
           <span style={{ flex: 1 }}>{selected ? selected.label : placeholder}</span>
+
+          {/* Clear button — only for non-default selections (value !== '') */}
+          {selected && selected.value !== '' && (
+            <span
+              onClick={e => { e.stopPropagation(); onChange(''); setOpen(false); }}
+              style={{
+                flexShrink: 0, cursor: 'pointer', userSelect: 'none',
+                fontSize: '11px', fontWeight: FW_LIGHT,
+                color: t.TEXT_MUTED, lineHeight: 1,
+                fontFamily: FONT_BODY, padding: '0 2px',
+              }}
+            >
+              ✕
+            </span>
+          )}
+
+          {/* Chevron — always visible so the advisor can open and switch filters */}
           <span style={{
             width: 0, height: 0,
             borderLeft: '4px solid transparent',
