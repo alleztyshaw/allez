@@ -11,7 +11,7 @@ import {
 } from '../utils/hqConstants';
 
 /**
- * Dropdown — generic custom dropdown pill, usable on any page.
+ * Dropdown — generic custom dropdown, usable on any page.
  *
  * Props:
  *   options     [{ value, label, description? }]   — list of selectable options
@@ -19,7 +19,7 @@ import {
  *   onChange    (value) => void                     — called on selection
  *   placeholder string                              — shown when value is null/empty
  *   style       object?                             — optional overrides on the trigger pill
- *   panelWidth  string?                             — optional override e.g. '240px' (defaults to 'auto', min 180px)
+ *   panelWidth  string?                             — optional override e.g. '240px'
  */
 export function Dropdown({ options = [], value, onChange, placeholder = 'Select...', style = {}, panelWidth }) {
   const t = useTokens();
@@ -29,7 +29,6 @@ export function Dropdown({ options = [], value, onChange, placeholder = 'Select.
 
   const selected = options.find(o => o.value === value);
 
-  // Close on outside click
   useEffect(() => {
     function handleClick(e) {
       if (ref.current && !ref.current.contains(e.target)) setOpen(false);
@@ -65,35 +64,55 @@ export function Dropdown({ options = [], value, onChange, placeholder = 'Select.
     ...style,
   };
 
-  // Frosted panel — slightly transparent + blur gives premium depth.
-  // opacity: 0.97 keeps it nearly opaque while allowing the blur to register.
+  // ── Frosted panel — two-layer approach ───────────────────────────────────
+  //
+  // The problem with `opacity` on the panel element: it makes ALL children
+  // (text, pills, everything) semi-transparent too. At opacity 0.1, text
+  // nearly vanishes — so the change looked invisible, not frosted.
+  //
+  // The correct approach: the panel wrapper has no background of its own.
+  // An absolutely-positioned child div carries the background + blur at
+  // reduced opacity. All option content renders above it at full opacity,
+  // so text stays crisp while only the surface is translucent.
+
   const panel = {
     position: 'absolute',
     top: 'calc(100% + 6px)',
     left: 0,
     zIndex: 200,
-    background: t.SURFACE,
-    opacity: 0.97,
-    backdropFilter: 'blur(16px)',
-    WebkitBackdropFilter: 'blur(16px)',
+    // No background here — handled by panelBg layer below
     border: `1px solid ${t.BORDER}`,
     borderRadius: RADIUS_LG,
     boxShadow: SHADOW_LG,
     minWidth: '180px',
     width: panelWidth || 'auto',
-    // Inner padding + flex so pills sit inside the panel with gap between them
     padding: '6px',
     display: 'flex',
     flexDirection: 'column',
     gap: '6px',
     animation: 'ddFadeDown 0.12s ease both',
+    overflow: 'hidden', // clips the bg layer to the panel's border-radius
   };
 
-  // Each option renders as a pill — RADIUS_LG matches the panel corners.
+  // Background layer — only this is translucent. Sits behind options via z-index.
+  const panelBg = {
+    position: 'absolute',
+    inset: 0,
+    background: t.SURFACE,
+    opacity:0.9,
+    backdropFilter: 'blur(16px)',
+    WebkitBackdropFilter: 'blur(16px)',
+    zIndex: 0,
+    // No border-radius needed — parent overflow:hidden clips it
+  };
+
+  // Each option pill — z-index 1 so it renders above the bg layer.
   function optionStyle(opt) {
     const isSelected = opt.value === value;
     const isHovered  = hovered === opt.value;
     return {
+      position: 'relative',
+      zIndex: 1,
       padding: '5px 12px',
       cursor: 'pointer',
       fontFamily: FONT_BODY,
@@ -127,8 +146,6 @@ export function Dropdown({ options = [], value, onChange, placeholder = 'Select.
         {/* Trigger pill */}
         <div style={trigger} onClick={() => setOpen(o => !o)}>
           <span style={{ flex: 1 }}>{selected ? selected.label : placeholder}</span>
-
-          {/* CSS border triangle — no Unicode */}
           <span style={{
             width: 0, height: 0,
             borderLeft: '4px solid transparent',
@@ -143,6 +160,10 @@ export function Dropdown({ options = [], value, onChange, placeholder = 'Select.
         {/* Dropdown panel */}
         {open && (
           <div style={panel}>
+            {/* Background layer — translucent, sits behind options */}
+            <div style={panelBg} />
+
+            {/* Options — full opacity, above bg layer */}
             {options.map(opt => (
               <div
                 key={opt.value}
