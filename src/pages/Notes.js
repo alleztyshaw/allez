@@ -17,16 +17,48 @@ import {
   AI_COLOR,
   AI_COLOR_MUTED,
   AI_COLOR_BORDER,
-  FW_LIGHT, FW_REGULAR, FW_MEDIUM, FW_SEMIBOLD} from '../utils/hqConstants';
+  FW_LIGHT, FW_REGULAR, FW_MEDIUM, FW_SEMIBOLD,
+} from '../utils/hqConstants';
 import { useTokens } from '../context/ThemeContext';
 import useWindowWidth from '../hooks/useWindowWidth';
+import { Dropdown } from '../components/Dropdown';
+import DateRangeModal from '../components/DateRangeModal';
 
 const NOTE_TYPES = ['Meeting', 'Call', 'Email', 'General'];
 
+// ── Timeframe filter options ──────────────────────────────────────────────────
+const TIMEFRAME_OPTIONS = [
+  { value: 'all',     label: 'All time'       },
+  { value: 'today',   label: 'Today'          },
+  { value: 'week',    label: 'This week'      },
+  { value: 'month',   label: 'This month'     },
+  { value: '3months', label: 'Last 3 months'  },
+  { value: 'year',    label: 'This year'      },
+  { value: 'custom',  label: 'Custom range'   },
+];
+
+// Returns the earliest Date a note must have to pass the timeframe filter.
+// Returns null for 'all' (no cutoff) and 'custom' (handled separately).
+function getTimeframeCutoff(key) {
+  const now = new Date();
+  if (key === 'today')   { const d = new Date(now); d.setHours(0, 0, 0, 0); return d; }
+  if (key === 'week')    { const d = new Date(now); d.setDate(d.getDate() - 7); return d; }
+  if (key === 'month')   { const d = new Date(now); d.setMonth(d.getMonth() - 1); return d; }
+  if (key === '3months') { const d = new Date(now); d.setMonth(d.getMonth() - 3); return d; }
+  if (key === 'year')    { const d = new Date(now); d.setFullYear(d.getFullYear() - 1); return d; }
+  return null;
+}
+
+// Formats a Date as MM/DD/YYYY for the custom range label in the dropdown pill.
+function formatRangeDate(d) {
+  return d.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
+}
+
+// ── Date helpers ──────────────────────────────────────────────────────────────
 function formatDateLabel(dateStr) {
-  const today = new Date().toISOString().slice(0, 10);
+  const today     = new Date().toISOString().slice(0, 10);
   const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
-  if (dateStr === today) return 'Today';
+  if (dateStr === today)     return 'Today';
   if (dateStr === yesterday) return 'Yesterday';
   return new Date(dateStr + 'T12:00:00').toLocaleDateString('en-US', {
     weekday: 'long', month: 'long', day: 'numeric', year: 'numeric',
@@ -51,71 +83,76 @@ function parseAiSummary(note) {
 const emptyForm = { client_id: '', title: '', body: '', note_type: 'General' };
 
 export default function Notes() {
-  const t = useTokens();
+  const t           = useTokens();
   const windowWidth = useWindowWidth();
-  const isMobile = windowWidth < MOBILE_BREAKPOINT;
-  const location = useLocation();
-  const fromBrief = location.state?.from === '/hq/brief';
-  const fromClient = location.state?.from?.startsWith('/hq/clients/');
-  const backTo = fromBrief ? '/hq/brief' : fromClient ? location.state.from : null;
-  const backLabel = fromBrief ? '← Back to Daily Brief' : fromClient ? '← Back to Client' : null;
-  const { orgId } = useOrg();
+  const isMobile    = windowWidth < MOBILE_BREAKPOINT;
+  const location    = useLocation();
+  const fromBrief   = location.state?.from === '/hq/brief';
+  const fromClient  = location.state?.from?.startsWith('/hq/clients/');
+  const backTo      = fromBrief ? '/hq/brief' : fromClient ? location.state.from : null;
+  const backLabel   = fromBrief ? '← Back to Daily Brief' : fromClient ? '← Back to Client' : null;
+  const { orgId }   = useOrg();
 
   // Tab state — always default to Record
   const [activeTab, setActiveTab] = useState('record');
 
   // Core data
-  const [notes, setNotes] = useState([]);
-  const [clients, setClients] = useState([]);
+  const [notes,      setNotes]      = useState([]);
+  const [clients,    setClients]    = useState([]);
   const [orgMembers, setOrgMembers] = useState([]);
-  const [userRole, setUserRole] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [userRole,   setUserRole]   = useState(null);
+  const [loading,    setLoading]    = useState(true);
 
   // Compose
   const [composeMode, setComposeMode] = useState('ai'); // 'ai' | 'manual'
-  const [formData, setFormData] = useState(emptyForm);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
+  const [formData,    setFormData]    = useState(emptyForm);
+  const [saving,      setSaving]      = useState(false);
+  const [error,       setError]       = useState('');
 
   // AI note-taker
-  const [aiTranscript, setAiTranscript] = useState('');
-  const [aiProcessing, setAiProcessing] = useState(false);
-  const [aiResult, setAiResult] = useState(null);
-  const [aiError, setAiError] = useState('');
+  const [aiTranscript,    setAiTranscript]    = useState('');
+  const [aiProcessing,    setAiProcessing]    = useState(false);
+  const [aiResult,        setAiResult]        = useState(null);
+  const [aiError,         setAiError]         = useState('');
   const [aiTitleOverride, setAiTitleOverride] = useState('');
-  const [showTranscript, setShowTranscript] = useState(false);
+  const [showTranscript,  setShowTranscript]  = useState(false);
 
   // Audio input
-  const [inputMode, setInputMode]           = useState('paste'); // 'paste' | 'upload' | 'record'
-  const [wasRecorded, setWasRecorded]       = useState(false);
-  const [audioFile, setAudioFile]           = useState(null);
+  const [inputMode,         setInputMode]         = useState('paste'); // 'paste' | 'upload' | 'record'
+  const [wasRecorded,       setWasRecorded]       = useState(false);
+  const [audioFile,         setAudioFile]         = useState(null);
   const [audioTranscribing, setAudioTranscribing] = useState(false);
-  const [audioError, setAudioError]         = useState('');
-  const [recording, setRecording]           = useState(false);
-  const [recordingSeconds, setRecordingSeconds] = useState(0);
-  const mediaRecorderRef = useRef(null);
-  const audioChunksRef   = useRef([]);
+  const [audioError,        setAudioError]        = useState('');
+  const [recording,         setRecording]         = useState(false);
+  const [recordingSeconds,  setRecordingSeconds]  = useState(0);
+  const mediaRecorderRef  = useRef(null);
+  const audioChunksRef    = useRef([]);
   const recordingTimerRef = useRef(null);
   const [pushedTasks, setPushedTasks] = useState(new Set());
 
   // Email draft modal
-  const [emailNote, setEmailNote]           = useState(null);
+  const [emailNote,       setEmailNote]       = useState(null);
   const [emailSalutation, setEmailSalutation] = useState('');
-  const [emailSignOff, setEmailSignOff]     = useState('Best,');
-  const [emailTone, setEmailTone]           = useState('professional');
-  const [emailInclude, setEmailInclude]     = useState(['summary', 'decisions', 'action_items', 'follow_ups']);
+  const [emailSignOff,    setEmailSignOff]    = useState('Best,');
+  const [emailTone,       setEmailTone]       = useState('professional');
+  const [emailInclude,    setEmailInclude]    = useState(['summary', 'decisions', 'action_items', 'follow_ups']);
   const [emailGenerating, setEmailGenerating] = useState(false);
-  const [emailSubject, setEmailSubject]     = useState('');
-  const [emailBody, setEmailBody]           = useState('');
-  const [emailError, setEmailError]         = useState('');
-  const [emailCopied, setEmailCopied]       = useState(false);
-  const [emailDrafts, setEmailDrafts]       = useState({});
+  const [emailSubject,    setEmailSubject]    = useState('');
+  const [emailBody,       setEmailBody]       = useState('');
+  const [emailError,      setEmailError]      = useState('');
+  const [emailCopied,     setEmailCopied]     = useState(false);
+  const [emailDrafts,     setEmailDrafts]     = useState({});
 
   // Note list
-  const [editingNote, setEditingNote] = useState(null);
-  const [editForm, setEditForm] = useState({});
-  const [expandedNotes, setExpandedNotes] = useState({});
-  const [clientFilter, setClientFilter] = useState('');
+  const [editingNote,    setEditingNote]    = useState(null);
+  const [editForm,       setEditForm]       = useState({});
+  const [expandedNotes,  setExpandedNotes]  = useState({});
+  const [clientFilter,   setClientFilter]   = useState('');
+
+  // ── History filters ───────────────────────────────────────────────────────
+  const [timeframe,      setTimeframe]      = useState('all');
+  const [customRange,    setCustomRange]    = useState({ start: null, end: null });
+  const [showDateModal,  setShowDateModal]  = useState(false);
 
   const canWrite = WRITE_ROLES.includes(userRole);
 
@@ -123,10 +160,22 @@ export default function Notes() {
     setExpandedNotes((prev) => ({ ...prev, [noteId]: !prev[noteId] }));
   }
 
+  // When the advisor picks 'custom', open the date range modal instead of
+  // immediately setting the timeframe. The modal will call back with a range
+  // and then we commit timeframe = 'custom'.
+  function handleTimeframeChange(val) {
+    if (val === 'custom') {
+      setShowDateModal(true);
+    } else {
+      setTimeframe(val);
+      setCustomRange({ start: null, end: null });
+    }
+  }
+
   // Read pre-fill state from ClientDetail navigation
   useEffect(() => {
     const clientId = location.state?.clientId;
-    const tab = location.state?.tab;
+    const tab      = location.state?.tab;
     if (clientId) {
       setFormData((f) => ({ ...f, client_id: clientId }));
       setClientFilter(clientId);
@@ -194,7 +243,7 @@ export default function Notes() {
     try {
       const formData = new FormData();
       formData.append('audio', file);
-      const res = await fetch('/api/transcribe', { method: 'POST', body: formData });
+      const res  = await fetch('/api/transcribe', { method: 'POST', body: formData });
       const data = await res.json();
       if (!res.ok) {
         setAudioError(data.error || 'Transcription failed. Please try again.');
@@ -229,7 +278,7 @@ export default function Notes() {
   async function startRecording() {
     setAudioError('');
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream   = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mimeType = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/mp4';
       const recorder = new MediaRecorder(stream, { mimeType });
       audioChunksRef.current = [];
@@ -275,11 +324,11 @@ export default function Notes() {
     setSaving(true); setError('');
     const { error } = await supabase.from('notes').insert([{
       client_id: formData.client_id || null,
-      title: formData.title,
-      body: formData.body,
+      title:     formData.title,
+      body:      formData.body,
       note_type: formData.note_type,
-      source: 'manual',
-      org_id: orgId,
+      source:    'manual',
+      org_id:    orgId,
     }]);
     if (error) { setError('Something went wrong. Please try again.'); console.error(error); }
     else { resetCompose(); fetchData(); setActiveTab('history'); }
@@ -294,23 +343,21 @@ export default function Notes() {
     setAiError('');
     setAiResult(null);
 
-    const selectedClient = clients.find(c => c.id === formData.client_id);
-    const clientFullName = selectedClient
-      ? `${selectedClient.first_name} ${selectedClient.last_name}`
-      : '';
-    const memberNames = orgMembers
+    const selectedClient  = clients.find(c => c.id === formData.client_id);
+    const clientFullName  = selectedClient ? `${selectedClient.first_name} ${selectedClient.last_name}` : '';
+    const memberNames     = orgMembers
       .map(m => m.first_name && m.last_name ? `${m.first_name} ${m.last_name}` : null)
       .filter(Boolean);
 
     try {
       const response = await fetch('/api/process-note', {
-        method: 'POST',
+        method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          transcript: aiTranscript,
-          client_name: clientFullName,
+          transcript:       aiTranscript,
+          client_name:      clientFullName,
           org_member_names: memberNames,
-          note_type: formData.note_type,
+          note_type:        formData.note_type,
         }),
       });
       const data = await response.json();
@@ -333,19 +380,19 @@ export default function Notes() {
 
     const selectedClient = clients.find(c => c.id === formData.client_id);
     const clientFullName = selectedClient ? `${selectedClient.first_name} ${selectedClient.last_name}` : '';
-    const memberNames = orgMembers
+    const memberNames    = orgMembers
       .map(m => m.first_name && m.last_name ? `${m.first_name} ${m.last_name}` : null)
       .filter(Boolean);
 
     try {
       const response = await fetch('/api/process-note', {
-        method: 'POST',
+        method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           transcript,
-          client_name: clientFullName,
+          client_name:      clientFullName,
           org_member_names: memberNames,
-          note_type: formData.note_type,
+          note_type:        formData.note_type,
         }),
       });
       const data = await response.json();
@@ -366,20 +413,20 @@ export default function Notes() {
     setSaving(true);
     setAiError('');
     const finalTitle = aiTitleOverride.trim() || aiResult.title || 'AI Note';
-    const { error } = await supabase.from('notes').insert([{
-      client_id: formData.client_id || null,
-      title: finalTitle,
-      body: aiTranscript,
-      transcript: aiTranscript,
+    const { error }  = await supabase.from('notes').insert([{
+      client_id:             formData.client_id || null,
+      title:                 finalTitle,
+      body:                  aiTranscript,
+      transcript:            aiTranscript,
       ai_summary: JSON.stringify({
-        summary: aiResult.summary,
-        decisions: aiResult.decisions,
+        summary:      aiResult.summary,
+        decisions:    aiResult.decisions,
         action_items: aiResult.action_items,
-        follow_ups: aiResult.follow_ups,
+        follow_ups:   aiResult.follow_ups,
       }),
-      note_type: formData.note_type,
-      source: 'ai',
-      org_id: orgId,
+      note_type:             formData.note_type,
+      source:                'ai',
+      org_id:                orgId,
       compliance_flagged:    !!aiResult.compliance_flagged,
       compliance_severity:   aiResult.compliance_severity || null,
       compliance_reasons:    aiResult.compliance_reasons?.length ? aiResult.compliance_reasons : null,
@@ -403,29 +450,25 @@ export default function Notes() {
     let dueDate = null;
     if (item.due) {
       const parsed = new Date(item.due);
-      if (!isNaN(parsed.getTime())) {
-        dueDate = parsed.toISOString().split('T')[0];
-      }
+      if (!isNaN(parsed.getTime())) dueDate = parsed.toISOString().split('T')[0];
     }
 
     const { error } = await supabase.from('client_tasks').insert([{
-      org_id: orgId,
+      org_id:    orgId,
       client_id: clientId,
-      title: item.task,
-      due_date: dueDate,
+      title:     item.task,
+      due_date:  dueDate,
       completed: false,
     }]);
 
-    if (!error) {
-      setPushedTasks(prev => new Set([...prev, index]));
-    }
+    if (!error) setPushedTasks(prev => new Set([...prev, index]));
   }
 
   // ── Email draft ─────────────────────────────────────────────────────────────
 
   function openEmailDraft(note) {
     const client = clients.find(c => c.id === note.client_id);
-    const saved = emailDrafts[note.id];
+    const saved  = emailDrafts[note.id];
     setEmailNote(note);
     setEmailSalutation(saved?.salutation ?? (client?.first_name ? `Hi ${client.first_name},` : ''));
     setEmailSignOff(saved?.signOff ?? 'Best,');
@@ -444,24 +487,24 @@ export default function Notes() {
     setEmailSubject('');
     setEmailBody('');
 
-    const aiSummary = parseAiSummary(emailNote);
-    const client = clients.find(c => c.id === emailNote.client_id);
+    const aiSummary      = parseAiSummary(emailNote);
+    const client         = clients.find(c => c.id === emailNote.client_id);
     const clientFullName = client ? `${client.first_name} ${client.last_name}` : '';
-    const advisor = orgMembers.find(m => m.user_id === emailNote.created_by);
+    const advisor        = orgMembers.find(m => m.user_id === emailNote.created_by);
     const advisorFullName = advisor ? `${advisor.first_name} ${advisor.last_name}` : '';
 
     try {
-      const res = await fetch('/api/draft-email', {
-        method: 'POST',
+      const res  = await fetch('/api/draft-email', {
+        method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ai_summary: aiSummary,
-          client_name: clientFullName,
-          advisor_name: advisorFullName,
-          salutation: emailSalutation,
-          sign_off: emailSignOff,
-          tone: emailTone,
-          include: emailInclude,
+          ai_summary:    aiSummary,
+          client_name:   clientFullName,
+          advisor_name:  advisorFullName,
+          salutation:    emailSalutation,
+          sign_off:      emailSignOff,
+          tone:          emailTone,
+          include:       emailInclude,
         }),
       });
       const data = await res.json();
@@ -473,12 +516,12 @@ export default function Notes() {
         setEmailDrafts(prev => ({
           ...prev,
           [emailNote.id]: {
-            subject: data.subject,
-            body: data.body,
+            subject:    data.subject,
+            body:       data.body,
             salutation: emailSalutation,
-            signOff: emailSignOff,
-            tone: emailTone,
-            include: emailInclude,
+            signOff:    emailSignOff,
+            tone:       emailTone,
+            include:    emailInclude,
           },
         }));
       }
@@ -498,7 +541,7 @@ export default function Notes() {
 
   function handleMailto() {
     const client = clients.find(c => c.id === emailNote?.client_id);
-    const email = client?.email || '';
+    const email  = client?.email || '';
     window.open(`mailto:${email}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`);
   }
 
@@ -506,36 +549,36 @@ export default function Notes() {
     setEditingNote(note);
     const aiSummary = parseAiSummary(note);
     setEditForm({
-      title: note.title,
-      body: note.body,
-      note_type: note.note_type,
+      title:           note.title,
+      body:            note.body,
+      note_type:       note.note_type,
       ai_summary_text: aiSummary?.summary || '',
-      ai_decisions: aiSummary?.decisions?.join('\n') || '',
+      ai_decisions:    aiSummary?.decisions?.join('\n') || '',
       ai_action_items: aiSummary?.action_items?.map(a =>
         [a.task, a.owner, a.due].filter(Boolean).join(' · ')
       ).join('\n') || '',
-      ai_follow_ups: aiSummary?.follow_ups?.join('\n') || '',
+      ai_follow_ups:   aiSummary?.follow_ups?.join('\n') || '',
     });
   }
 
   async function handleEditSave() {
     if (!editForm.title.trim()) return;
-    const isAi = editingNote.source === 'ai';
+    const isAi  = editingNote.source === 'ai';
     const update = {
-      title: editForm.title,
-      note_type: editForm.note_type,
+      title:      editForm.title,
+      note_type:  editForm.note_type,
       updated_at: new Date().toISOString(),
     };
     if (!isAi) {
       update.body = editForm.body;
     } else {
-      const decisions = editForm.ai_decisions.split('\n').map(s => s.trim()).filter(Boolean);
+      const decisions    = editForm.ai_decisions.split('\n').map(s => s.trim()).filter(Boolean);
       const action_items = editForm.ai_action_items.split('\n').map(s => s.trim()).filter(Boolean).map(line => {
         const [task, owner, due] = line.split(' · ');
         return { task: task || '', owner: owner || null, due: due || null };
       });
-      const follow_ups = editForm.ai_follow_ups.split('\n').map(s => s.trim()).filter(Boolean);
-      update.ai_summary = JSON.stringify({
+      const follow_ups   = editForm.ai_follow_ups.split('\n').map(s => s.trim()).filter(Boolean);
+      update.ai_summary  = JSON.stringify({
         summary: editForm.ai_summary_text,
         decisions,
         action_items,
@@ -551,64 +594,97 @@ export default function Notes() {
     fetchData();
   }
 
-  const filteredNotes = clientFilter ? notes.filter(n => n.client_id === clientFilter) : notes;
-  const noteCounts = notes.reduce((acc, n) => { acc[n.client_id] = (acc[n.client_id] || 0) + 1; return acc; }, {});
+  // ── Filtered notes — client + timeframe ──────────────────────────────────
+  const noteCounts = notes.reduce((acc, n) => {
+    acc[n.client_id] = (acc[n.client_id] || 0) + 1;
+    return acc;
+  }, {});
+
+  const cutoff = timeframe !== 'custom' ? getTimeframeCutoff(timeframe) : null;
+
+  const filteredNotes = notes
+    .filter(n => !clientFilter || n.client_id === clientFilter)
+    .filter(n => {
+      if (timeframe === 'custom' && customRange.start && customRange.end) {
+        const d = new Date(n.created_at);
+        return d >= customRange.start && d <= customRange.end;
+      }
+      return !cutoff || new Date(n.created_at) >= cutoff;
+    });
+
   const grouped = groupByDate(filteredNotes);
+
+  // ── Dropdown options (computed — depend on state/data) ───────────────────
+  // Client options include a note count so advisors can see at a glance.
+  const clientOptions = [
+    { value: '', label: 'All clients' },
+    ...clients.map(c => ({
+      value: c.id,
+      label: `${c.first_name} ${c.last_name} (${noteCounts[c.id] || 0})`,
+    })),
+  ];
+
+  // When a custom range is active, replace "Custom range" label with the
+  // formatted dates so the pill always shows what's active.
+  const timeframeOptions = TIMEFRAME_OPTIONS.map(o =>
+    o.value === 'custom' && timeframe === 'custom' && customRange.start && customRange.end
+      ? { ...o, label: `${formatRangeDate(customRange.start)} – ${formatRangeDate(customRange.end)}` }
+      : o
+  );
 
   // ── Styles ──────────────────────────────────────────────────────────────────
 
   const s = {
     ...pageStyles(t, isMobile),
-    composeCard: { background: t.SURFACE, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_LG, padding: '24px', marginBottom: '32px', boxShadow: SHADOW_MD },
-    composeHeader: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' },
-    modeToggle: { display: 'flex', gap: '2px', background: t.SURFACE_ALT, borderRadius: RADIUS_MD, padding: '3px', border: `1px solid ${t.BORDER}` },
-    modeTabActive: { padding: '5px 14px', fontSize: '12px', fontWeight: FW_SEMIBOLD, letterSpacing: '0.04em', borderRadius: '4px', border: 'none', cursor: 'pointer', fontFamily: FONT_BODY, background: t.ACCENT_MUTED, color: t.ACCENT },
+    composeCard:     { background: t.SURFACE, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_LG, padding: '24px', marginBottom: '32px', boxShadow: SHADOW_MD },
+    composeHeader:   { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' },
+    modeToggle:      { display: 'flex', gap: '2px', background: t.SURFACE_ALT, borderRadius: RADIUS_MD, padding: '3px', border: `1px solid ${t.BORDER}` },
+    modeTabActive:   { padding: '5px 14px', fontSize: '12px', fontWeight: FW_SEMIBOLD, letterSpacing: '0.04em', borderRadius: '4px', border: 'none', cursor: 'pointer', fontFamily: FONT_BODY, background: t.ACCENT_MUTED, color: t.ACCENT },
     modeTabInactive: { padding: '5px 14px', fontSize: '12px', fontWeight: FW_SEMIBOLD, letterSpacing: '0.04em', borderRadius: '4px', border: 'none', cursor: 'pointer', fontFamily: FONT_BODY, background: 'transparent', color: t.TEXT_MUTED },
-    aiBadge: { fontSize: '10px', fontWeight: FW_SEMIBOLD, letterSpacing: '0.08em', padding: '2px 8px', borderRadius: RADIUS_PILL, background: AI_COLOR_MUTED, color: AI_COLOR, border: `1px solid ${AI_COLOR_BORDER}`, textTransform: 'uppercase' },
-    manualBadge: { fontSize: '10px', fontWeight: FW_SEMIBOLD, letterSpacing: '0.08em', padding: '2px 8px', borderRadius: RADIUS_PILL, background: t.SURFACE_ALT, color: t.TEXT_MUTED, border: `1px solid ${t.BORDER}`, textTransform: 'uppercase' },
-    formRow: { display: 'flex', gap: '12px', marginBottom: '12px', flexWrap: 'wrap' },
-    formField: { display: 'flex', flexDirection: 'column', gap: '4px', flex: 1, minWidth: '180px' },
-    label: { fontSize: '12px', fontWeight: FW_MEDIUM, color: t.TEXT_MUTED, letterSpacing: '0.02em' },
-    input: { border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_MD, padding: '8px 12px', fontSize: '14px', outline: 'none', color: t.TEXT, background: t.SURFACE_ALT, fontFamily: FONT_BODY },
-    textarea: { width: '100%', border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_MD, padding: '10px 12px', fontSize: '14px', minHeight: '100px', resize: 'vertical', outline: 'none', color: t.TEXT, background: t.SURFACE_ALT, fontFamily: FONT_BODY, boxSizing: 'border-box', marginBottom: '12px' },
-    transcriptArea: { width: '100%', border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_MD, padding: '12px', fontSize: '13px', minHeight: '180px', resize: 'vertical', outline: 'none', color: t.TEXT, background: t.SURFACE_ALT, fontFamily: FONT_BODY, boxSizing: 'border-box', marginBottom: '12px', lineHeight: '1.6' },
-    composeFooter: { display: 'flex', justifyContent: 'flex-end', gap: '10px', alignItems: 'center', marginTop: '20px' },
-    cancelButton: { padding: '10px 22px', borderRadius: RADIUS_MD, border: `1px solid ${t.BORDER}`, background: 'transparent', fontSize: '13px', cursor: 'pointer', color: t.TEXT_MUTED, fontFamily: FONT_BODY },
-    saveButton: { padding: '10px 22px', borderRadius: RADIUS_MD, border: `1px solid ${t.ACCENT_BORDER}`, background: t.ACCENT_MUTED, color: t.ACCENT, fontSize: '13px', fontWeight: FW_SEMIBOLD, cursor: 'pointer', fontFamily: FONT_BODY },
-    processButton: { padding: '10px 22px', borderRadius: RADIUS_MD, border: `1px solid ${AI_COLOR_BORDER}`, background: AI_COLOR_MUTED, color: AI_COLOR, fontSize: '13px', fontWeight: FW_SEMIBOLD, cursor: 'pointer', fontFamily: FONT_BODY },
-    errorText: { color: '#f87171', fontSize: '13px', marginBottom: '10px' },
-    resultCard: { background: t.SURFACE_ALT, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_MD, padding: '20px', marginBottom: '16px' },
-    resultSection: { marginBottom: '16px' },
-    resultLabel: { fontSize: '10px', fontWeight: FW_SEMIBOLD, textTransform: 'uppercase', letterSpacing: '0.1em', color: AI_COLOR, marginBottom: '8px' },
-    resultText: { fontSize: '14px', color: t.TEXT, lineHeight: '1.65', fontWeight: FW_LIGHT, margin: 0 },
-    resultListItem: { fontSize: '13px', color: t.TEXT, lineHeight: '1.6', fontWeight: FW_LIGHT, padding: '5px 0', borderBottom: `1px solid ${t.BORDER}`, display: 'flex', gap: '8px' },
-    resultBullet: { color: AI_COLOR, flexShrink: 0, fontSize: '12px', marginTop: '2px' },
-    dateGroup: { marginBottom: '28px' },
-    dateLabel: { fontSize: '11px', fontWeight: FW_SEMIBOLD, textTransform: 'uppercase', letterSpacing: '0.08em', color: t.TEXT_MUTED, marginBottom: '10px' },
-    noteCard: { background: t.SURFACE, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_LG, padding: '18px 20px', marginBottom: '10px', boxShadow: SHADOW_MD },
-    noteHeader: { display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px', flexWrap: 'wrap' },
-    noteTitle: { fontFamily: FONT_DISPLAY, fontSize: '17px', fontWeight: FW_REGULAR, color: t.TEXT, flex: 1, letterSpacing: '0.01em' },
-    noteTypeBadge: { fontSize: '11px', fontWeight: FW_REGULAR, color: t.TEXT_MUTED, letterSpacing: '0.03em' },
-    noteAiBadge: { fontSize: '10px', fontWeight: FW_SEMIBOLD, padding: '2px 10px', borderRadius: RADIUS_PILL, background: AI_COLOR_MUTED, color: AI_COLOR, border: `1px solid ${AI_COLOR_BORDER}`, letterSpacing: '0.06em', textTransform: 'uppercase' },
-    clientBadge: { fontSize: '11px', fontWeight: FW_SEMIBOLD, padding: '2px 10px', borderRadius: RADIUS_PILL, background: 'rgba(96,165,250,0.12)', color: '#60a5fa', border: 'rgba(96,165,250,0.2)', textDecoration: 'none', transition: 'background 0.15s, box-shadow 0.15s' },
-    noteBody: { fontSize: '14px', color: t.TEXT_MUTED, lineHeight: '1.65', margin: '0 0 10px', whiteSpace: 'pre-wrap', fontWeight: FW_LIGHT },
-    noteActions: { display: 'flex', gap: '12px' },
-    noteAction: { background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px', color: t.TEXT_MUTED, padding: 0, fontFamily: FONT_BODY },
-    aiSection: { marginBottom: '12px' },
-    aiSectionLabel: { fontSize: '10px', fontWeight: FW_SEMIBOLD, textTransform: 'uppercase', letterSpacing: '0.08em', color: AI_COLOR, marginBottom: '6px' },
-    aiSectionText: { fontSize: '13px', color: t.TEXT_MUTED, lineHeight: '1.6', fontWeight: FW_LIGHT, margin: 0 },
-    aiListItem: { display: 'flex', gap: '8px', fontSize: '13px', color: t.TEXT_MUTED, lineHeight: '1.6', fontWeight: FW_LIGHT, marginBottom: '4px' },
-    emptyState: { background: t.SURFACE, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_LG, padding: '48px', textAlign: 'center', color: t.TEXT_MUTED, fontSize: '14px', fontWeight: FW_LIGHT },
-    overlay: { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.65)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' },
-    modal: { background: t.SURFACE, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_LG, width: '100%', maxWidth: '580px', boxShadow: '0 24px 64px rgba(0,0,0,0.5)' },
-    modalHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '18px 22px', borderBottom: `1px solid ${t.BORDER}` },
-    modalTitle: { margin: 0, fontFamily: FONT_DISPLAY, fontSize: '22px', fontWeight: FW_REGULAR, color: t.TEXT, letterSpacing: '0.01em' },
-    closeButton: { background: 'none', border: 'none', fontSize: '16px', cursor: 'pointer', color: t.TEXT_MUTED, padding: '2px 6px' },
-    modalBody: { padding: '20px 22px' },
-    modalFooter: { padding: '14px 22px', borderTop: `1px solid ${t.BORDER}`, display: 'flex', justifyContent: 'flex-end', gap: '10px' },
+    aiBadge:         { fontSize: '10px', fontWeight: FW_SEMIBOLD, letterSpacing: '0.08em', padding: '2px 8px', borderRadius: RADIUS_PILL, background: AI_COLOR_MUTED, color: AI_COLOR, border: `1px solid ${AI_COLOR_BORDER}`, textTransform: 'uppercase' },
+    manualBadge:     { fontSize: '10px', fontWeight: FW_SEMIBOLD, letterSpacing: '0.08em', padding: '2px 8px', borderRadius: RADIUS_PILL, background: t.SURFACE_ALT, color: t.TEXT_MUTED, border: `1px solid ${t.BORDER}`, textTransform: 'uppercase' },
+    formRow:         { display: 'flex', gap: '12px', marginBottom: '12px', flexWrap: 'wrap' },
+    formField:       { display: 'flex', flexDirection: 'column', gap: '4px', flex: 1, minWidth: '180px' },
+    label:           { fontSize: '12px', fontWeight: FW_MEDIUM, color: t.TEXT_MUTED, letterSpacing: '0.02em' },
+    input:           { border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_MD, padding: '8px 12px', fontSize: '14px', outline: 'none', color: t.TEXT, background: t.SURFACE_ALT, fontFamily: FONT_BODY },
+    textarea:        { width: '100%', border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_MD, padding: '10px 12px', fontSize: '14px', minHeight: '100px', resize: 'vertical', outline: 'none', color: t.TEXT, background: t.SURFACE_ALT, fontFamily: FONT_BODY, boxSizing: 'border-box', marginBottom: '12px' },
+    transcriptArea:  { width: '100%', border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_MD, padding: '12px', fontSize: '13px', minHeight: '180px', resize: 'vertical', outline: 'none', color: t.TEXT, background: t.SURFACE_ALT, fontFamily: FONT_BODY, boxSizing: 'border-box', marginBottom: '12px', lineHeight: '1.6' },
+    composeFooter:   { display: 'flex', justifyContent: 'flex-end', gap: '10px', alignItems: 'center', marginTop: '20px' },
+    cancelButton:    { padding: '10px 22px', borderRadius: RADIUS_MD, border: `1px solid ${t.BORDER}`, background: 'transparent', fontSize: '13px', cursor: 'pointer', color: t.TEXT_MUTED, fontFamily: FONT_BODY },
+    saveButton:      { padding: '10px 22px', borderRadius: RADIUS_MD, border: `1px solid ${t.ACCENT_BORDER}`, background: t.ACCENT_MUTED, color: t.ACCENT, fontSize: '13px', fontWeight: FW_SEMIBOLD, cursor: 'pointer', fontFamily: FONT_BODY },
+    processButton:   { padding: '10px 22px', borderRadius: RADIUS_MD, border: `1px solid ${AI_COLOR_BORDER}`, background: AI_COLOR_MUTED, color: AI_COLOR, fontSize: '13px', fontWeight: FW_SEMIBOLD, cursor: 'pointer', fontFamily: FONT_BODY },
+    errorText:       { color: '#f87171', fontSize: '13px', marginBottom: '10px' },
+    resultCard:      { background: t.SURFACE_ALT, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_MD, padding: '20px', marginBottom: '16px' },
+    resultSection:   { marginBottom: '16px' },
+    resultLabel:     { fontSize: '10px', fontWeight: FW_SEMIBOLD, textTransform: 'uppercase', letterSpacing: '0.1em', color: AI_COLOR, marginBottom: '8px' },
+    resultText:      { fontSize: '14px', color: t.TEXT, lineHeight: '1.65', fontWeight: FW_LIGHT, margin: 0 },
+    resultListItem:  { fontSize: '13px', color: t.TEXT, lineHeight: '1.6', fontWeight: FW_LIGHT, padding: '5px 0', borderBottom: `1px solid ${t.BORDER}`, display: 'flex', gap: '8px' },
+    resultBullet:    { color: AI_COLOR, flexShrink: 0, fontSize: '12px', marginTop: '2px' },
+    dateGroup:       { marginBottom: '28px' },
+    dateLabel:       { fontSize: '11px', fontWeight: FW_SEMIBOLD, textTransform: 'uppercase', letterSpacing: '0.08em', color: t.TEXT_MUTED, marginBottom: '10px' },
+    noteCard:        { background: t.SURFACE, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_LG, padding: '18px 20px', marginBottom: '10px', boxShadow: SHADOW_MD },
+    noteHeader:      { display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px', flexWrap: 'wrap' },
+    noteTitle:       { fontFamily: FONT_DISPLAY, fontSize: '17px', fontWeight: FW_REGULAR, color: t.TEXT, flex: 1, letterSpacing: '0.01em' },
+    noteTypeBadge:   { fontSize: '11px', fontWeight: FW_REGULAR, color: t.TEXT_MUTED, letterSpacing: '0.03em' },
+    noteAiBadge:     { fontSize: '10px', fontWeight: FW_SEMIBOLD, padding: '2px 10px', borderRadius: RADIUS_PILL, background: AI_COLOR_MUTED, color: AI_COLOR, border: `1px solid ${AI_COLOR_BORDER}`, letterSpacing: '0.06em', textTransform: 'uppercase' },
+    clientBadge:     { fontSize: '11px', fontWeight: FW_SEMIBOLD, padding: '2px 10px', borderRadius: RADIUS_PILL, background: 'rgba(96,165,250,0.12)', color: '#60a5fa', border: 'rgba(96,165,250,0.2)', textDecoration: 'none', transition: 'background 0.15s, box-shadow 0.15s' },
+    noteBody:        { fontSize: '14px', color: t.TEXT_MUTED, lineHeight: '1.65', margin: '0 0 10px', whiteSpace: 'pre-wrap', fontWeight: FW_LIGHT },
+    noteActions:     { display: 'flex', gap: '12px' },
+    noteAction:      { background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px', color: t.TEXT_MUTED, padding: 0, fontFamily: FONT_BODY },
+    aiSection:       { marginBottom: '12px' },
+    aiSectionLabel:  { fontSize: '10px', fontWeight: FW_SEMIBOLD, textTransform: 'uppercase', letterSpacing: '0.08em', color: AI_COLOR, marginBottom: '6px' },
+    aiSectionText:   { fontSize: '13px', color: t.TEXT_MUTED, lineHeight: '1.6', fontWeight: FW_LIGHT, margin: 0 },
+    aiListItem:      { display: 'flex', gap: '8px', fontSize: '13px', color: t.TEXT_MUTED, lineHeight: '1.6', fontWeight: FW_LIGHT, marginBottom: '4px' },
+    emptyState:      { background: t.SURFACE, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_LG, padding: '48px', textAlign: 'center', color: t.TEXT_MUTED, fontSize: '14px', fontWeight: FW_LIGHT },
+    overlay:         { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.65)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' },
+    modal:           { background: t.SURFACE, border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_LG, width: '100%', maxWidth: '580px', boxShadow: '0 24px 64px rgba(0,0,0,0.5)' },
+    modalHeader:     { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '18px 22px', borderBottom: `1px solid ${t.BORDER}` },
+    modalTitle:      { margin: 0, fontFamily: FONT_DISPLAY, fontSize: '22px', fontWeight: FW_REGULAR, color: t.TEXT, letterSpacing: '0.01em' },
+    closeButton:     { background: 'none', border: 'none', fontSize: '16px', cursor: 'pointer', color: t.TEXT_MUTED, padding: '2px 6px' },
+    modalBody:       { padding: '20px 22px' },
+    modalFooter:     { padding: '14px 22px', borderTop: `1px solid ${t.BORDER}`, display: 'flex', justifyContent: 'flex-end', gap: '10px' },
   };
 
-  // Tab button style helper
   function tabStyle(tab) {
     const isActive = activeTab === tab;
     return {
@@ -627,7 +703,7 @@ export default function Notes() {
 
         <style>{`
           @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=DM+Sans:wght@300;400;500;600&display=swap');
-          @keyframes fadeUp { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+          @keyframes fadeUp  { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
           @keyframes aiPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
           .note-card { animation: fadeUp 0.4s ease both; }
           .note-card:hover { transform: translateY(-2px) !important; box-shadow: ${SHADOW_LG} !important; }
@@ -661,12 +737,8 @@ export default function Notes() {
 
         {/* Tab row */}
         <div style={{ display: 'flex', gap: '4px', marginBottom: '28px', borderBottom: `1px solid ${t.BORDER}` }}>
-          <button style={tabStyle('record')} onClick={() => setActiveTab('record')}>
-            Record
-          </button>
-          <button style={tabStyle('history')} onClick={() => setActiveTab('history')}>
-            History
-          </button>
+          <button style={tabStyle('record')}  onClick={() => setActiveTab('record')}>Record</button>
+          <button style={tabStyle('history')} onClick={() => setActiveTab('history')}>History</button>
         </div>
 
         {/* ── Record tab ───────────────────────────────────────────────────── */}
@@ -676,16 +748,10 @@ export default function Notes() {
             {/* Mode toggle */}
             <div style={s.composeHeader}>
               <div style={s.modeToggle}>
-                <button
-                  style={composeMode === 'ai' ? s.modeTabActive : s.modeTabInactive}
-                  onClick={() => { setComposeMode('ai'); setError(''); }}
-                >
+                <button style={composeMode === 'ai' ? s.modeTabActive : s.modeTabInactive} onClick={() => { setComposeMode('ai'); setError(''); }}>
                   AI Note-Taker
                 </button>
-                <button
-                  style={composeMode === 'manual' ? s.modeTabActive : s.modeTabInactive}
-                  onClick={() => { setComposeMode('manual'); setAiResult(null); setAiError(''); }}
-                >
+                <button style={composeMode === 'manual' ? s.modeTabActive : s.modeTabInactive} onClick={() => { setComposeMode('manual'); setAiResult(null); setAiError(''); }}>
                   Manual
                 </button>
               </div>
@@ -732,15 +798,14 @@ export default function Notes() {
             {/* ── AI mode ────────────────────────────────────────────────── */}
             {composeMode === 'ai' && (
               <>
-                {/* Transcript input — hidden once result is ready */}
                 {!aiResult && !aiProcessing && (
                   <>
                     {/* Input mode tabs */}
                     <div style={{ display: 'flex', gap: '6px', marginBottom: '14px' }}>
                       {[
-                        { key: 'paste', label: 'Paste text' },
-                        { key: 'upload', label: 'Upload audio' },
-                        { key: 'record', label: 'Record' },
+                        { key: 'paste',  label: 'Paste text'   },
+                        { key: 'upload', label: 'Upload audio'  },
+                        { key: 'record', label: 'Record'        },
                       ].map(tab => (
                         <button
                           key={tab.key}
@@ -777,23 +842,8 @@ export default function Notes() {
                         <p style={{ fontSize: '13px', color: t.TEXT_MUTED, margin: '0 0 16px', fontWeight: FW_LIGHT }}>
                           Supported formats: MP3, MP4, M4A, WAV, WEBM, OGG
                         </p>
-                        <input
-                          type="file"
-                          accept="audio/*"
-                          id="audio-upload"
-                          style={{ display: 'none' }}
-                          onChange={handleFileSelect}
-                        />
-                        <label
-                          htmlFor="audio-upload"
-                          style={{
-                            display: 'inline-block', padding: '9px 20px',
-                            border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_MD,
-                            fontSize: '13px', color: t.TEXT_MUTED, cursor: 'pointer',
-                            fontFamily: FONT_BODY, fontWeight: FW_MEDIUM,
-                            marginBottom: audioFile ? '12px' : 0,
-                          }}
-                        >
+                        <input type="file" accept="audio/*" id="audio-upload" style={{ display: 'none' }} onChange={handleFileSelect} />
+                        <label htmlFor="audio-upload" style={{ display: 'inline-block', padding: '9px 20px', border: `1px solid ${t.BORDER}`, borderRadius: RADIUS_MD, fontSize: '13px', color: t.TEXT_MUTED, cursor: 'pointer', fontFamily: FONT_BODY, fontWeight: FW_MEDIUM, marginBottom: audioFile ? '12px' : 0 }}>
                           Choose file
                         </label>
                         {audioFile && (
@@ -801,20 +851,12 @@ export default function Notes() {
                             <p style={{ fontSize: '13px', color: t.TEXT, margin: '0 0 12px', fontWeight: FW_LIGHT }}>
                               {audioFile.name} ({(audioFile.size / 1024 / 1024).toFixed(1)} MB)
                             </p>
-                            <button
-                              style={{ ...s.saveButton, opacity: audioTranscribing ? 0.6 : 1 }}
-                              onClick={handleFileTranscribe}
-                              disabled={audioTranscribing}
-                            >
+                            <button style={{ ...s.saveButton, opacity: audioTranscribing ? 0.6 : 1 }} onClick={handleFileTranscribe} disabled={audioTranscribing}>
                               {audioTranscribing ? 'Transcribing…' : 'Transcribe'}
                             </button>
                           </div>
                         )}
-                        {audioTranscribing && (
-                          <p style={{ fontSize: '12px', color: t.TEXT_MUTED, margin: '12px 0 0', fontWeight: FW_LIGHT }}>
-                            This may take 30–90 seconds depending on file length…
-                          </p>
-                        )}
+                        {audioTranscribing && <p style={{ fontSize: '12px', color: t.TEXT_MUTED, margin: '12px 0 0', fontWeight: FW_LIGHT }}>This may take 30–90 seconds depending on file length…</p>}
                         {audioError && <p style={{ color: '#f87171', fontSize: '12px', margin: '10px 0 0' }}>{audioError}</p>}
                       </div>
                     )}
@@ -827,16 +869,7 @@ export default function Notes() {
                             <p style={{ fontSize: '13px', color: t.TEXT_MUTED, margin: '0 0 18px', fontWeight: FW_LIGHT, lineHeight: '1.5' }}>
                               Hit stop when you're done — we'll process automatically.
                             </p>
-                            <button
-                              style={{
-                                padding: '9px 20px', borderRadius: RADIUS_MD,
-                                border: `1px solid ${AI_COLOR_BORDER}`,
-                                background: AI_COLOR_MUTED, color: AI_COLOR,
-                                fontSize: '13px', fontWeight: FW_SEMIBOLD,
-                                cursor: 'pointer', fontFamily: FONT_BODY,
-                              }}
-                              onClick={startRecording}
-                            >
+                            <button style={{ padding: '9px 20px', borderRadius: RADIUS_MD, border: `1px solid ${AI_COLOR_BORDER}`, background: AI_COLOR_MUTED, color: AI_COLOR, fontSize: '13px', fontWeight: FW_SEMIBOLD, cursor: 'pointer', fontFamily: FONT_BODY }} onClick={startRecording}>
                               Start recording
                             </button>
                           </>
@@ -849,16 +882,7 @@ export default function Notes() {
                                 Recording — {Math.floor(recordingSeconds / 60)}:{String(recordingSeconds % 60).padStart(2, '0')}
                               </span>
                             </div>
-                            <button
-                              style={{
-                                padding: '9px 20px', borderRadius: RADIUS_MD,
-                                border: `1px solid rgba(248,113,113,0.4)`,
-                                background: 'rgba(248,113,113,0.12)', color: '#f87171',
-                                fontSize: '13px', fontWeight: FW_SEMIBOLD,
-                                cursor: 'pointer', fontFamily: FONT_BODY,
-                              }}
-                              onClick={stopRecording}
-                            >
+                            <button style={{ padding: '9px 20px', borderRadius: RADIUS_MD, border: `1px solid rgba(248,113,113,0.4)`, background: 'rgba(248,113,113,0.12)', color: '#f87171', fontSize: '13px', fontWeight: FW_SEMIBOLD, cursor: 'pointer', fontFamily: FONT_BODY }} onClick={stopRecording}>
                               Stop recording
                             </button>
                           </>
@@ -866,9 +890,7 @@ export default function Notes() {
                         {audioTranscribing && (
                           <div>
                             <div style={{ marginBottom: '12px' }}>
-                              <span className="ai-dot" />
-                              <span className="ai-dot" />
-                              <span className="ai-dot" />
+                              <span className="ai-dot" /><span className="ai-dot" /><span className="ai-dot" />
                             </div>
                             <p style={{ color: AI_COLOR, fontSize: '13px', fontWeight: FW_MEDIUM, margin: '0 0 4px' }}>Transcribing & processing</p>
                             <p style={{ color: t.TEXT_MUTED, fontSize: '11px', fontWeight: FW_LIGHT, margin: 0 }}>This may take 30–90 seconds…</p>
@@ -884,9 +906,7 @@ export default function Notes() {
                 {aiProcessing && (
                   <div style={{ textAlign: 'center', padding: '40px 0' }}>
                     <div style={{ marginBottom: '14px' }}>
-                      <span className="ai-dot" />
-                      <span className="ai-dot" />
-                      <span className="ai-dot" />
+                      <span className="ai-dot" /><span className="ai-dot" /><span className="ai-dot" />
                     </div>
                     <p style={{ color: AI_COLOR, fontSize: '13px', fontWeight: FW_MEDIUM, margin: '0 0 4px' }}>Analysing transcript</p>
                     <p style={{ color: t.TEXT_MUTED, fontSize: '11px', fontWeight: FW_LIGHT, margin: 0 }}>De-identifying · Processing · Re-identifying</p>
@@ -897,35 +917,26 @@ export default function Notes() {
                 {aiResult && !aiProcessing && (
                   <div style={{ animation: 'fadeUp 0.3s ease both' }}>
                     <div style={s.resultCard}>
-
-                      {/* Editable title */}
                       <div style={s.resultSection}>
                         <p style={s.resultLabel}>Title</p>
                         <input value={aiTitleOverride} onChange={e => setAiTitleOverride(e.target.value)} style={{ ...s.input, width: '100%', boxSizing: 'border-box' }} />
                       </div>
-
-                      {/* Summary */}
                       {aiResult.summary && (
                         <div style={s.resultSection}>
                           <p style={s.resultLabel}>Summary</p>
                           <p style={s.resultText}>{aiResult.summary}</p>
                         </div>
                       )}
-
-                      {/* Decisions */}
                       {aiResult.decisions?.length > 0 && (
                         <div style={s.resultSection}>
                           <p style={s.resultLabel}>Decisions</p>
                           {aiResult.decisions.map((d, i) => (
                             <div key={i} style={{ ...s.resultListItem, borderBottom: i < aiResult.decisions.length - 1 ? `1px solid ${t.BORDER}` : 'none' }}>
-                              <span style={s.resultBullet}>·</span>
-                              <span>{d}</span>
+                              <span style={s.resultBullet}>·</span><span>{d}</span>
                             </div>
                           ))}
                         </div>
                       )}
-
-                      {/* Action items */}
                       {aiResult.action_items?.length > 0 && (
                         <div style={s.resultSection}>
                           <p style={s.resultLabel}>Action Items</p>
@@ -935,28 +946,24 @@ export default function Notes() {
                               <span>
                                 {item.task}
                                 {item.owner && <span style={{ color: t.TEXT_MUTED }}> · {item.owner}</span>}
-                                {item.due && <span style={{ color: t.TEXT_MUTED }}> · {item.due}</span>}
+                                {item.due   && <span style={{ color: t.TEXT_MUTED }}> · {item.due}</span>}
                               </span>
                             </div>
                           ))}
                         </div>
                       )}
-
-                      {/* Follow-ups */}
                       {aiResult.follow_ups?.length > 0 && (
                         <div style={{ ...s.resultSection, marginBottom: 0 }}>
                           <p style={s.resultLabel}>Follow-ups</p>
                           {aiResult.follow_ups.map((f, i) => (
                             <div key={i} style={{ ...s.resultListItem, borderBottom: i < aiResult.follow_ups.length - 1 ? `1px solid ${t.BORDER}` : 'none' }}>
-                              <span style={s.resultBullet}>·</span>
-                              <span>{f}</span>
+                              <span style={s.resultBullet}>·</span><span>{f}</span>
                             </div>
                           ))}
                         </div>
                       )}
                     </div>
 
-                    {/* Show original transcript toggle */}
                     <button style={{ ...s.noteAction, fontSize: '12px', marginBottom: '12px' }} onClick={() => setShowTranscript(v => !v)}>
                       {showTranscript ? 'Hide' : 'Show'} original transcript
                       <span className={`expand-triangle${showTranscript ? ' open' : ''}`} />
@@ -993,22 +1000,24 @@ export default function Notes() {
         {/* ── History tab ──────────────────────────────────────────────────── */}
         {activeTab === 'history' && (
           <>
-            {/* Client filter */}
-            {clients.length > 0 && (
-              <div style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <select value={clientFilter} onChange={e => setClientFilter(e.target.value)} style={{ ...s.input, maxWidth: '280px', padding: '8px 12px' }}>
-                  <option value="">All clients</option>
-                  {clients.map(c => (
-                    <option key={c.id} value={c.id}>{c.first_name} {c.last_name} ({noteCounts[c.id] || 0})</option>
-                  ))}
-                </select>
-                {clientFilter && (
-                  <button onClick={() => setClientFilter('')} style={{ ...s.cancelButton, padding: '6px 14px', fontSize: '12px' }}>
-                    Clear
-                  </button>
-                )}
-              </div>
-            )}
+            {/* ── History filters ─────────────────────────────────────────── */}
+            <div style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+              {clients.length > 0 && (
+                <Dropdown
+                  options={clientOptions}
+                  value={clientFilter}
+                  onChange={setClientFilter}
+                  placeholder="All clients"
+                  panelWidth="260px"
+                />
+              )}
+              <Dropdown
+                options={timeframeOptions}
+                value={timeframe}
+                onChange={handleTimeframeChange}
+                placeholder="All time"
+              />
+            </div>
 
             {/* Notes list */}
             {loading ? (
@@ -1021,17 +1030,19 @@ export default function Notes() {
                     ? 'No notes yet — head to the Record tab to capture your first meeting.'
                     : 'No notes yet.'}
               </div>
+            ) : filteredNotes.length === 0 ? (
+              <div style={s.emptyState}>No notes match the selected filters.</div>
             ) : (
               grouped.map(([date, dateNotes]) => (
                 <div key={date} style={s.dateGroup}>
                   <p style={s.dateLabel}>{formatDateLabel(date)}</p>
                   {dateNotes.map((note, i) => {
-                    const status = clientStatus(note.client_id);
+                    const status     = clientStatus(note.client_id);
                     const isExpanded = expandedNotes[note.id];
-                    const aiSummary = parseAiSummary(note);
-                    const isAi = note.source === 'ai' && aiSummary;
+                    const aiSummary  = parseAiSummary(note);
+                    const isAi       = note.source === 'ai' && aiSummary;
                     const previewText = isAi ? aiSummary.summary : note.body;
-                    const isLong = previewText && previewText.length > 80;
+                    const isLong     = previewText && previewText.length > 80;
 
                     return (
                       <div
@@ -1039,7 +1050,6 @@ export default function Notes() {
                         className="note-card"
                         style={{ ...s.noteCard, animationDelay: `${i * 60}ms`, transition: 'transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease' }}
                       >
-                        {/* Header */}
                         <div style={s.noteHeader}>
                           <span style={s.noteTitle}>{note.title}</span>
                           {!isAi && <span style={s.manualBadge}>Manual</span>}
@@ -1052,8 +1062,8 @@ export default function Notes() {
                               style={{
                                 ...s.clientBadge,
                                 backgroundColor: STATUS_COLORS?.[status]?.bg || 'rgba(96,165,250,0.12)',
-                                color: STATUS_COLORS?.[status]?.color || '#60a5fa',
-                                border: `1px solid ${STATUS_COLORS?.[status]?.color || '#60a5fa'}33`,
+                                color:           STATUS_COLORS?.[status]?.color || '#60a5fa',
+                                border:          `1px solid ${STATUS_COLORS?.[status]?.color || '#60a5fa'}33`,
                               }}
                             >
                               {clientName(note.client_id)}
@@ -1065,17 +1075,11 @@ export default function Notes() {
                           )}
                         </div>
 
-                        {/* Preview / expanded content */}
                         {previewText && (
                           <div style={{ marginBottom: '10px' }}>
-                            <div style={{
-                              maxHeight: isExpanded ? '2000px' : '1.4em',
-                              overflow: 'hidden',
-                              transition: isExpanded ? 'max-height 0.4s ease-in-out' : 'max-height 0.3s ease-in-out',
-                            }}>
+                            <div style={{ maxHeight: isExpanded ? '2000px' : '1.4em', overflow: 'hidden', transition: isExpanded ? 'max-height 0.4s ease-in-out' : 'max-height 0.3s ease-in-out' }}>
                               <p style={{ ...s.noteBody, marginBottom: 0 }}>{previewText}</p>
 
-                              {/* AI structured sections shown on expand */}
                               {isAi && isExpanded && (
                                 <div style={{ marginTop: '16px' }}>
                                   {aiSummary.decisions?.length > 0 && (
@@ -1093,7 +1097,7 @@ export default function Notes() {
                                     <div style={s.aiSection}>
                                       <p style={s.aiSectionLabel}>Action Items</p>
                                       {aiSummary.action_items.map((item, j) => {
-                                        const key = `${note.id}-${j}`;
+                                        const key    = `${note.id}-${j}`;
                                         const pushed = pushedTasks.has(key);
                                         return (
                                           <div key={j} style={{ ...s.aiListItem, justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -1102,27 +1106,14 @@ export default function Notes() {
                                               <span style={s.aiSectionText}>
                                                 {item.task}
                                                 {item.owner && <span style={{ opacity: 0.7 }}> · {item.owner}</span>}
-                                                {item.due && <span style={{ opacity: 0.7 }}> · {item.due}</span>}
+                                                {item.due   && <span style={{ opacity: 0.7 }}> · {item.due}</span>}
                                               </span>
                                             </div>
                                             <button
                                               className={pushed ? '' : 'push-task-btn'}
                                               onClick={() => pushToTask(item, key, note.client_id)}
                                               disabled={pushed}
-                                              style={{
-                                                flexShrink: 0,
-                                                marginLeft: '12px',
-                                                background: 'none',
-                                                border: `1px solid ${pushed ? t.ACCENT_BORDER : t.BORDER}`,
-                                                borderRadius: '6px',
-                                                padding: '3px 10px',
-                                                fontSize: '11px',
-                                                fontWeight: FW_SEMIBOLD,
-                                                color: pushed ? t.ACCENT : t.TEXT_MUTED,
-                                                cursor: pushed ? 'default' : 'pointer',
-                                                fontFamily: FONT_BODY,
-                                                letterSpacing: '0.03em',
-                                              }}
+                                              style={{ flexShrink: 0, marginLeft: '12px', background: 'none', border: `1px solid ${pushed ? t.ACCENT_BORDER : t.BORDER}`, borderRadius: '6px', padding: '3px 10px', fontSize: '11px', fontWeight: FW_SEMIBOLD, color: pushed ? t.ACCENT : t.TEXT_MUTED, cursor: pushed ? 'default' : 'pointer', fontFamily: FONT_BODY, letterSpacing: '0.03em' }}
                                             >
                                               {pushed ? '✓ Added' : '+ Task'}
                                             </button>
@@ -1179,7 +1170,7 @@ export default function Notes() {
           </>
         )}
 
-        {/* ── Edit modal — always accessible regardless of active tab ──────── */}
+        {/* ── Edit modal ───────────────────────────────────────────────────── */}
         {editingNote && (
           <div style={s.overlay}>
             <div style={s.modal}>
@@ -1246,13 +1237,10 @@ export default function Notes() {
                 <h2 style={s.modalTitle}>Draft Follow-up Email</h2>
                 <button style={s.closeButton} onClick={() => setEmailNote(null)}>✕</button>
               </div>
-
               <div style={s.modalBody}>
-
                 <p style={{ fontSize: '11px', color: t.TEXT_MUTED, fontStyle: 'italic', margin: '0 0 28px', fontWeight: FW_LIGHT, paddingLeft: '2px' }}>
                   For advisor review — please check before sending to client.
                 </p>
-
                 <div style={{ display: 'flex', gap: '16px', marginBottom: '24px', paddingLeft: '2px' }}>
                   <div style={{ flex: 1 }}>
                     <label style={{ ...s.label, display: 'block', marginBottom: '6px' }}>Salutation</label>
@@ -1263,111 +1251,75 @@ export default function Notes() {
                     <input style={s.input} value={emailSignOff} onChange={e => setEmailSignOff(e.target.value)} placeholder="Best," />
                   </div>
                 </div>
-
                 <div style={{ marginBottom: '24px', paddingLeft: '2px' }}>
                   <label style={{ ...s.label, display: 'block', marginBottom: '8px' }}>Tone</label>
                   <div style={{ display: 'flex', gap: '8px' }}>
                     {[
-                      { value: 'formal', label: 'Formal' },
-                      { value: 'professional', label: 'Professional' },
-                      { value: 'conversational', label: 'Conversational' },
+                      { value: 'formal',           label: 'Formal'          },
+                      { value: 'professional',      label: 'Professional'    },
+                      { value: 'conversational',    label: 'Conversational'  },
                     ].map(opt => (
-                      <button
-                        key={opt.value}
-                        onClick={() => setEmailTone(opt.value)}
-                        style={{
-                          padding: '7px 16px', borderRadius: '6px', fontSize: '12px',
-                          fontFamily: FONT_BODY, cursor: 'pointer', fontWeight: FW_MEDIUM,
-                          border: `1px solid ${emailTone === opt.value ? t.ACCENT_BORDER : t.BORDER}`,
-                          background: emailTone === opt.value ? t.ACCENT_MUTED : 'transparent',
-                          color: emailTone === opt.value ? t.ACCENT : t.TEXT_MUTED,
-                        }}
-                      >
+                      <button key={opt.value} onClick={() => setEmailTone(opt.value)} style={{ padding: '7px 16px', borderRadius: '6px', fontSize: '12px', fontFamily: FONT_BODY, cursor: 'pointer', fontWeight: FW_MEDIUM, border: `1px solid ${emailTone === opt.value ? t.ACCENT_BORDER : t.BORDER}`, background: emailTone === opt.value ? t.ACCENT_MUTED : 'transparent', color: emailTone === opt.value ? t.ACCENT : t.TEXT_MUTED }}>
                         {opt.label}
                       </button>
                     ))}
                   </div>
                 </div>
-
                 <div style={{ marginBottom: '28px', paddingLeft: '2px' }}>
                   <label style={{ ...s.label, display: 'block', marginBottom: '10px' }}>Include</label>
                   <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
                     {[
-                      { value: 'summary', label: 'Summary' },
-                      { value: 'decisions', label: 'Decisions' },
+                      { value: 'summary',      label: 'Summary'      },
+                      { value: 'decisions',    label: 'Decisions'    },
                       { value: 'action_items', label: 'Action Items' },
-                      { value: 'follow_ups', label: 'Follow-ups' },
+                      { value: 'follow_ups',   label: 'Follow-ups'   },
                     ].map(opt => (
                       <label key={opt.value} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px', color: t.TEXT, fontWeight: FW_LIGHT }}>
-                        <input
-                          type="checkbox"
-                          checked={emailInclude.includes(opt.value)}
-                          onChange={e => setEmailInclude(prev =>
-                            e.target.checked ? [...prev, opt.value] : prev.filter(v => v !== opt.value)
-                          )}
-                        />
+                        <input type="checkbox" checked={emailInclude.includes(opt.value)} onChange={e => setEmailInclude(prev => e.target.checked ? [...prev, opt.value] : prev.filter(v => v !== opt.value))} />
                         {opt.label}
                       </label>
                     ))}
                   </div>
                 </div>
-
                 {!emailBody && (
-                  <button
-                    style={{ ...s.saveButton, width: '100%', padding: '13px', fontSize: '14px', marginBottom: emailError ? '12px' : 0 }}
-                    onClick={handleDraftEmail}
-                    disabled={emailGenerating || emailInclude.length === 0}
-                  >
+                  <button style={{ ...s.saveButton, width: '100%', padding: '13px', fontSize: '14px', marginBottom: emailError ? '12px' : 0 }} onClick={handleDraftEmail} disabled={emailGenerating || emailInclude.length === 0}>
                     {emailGenerating ? 'Generating…' : 'Generate Draft'}
                   </button>
                 )}
-
-                {emailError && (
-                  <p style={{ color: '#f87171', fontSize: '13px', margin: '10px 0 0' }}>{emailError}</p>
-                )}
-
+                {emailError && <p style={{ color: '#f87171', fontSize: '13px', margin: '10px 0 0' }}>{emailError}</p>}
                 {emailBody && (
                   <div style={{ marginTop: '4px' }}>
                     <div style={{ marginBottom: '16px' }}>
                       <label style={{ ...s.label, display: 'block', marginBottom: '6px' }}>Subject</label>
-                      <input
-                        style={s.input}
-                        value={emailSubject}
-                        onChange={e => {
-                          setEmailSubject(e.target.value);
-                          setEmailDrafts(prev => ({ ...prev, [emailNote.id]: { ...prev[emailNote.id], subject: e.target.value } }));
-                        }}
-                      />
+                      <input style={s.input} value={emailSubject} onChange={e => { setEmailSubject(e.target.value); setEmailDrafts(prev => ({ ...prev, [emailNote.id]: { ...prev[emailNote.id], subject: e.target.value } })); }} />
                     </div>
                     <div style={{ marginBottom: '20px' }}>
                       <label style={{ ...s.label, display: 'block', marginBottom: '6px' }}>Body</label>
-                      <textarea
-                        style={{ ...s.textarea, minHeight: '220px' }}
-                        value={emailBody}
-                        onChange={e => {
-                          setEmailBody(e.target.value);
-                          setEmailDrafts(prev => ({ ...prev, [emailNote.id]: { ...prev[emailNote.id], body: e.target.value } }));
-                        }}
-                      />
+                      <textarea style={{ ...s.textarea, minHeight: '220px' }} value={emailBody} onChange={e => { setEmailBody(e.target.value); setEmailDrafts(prev => ({ ...prev, [emailNote.id]: { ...prev[emailNote.id], body: e.target.value } })); }} />
                     </div>
                     <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                      <button style={s.saveButton} onClick={handleCopyEmail}>
-                        {emailCopied ? '✓ Copied' : 'Copy to clipboard'}
-                      </button>
-                      <button style={s.saveButton} onClick={handleMailto}>
-                        Open in mail client
-                      </button>
-                      <button style={s.cancelButton} onClick={handleDraftEmail} disabled={emailGenerating}>
-                        {emailGenerating ? 'Regenerating…' : 'Regenerate'}
-                      </button>
+                      <button style={s.saveButton} onClick={handleCopyEmail}>{emailCopied ? '✓ Copied' : 'Copy to clipboard'}</button>
+                      <button style={s.saveButton} onClick={handleMailto}>Open in mail client</button>
+                      <button style={s.cancelButton} onClick={handleDraftEmail} disabled={emailGenerating}>{emailGenerating ? 'Regenerating…' : 'Regenerate'}</button>
                     </div>
                   </div>
                 )}
-
               </div>
             </div>
           </div>
         )}
+
+        {/* ── Date range modal ─────────────────────────────────────────────── */}
+        <DateRangeModal
+          open={showDateModal}
+          onClose={() => setShowDateModal(false)}
+          initialRange={customRange.start && customRange.end ? customRange : null}
+          onApply={(start, end) => {
+            setCustomRange({ start, end });
+            setTimeframe('custom');
+            setShowDateModal(false);
+          }}
+        />
 
       </div>
     </div>

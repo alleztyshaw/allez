@@ -4,6 +4,7 @@ import { supabase } from '../supabaseClient';
 import { useOrg } from '../context/OrgContext';
 import { useTokens } from '../context/ThemeContext';
 import useWindowWidth from '../hooks/useWindowWidth';
+import { Dropdown } from '../components/Dropdown';
 import {
   FONT_BODY,
   FW_LIGHT, FW_REGULAR, FW_SEMIBOLD,
@@ -15,6 +16,29 @@ import {
   PLAN_OPTIONS, ORG_STATUS_OPTIONS,
   pageStyles,
 } from '../utils/hqConstants';
+
+// ── Filter + form option arrays ───────────────────────────────────────────────
+
+const STATUS_FILTER_OPTIONS = [
+  { value: '', label: 'All statuses' },
+  ...ORG_STATUS_OPTIONS.map(s => ({ value: s, label: s.charAt(0).toUpperCase() + s.slice(1) })),
+];
+
+const PLAN_FILTER_OPTIONS = [
+  { value: '', label: 'All plans' },
+  ...PLAN_OPTIONS.map(p => ({ value: p, label: p })),
+];
+
+const TYPE_OPTIONS = [
+  { value: '',         label: 'All types' },
+  { value: 'platform', label: 'Platform'  },
+  { value: 'demo',     label: 'Demo'      },
+  { value: 'customer', label: 'Customer'  },
+];
+
+const PLAN_FORM_OPTIONS = ['Starter', 'Pro', 'Pathfinder', 'Free', 'Internal'].map(p => ({ value: p, label: p }));
+
+// ── Sort indicator ────────────────────────────────────────────────────────────
 
 function SortTriangle({ active, dir }) {
   if (!active) return null;
@@ -34,6 +58,8 @@ function SortTriangle({ active, dir }) {
   );
 }
 
+// ── Component ─────────────────────────────────────────────────────────────────
+
 export default function Orgs() {
   const { isAdmin, isPlatformAdmin, orgLoading } = useOrg();
   const navigate    = useNavigate();
@@ -44,8 +70,8 @@ export default function Orgs() {
   const [orgs,    setOrgs]    = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const [sortKey, setSortKey] = useState('name');
-  const [sortDir, setSortDir] = useState('asc');
+  const [sortKey,      setSortKey]      = useState('name');
+  const [sortDir,      setSortDir]      = useState('asc');
   const [search,       setSearch]       = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [planFilter,   setPlanFilter]   = useState('');
@@ -114,12 +140,6 @@ export default function Orgs() {
     return new Date(iso).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
   }
 
-  const TYPE_OPTIONS = [
-    { value: 'platform',  label: 'Platform'  },
-    { value: 'demo',      label: 'Demo'      },
-    { value: 'customer',  label: 'Customer'  },
-  ];
-
   const COLUMNS = [
     { key: 'name',         label: 'Name',    sortable: true  },
     { key: 'status',       label: 'Status',  sortable: true  },
@@ -134,9 +154,9 @@ export default function Orgs() {
       if (search       && !o.name.toLowerCase().includes(search.toLowerCase())) return false;
       if (statusFilter && o.status !== statusFilter)                            return false;
       if (planFilter   && o.plan   !== planFilter.toLowerCase())                return false;
-      if (typeFilter === 'platform' && !o.is_platform_org)                     return false;
-      if (typeFilter === 'demo'     && !o.is_demo)                             return false;
-      if (typeFilter === 'customer' && (o.is_platform_org || o.is_demo))       return false;
+      if (typeFilter === 'platform' && !o.is_platform_org)                      return false;
+      if (typeFilter === 'demo'     && !o.is_demo)                              return false;
+      if (typeFilter === 'customer' && (o.is_platform_org || o.is_demo))        return false;
       return true;
     })
     .sort((a, b) => {
@@ -159,9 +179,9 @@ export default function Orgs() {
 
   function statusBadgeStyle(status) {
     const map = {
-      active:     { bg: t.ACCENT_MUTED,            color: t.ACCENT  },
-      onboarding: { bg: 'rgba(251,191,36,0.15)',    color: '#fbbf24' },
-      inactive:   { bg: 'rgba(156,163,175,0.15)',   color: '#9ca3af' },
+      active:     { bg: t.ACCENT_MUTED,          color: t.ACCENT  },
+      onboarding: { bg: 'rgba(251,191,36,0.15)',  color: '#fbbf24' },
+      inactive:   { bg: 'rgba(156,163,175,0.15)', color: '#9ca3af' },
     };
     const c = map[status] || map.active;
     return {
@@ -177,20 +197,9 @@ export default function Orgs() {
       letterSpacing: '0.08em', padding: '3px 10px', borderRadius: RADIUS_PILL,
       display: 'inline-block',
     };
-    if (type === 'platform') return {
-      ...base,
-      background: t.ACCENT_MUTED, color: t.ACCENT,
-      border: `1px solid ${t.ACCENT_BORDER}`,
-    };
-    if (type === 'demo') return {
-      ...base,
-      background: t.SURFACE_ALT, color: t.TEXT_MUTED,
-    };
-    // customer
-    return {
-      ...base,
-      background: 'rgba(96,165,250,0.12)', color: COLOR_INFO,
-    };
+    if (type === 'platform') return { ...base, background: t.ACCENT_MUTED, color: t.ACCENT, border: `1px solid ${t.ACCENT_BORDER}` };
+    if (type === 'demo')     return { ...base, background: t.SURFACE_ALT,  color: t.TEXT_MUTED };
+    return { ...base, background: 'rgba(96,165,250,0.12)', color: COLOR_INFO };
   }
 
   function planDisplay(plan) {
@@ -215,14 +224,6 @@ export default function Orgs() {
       borderRadius: RADIUS_MD, padding: '8px 12px',
       fontSize: '13px', color: t.TEXT, fontFamily: FONT_BODY,
       outline: 'none', width: isMobile ? '100%' : '220px',
-    },
-    filterSelect: {
-      background: `${t.SURFACE} url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23A8C0E8' strokeWidth='1.5' fill='none' strokeLinecap='round'/%3E%3C/svg%3E") no-repeat right 10px center`,
-      border: `1px solid ${t.BORDER}`,
-      borderRadius: RADIUS_MD, padding: '8px 32px 8px 12px',
-      fontSize: '13px', color: t.TEXT_MUTED, fontFamily: FONT_BODY,
-      outline: 'none', cursor: 'pointer',
-      appearance: 'none', WebkitAppearance: 'none',
     },
     tableCard: {
       background: t.SURFACE, border: `1px solid ${t.BORDER}`,
@@ -287,13 +288,6 @@ export default function Orgs() {
       fontSize: '14px', color: t.TEXT, fontFamily: FONT_BODY,
       width: '100%', boxSizing: 'border-box', outline: 'none',
     },
-    formSelect: {
-      background: t.SURFACE_ALT, border: `1px solid ${t.BORDER}`,
-      borderRadius: RADIUS_MD, padding: '10px 14px',
-      fontSize: '14px', color: t.TEXT, fontFamily: FONT_BODY,
-      width: '100%', boxSizing: 'border-box', outline: 'none',
-      cursor: 'pointer', marginTop: '12px',
-    },
     formActions: { display: 'flex', gap: '10px', marginTop: '20px' },
     saveButton: {
       background: t.ACCENT_MUTED, border: `1px solid ${t.ACCENT_BORDER}`,
@@ -352,6 +346,7 @@ export default function Orgs() {
           )}
         </div>
 
+        {/* ── New org form ──────────────────────────────────────────────── */}
         {showForm && isPlatformAdmin && (
           <div style={s.formCard}>
             <label style={s.formLabel}>New Organisation</label>
@@ -361,15 +356,14 @@ export default function Orgs() {
               value={orgName}
               onChange={e => { setOrgName(e.target.value); setFormError(''); }}
             />
-            <select
-              style={s.formSelect}
-              value={selectedPlan}
-              onChange={e => setSelectedPlan(e.target.value)}
-            >
-              {['Starter', 'Pro', 'Pathfinder', 'Free', 'Internal'].map(opt => (
-                <option key={opt} value={opt}>{opt}</option>
-              ))}
-            </select>
+            <div style={{ marginTop: '12px' }}>
+              <Dropdown
+                options={PLAN_FORM_OPTIONS}
+                value={selectedPlan}
+                onChange={setSelectedPlan}
+                placeholder="Select plan"
+              />
+            </div>
             {formError && <p style={s.errorText}>{formError}</p>}
             <div style={s.formActions}>
               <button style={s.saveButton} onClick={handleCreateOrg} disabled={saving}>
@@ -387,6 +381,7 @@ export default function Orgs() {
           </div>
         )}
 
+        {/* ── Filter bar — platform admin only ──────────────────────────── */}
         {isPlatformAdmin && (
           <div style={s.filterBar}>
             <input
@@ -395,29 +390,28 @@ export default function Orgs() {
               value={search}
               onChange={e => setSearch(e.target.value)}
             />
-            <select style={s.filterSelect} value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
-              <option value="">All statuses</option>
-              {ORG_STATUS_OPTIONS.map(opt => (
-                <option key={opt} value={opt}>
-                  {opt.charAt(0).toUpperCase() + opt.slice(1)}
-                </option>
-              ))}
-            </select>
-            <select style={s.filterSelect} value={planFilter} onChange={e => setPlanFilter(e.target.value)}>
-              <option value="">All plans</option>
-              {PLAN_OPTIONS.map(opt => (
-                <option key={opt} value={opt}>{opt}</option>
-              ))}
-            </select>
-            <select style={s.filterSelect} value={typeFilter} onChange={e => setTypeFilter(e.target.value)}>
-              <option value="">All types</option>
-              {TYPE_OPTIONS.map(opt => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
-            </select>
+            <Dropdown
+              options={STATUS_FILTER_OPTIONS}
+              value={statusFilter}
+              onChange={setStatusFilter}
+              placeholder="All statuses"
+            />
+            <Dropdown
+              options={PLAN_FILTER_OPTIONS}
+              value={planFilter}
+              onChange={setPlanFilter}
+              placeholder="All plans"
+            />
+            <Dropdown
+              options={TYPE_OPTIONS}
+              value={typeFilter}
+              onChange={setTypeFilter}
+              placeholder="All types"
+            />
           </div>
         )}
 
+        {/* ── Content ───────────────────────────────────────────────────── */}
         {loading ? (
           <p style={{ color: t.TEXT_MUTED, fontWeight: FW_LIGHT, fontFamily: FONT_BODY }}>
             Loading…

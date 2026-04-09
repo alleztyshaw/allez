@@ -4,7 +4,7 @@ import { supabase } from '../supabaseClient';
 import { useOrg } from '../context/OrgContext';
 import { useTokens } from '../context/ThemeContext';
 import useWindowWidth from '../hooks/useWindowWidth';
-import RoleDropdown, { ROLES } from '../components/RoleDropdown';
+import { Dropdown } from '../components/Dropdown';
 import {
   FONT_DISPLAY, FONT_BODY,
   FW_LIGHT, FW_REGULAR, FW_SEMIBOLD,
@@ -16,6 +16,28 @@ import {
   pageStyles,
 } from '../utils/hqConstants';
 
+// ── Role options — used for invite form, drawer role edit, and role filter ───
+const ROLE_OPTIONS = [
+  { value: 'admin',      label: 'Admin',      description: 'Full access to org settings and member management' },
+  { value: 'manager',    label: 'Manager',    description: 'Manages advisors and client assignments' },
+  { value: 'advisor',    label: 'Advisor',    description: 'Full client and note access' },
+  { value: 'associate',  label: 'Associate',  description: 'Limited client access, no admin features' },
+  { value: 'compliance', label: 'Compliance', description: 'Read-only access for compliance review' },
+];
+
+// Role filter includes an "All" option so the user can clear the selection
+const ROLE_FILTER_OPTIONS = [
+  { value: '', label: 'All roles' },
+  ...ROLE_OPTIONS.map(({ value, label }) => ({ value, label })),
+];
+
+// Status filter options
+const STATUS_OPTIONS = ['Active', 'Setting Up', 'Invited', 'Inactive'];
+const STATUS_FILTER_OPTIONS = [
+  { value: '', label: 'All statuses' },
+  ...STATUS_OPTIONS.map(s => ({ value: s, label: s })),
+];
+
 // ── Lifecycle status ─────────────────────────────────────────────────────────
 function memberStatus(m) {
   if (m.is_active === false)  return 'Inactive';
@@ -24,9 +46,8 @@ function memberStatus(m) {
   return 'Active';
 }
 
-const STATUS_WEIGHT  = { Active: 0, 'Setting Up': 1, Invited: 2, Inactive: 3 };
-const ROLE_ORDER     = { admin: 0, manager: 1, advisor: 2, associate: 3, compliance: 4 };
-const STATUS_OPTIONS = ['Active', 'Setting Up', 'Invited', 'Inactive'];
+const STATUS_WEIGHT = { Active: 0, 'Setting Up': 1, Invited: 2, Inactive: 3 };
+const ROLE_ORDER    = { admin: 0, manager: 1, advisor: 2, associate: 3, compliance: 4 };
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 function memberName(m) {
@@ -48,29 +69,6 @@ function planDisplay(plan) {
 function roleLabel(role) {
   if (!role) return '—';
   return role.charAt(0).toUpperCase() + role.slice(1);
-}
-
-// ── Filter select ────────────────────────────────────────────────────────────
-function FilterSelect({ value, onChange, options, placeholder, t }) {
-  return (
-    <select
-      value={value}
-      onChange={e => onChange(e.target.value)}
-      style={{
-        background: `${t.SURFACE} url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23A8C0E8' strokeWidth='1.5' fill='none' strokeLinecap='round'/%3E%3C/svg%3E") no-repeat right 10px center`,
-        border: `1px solid ${t.BORDER}`,
-        borderRadius: RADIUS_MD, padding: '8px 32px 8px 12px',
-        fontSize: '13px', color: t.TEXT_MUTED, fontFamily: FONT_BODY,
-        outline: 'none', cursor: 'pointer',
-        appearance: 'none', WebkitAppearance: 'none',
-      }}
-    >
-      <option value="">{placeholder}</option>
-      {options.map(opt => (
-        <option key={opt} value={opt}>{opt.charAt(0).toUpperCase() + opt.slice(1)}</option>
-      ))}
-    </select>
-  );
 }
 
 // ── Component ────────────────────────────────────────────────────────────────
@@ -588,7 +586,13 @@ export default function OrgDetail() {
                 <input style={s.input} placeholder="Last name (optional)"  value={inviteLastName}  onChange={e => setInviteLastName(e.target.value)}  />
               </div>
               <input style={s.input} placeholder="Email address" value={inviteEmail} onChange={e => { setInviteEmail(e.target.value); setInviteError(''); }} />
-              <RoleDropdown value={inviteRole} onChange={setInviteRole} />
+              <Dropdown
+                options={ROLE_OPTIONS}
+                value={inviteRole}
+                onChange={setInviteRole}
+                placeholder="Select role"
+                panelWidth="280px"
+              />
               {inviteError && <p style={s.errorText}>{inviteError}</p>}
               <div style={{ display: 'flex', gap: '8px' }}>
                 <button style={s.saveButton} onClick={handleInvite} disabled={inviteSaving}>
@@ -603,7 +607,7 @@ export default function OrgDetail() {
           </div>
         )}
 
-        {/* Filter bar */}
+        {/* ── Filter bar ────────────────────────────────────────────────── */}
         <div style={s.filterBar}>
           <input
             style={s.searchInput}
@@ -611,8 +615,18 @@ export default function OrgDetail() {
             value={search}
             onChange={e => setSearch(e.target.value)}
           />
-          <FilterSelect value={roleFilter}   onChange={setRoleFilter}   options={ROLES}          placeholder="All roles"    t={t} />
-          <FilterSelect value={statusFilter} onChange={setStatusFilter} options={STATUS_OPTIONS}  placeholder="All statuses" t={t} />
+          <Dropdown
+            options={ROLE_FILTER_OPTIONS}
+            value={roleFilter}
+            onChange={setRoleFilter}
+            placeholder="All roles"
+          />
+          <Dropdown
+            options={STATUS_FILTER_OPTIONS}
+            value={statusFilter}
+            onChange={setStatusFilter}
+            placeholder="All statuses"
+          />
         </div>
 
         {/* Member table */}
@@ -691,7 +705,13 @@ export default function OrgDetail() {
                 <span style={s.drawerFieldLabel}>Role</span>
                 {drawerEditingRole ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    <RoleDropdown value={drawerRole} onChange={setDrawerRole} />
+                    <Dropdown
+                      options={ROLE_OPTIONS}
+                      value={drawerRole}
+                      onChange={setDrawerRole}
+                      placeholder="Select role"
+                      panelWidth="260px"
+                    />
                     <div style={{ display: 'flex', gap: '8px' }}>
                       <button style={s.saveButton} onClick={handleRoleChange} disabled={drawerSaving}>
                         {drawerSaving ? 'Saving…' : 'Save'}
