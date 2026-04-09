@@ -29,7 +29,6 @@ import Notes from './pages/Notes';
 import CRM from './pages/CRM';
 import HQ from './pages/HQ';
 import DailyBrief from './pages/DailyBrief';
-import Team from './pages/Team';
 import Welcome from './pages/Welcome';
 import Settings from './pages/Settings';
 import Orgs from './pages/Orgs';
@@ -102,7 +101,6 @@ function App() {
               <Route path="/hq/clients/:id"  element={<ProtectedLayout><ClientDetail /></ProtectedLayout>} />
               <Route path="/hq/notes"        element={<ProtectedLayout><Notes        /></ProtectedLayout>} />
               <Route path="/hq/crm"          element={<ProtectedLayout><CRM          /></ProtectedLayout>} />
-              <Route path="/hq/team"         element={<ProtectedLayout><Team         /></ProtectedLayout>} />
               <Route path="/hq/settings"     element={<ProtectedLayout><Settings     /></ProtectedLayout>} />
               <Route path="/hq/orgs"         element={<ProtectedLayout><Orgs         /></ProtectedLayout>} />
               <Route path="/hq/orgs/:orgId"  element={<ProtectedLayout><OrgDetail    /></ProtectedLayout>} />

@@ -66,7 +66,6 @@ export default function Sidebar() {
   ];
 
   const firmLinks = [
-    ...(!orgLoading && isAdmin                                ? [{ to: '/hq/team',  label: 'Team'      }] : []),
     ...(!orgLoading && (isAdmin || userRole === 'compliance') ? [{ to: '/hq/audit', label: 'Audit Log' }] : []),
     { to: '/hq/settings', label: 'Settings' },
     ...(!orgLoading && (isPlatformAdmin || isAdmin)
