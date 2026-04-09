@@ -23,7 +23,8 @@ import {
  */
 export function Dropdown({ options = [], value, onChange, placeholder = 'Select...', style = {}, panelWidth }) {
   const t = useTokens();
-  const [open, setOpen] = useState(false);
+  const [open,    setOpen]    = useState(false);
+  const [hovered, setHovered] = useState(null);
   const ref = useRef(null);
 
   const selected = options.find(o => o.value === value);
@@ -40,6 +41,7 @@ export function Dropdown({ options = [], value, onChange, placeholder = 'Select.
   function handleSelect(optValue) {
     onChange(optValue);
     setOpen(false);
+    setHovered(null);
   }
 
   // ── Styles ────────────────────────────────────────────────────────────────
@@ -63,33 +65,53 @@ export function Dropdown({ options = [], value, onChange, placeholder = 'Select.
     ...style,
   };
 
+  // Frosted panel — slightly transparent + blur gives premium depth.
+  // opacity: 0.97 keeps it nearly opaque while allowing the blur to register.
   const panel = {
     position: 'absolute',
     top: 'calc(100% + 6px)',
     left: 0,
     zIndex: 200,
     background: t.SURFACE,
+    opacity: 0.97,
+    backdropFilter: 'blur(16px)',
+    WebkitBackdropFilter: 'blur(16px)',
     border: `1px solid ${t.BORDER}`,
     borderRadius: RADIUS_LG,
     boxShadow: SHADOW_LG,
     minWidth: '180px',
     width: panelWidth || 'auto',
-    overflow: 'hidden',
+    // Inner padding + flex so pills sit inside the panel with gap between them
+    padding: '6px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '6px',
     animation: 'ddFadeDown 0.12s ease both',
   };
 
-  const optionBase = {
-    padding: '10px 14px',
-    cursor: 'pointer',
-    fontFamily: FONT_BODY,
-    fontSize: '13px',
-    fontWeight: FW_LIGHT,
-    color: t.TEXT,
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '2px',
-    transition: 'background 0.1s',
-  };
+  // Each option renders as a pill — RADIUS_LG matches the panel corners.
+  function optionStyle(opt) {
+    const isSelected = opt.value === value;
+    const isHovered  = hovered === opt.value;
+    return {
+      padding: '5px 12px',
+      cursor: 'pointer',
+      fontFamily: FONT_BODY,
+      fontSize: '13px',
+      fontWeight: isSelected ? FW_SEMIBOLD : FW_MEDIUM,
+      color: isSelected ? t.ACCENT : t.TEXT,
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '2px',
+      borderRadius: RADIUS_LG,
+      background: isSelected
+        ? t.ACCENT_MUTED
+        : isHovered
+          ? t.SURFACE_ALT
+          : 'transparent',
+      transition: 'background 0.1s',
+    };
+  }
 
   return (
     <>
@@ -98,11 +120,9 @@ export function Dropdown({ options = [], value, onChange, placeholder = 'Select.
           from { opacity: 0; transform: translateY(-6px); }
           to   { opacity: 1; transform: translateY(0); }
         }
-        .dd-option:hover { background: var(--dd-hover) !important; }
       `}</style>
 
-      {/* Inject hover var so CSS can reach the token without hardcoding */}
-      <div style={{ '--dd-hover': t.SURFACE_ALT, position: 'relative', display: 'inline-block' }} ref={ref}>
+      <div style={{ position: 'relative', display: 'inline-block' }} ref={ref}>
 
         {/* Trigger pill */}
         <div style={trigger} onClick={() => setOpen(o => !o)}>
@@ -110,8 +130,7 @@ export function Dropdown({ options = [], value, onChange, placeholder = 'Select.
 
           {/* CSS border triangle — no Unicode */}
           <span style={{
-            width: 0,
-            height: 0,
+            width: 0, height: 0,
             borderLeft: '4px solid transparent',
             borderRight: '4px solid transparent',
             borderTop: `5px solid ${t.TEXT_MUTED}`,
@@ -124,21 +143,15 @@ export function Dropdown({ options = [], value, onChange, placeholder = 'Select.
         {/* Dropdown panel */}
         {open && (
           <div style={panel}>
-            {options.map((opt, i) => (
+            {options.map(opt => (
               <div
                 key={opt.value}
-                className="dd-option"
                 onClick={() => handleSelect(opt.value)}
-                style={{
-                  ...optionBase,
-                  background: opt.value === value ? t.ACCENT_MUTED : t.SURFACE,
-                  color: opt.value === value ? t.ACCENT : t.TEXT,
-                  borderBottom: i < options.length - 1 ? `1px solid ${t.BORDER}` : 'none',
-                }}
+                onMouseEnter={() => setHovered(opt.value)}
+                onMouseLeave={() => setHovered(null)}
+                style={optionStyle(opt)}
               >
-                <span style={{ fontWeight: opt.value === value ? FW_SEMIBOLD : FW_MEDIUM }}>
-                  {opt.label}
-                </span>
+                <span>{opt.label}</span>
                 {opt.description && (
                   <span style={{ fontSize: '11px', color: t.TEXT_MUTED, fontWeight: FW_LIGHT }}>
                     {opt.description}

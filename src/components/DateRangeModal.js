@@ -9,42 +9,35 @@ import {
 
 // ── Calendar helpers ──────────────────────────────────────────────────────────
 
-const DAY_LABELS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
-
+const DAY_LABELS  = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 const MONTH_NAMES = [
   'January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December',
 ];
 
-// Returns midnight-normalised copy of a Date so comparisons are date-only.
 function toDay(d) {
-  const copy = new Date(d);
-  copy.setHours(0, 0, 0, 0);
-  return copy;
+  const c = new Date(d);
+  c.setHours(0, 0, 0, 0);
+  return c;
 }
 
 function sameDay(a, b) {
-  if (!a || !b) return false;
-  return a.toDateString() === b.toDateString();
+  return a && b && a.toDateString() === b.toDateString();
 }
 
-// Build the 42-cell grid (6 rows × 7 cols) for a given year + month.
-// Each cell is { date: Date, inMonth: boolean }.
+// Build the 42-cell (6 × 7) grid for a given year + month.
 function buildGrid(year, month) {
-  const firstOfMonth = new Date(year, month, 1);
-  const offset       = firstOfMonth.getDay();          // 0 = Sun
-  const daysInMonth  = new Date(year, month + 1, 0).getDate();
-  const cells        = [];
+  const first       = new Date(year, month, 1);
+  const offset      = first.getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const cells       = [];
 
-  // Filler cells from previous month
   for (let i = offset - 1; i >= 0; i--) {
     cells.push({ date: new Date(year, month, -i), inMonth: false });
   }
-  // Days in current month
   for (let d = 1; d <= daysInMonth; d++) {
     cells.push({ date: new Date(year, month, d), inMonth: true });
   }
-  // Filler cells from next month to complete the grid
   let next = 1;
   while (cells.length < 42) {
     cells.push({ date: new Date(year, month + 1, next++), inMonth: false });
@@ -52,10 +45,17 @@ function buildGrid(year, month) {
   return cells;
 }
 
-// Format a Date as MM/DD/YYYY for the text input.
+// Format Date → MM/DD/YYYY
 function fmt(d) {
   if (!d) return '';
   return d.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
+}
+
+// Build the combined range string written to the single input.
+function buildRangeText(start, end) {
+  if (start && end) return `${fmt(start)} - ${fmt(end)}`;
+  if (start)        return `${fmt(start)} - `;
+  return '';
 }
 
 // Parse "MM/DD/YYYY - MM/DD/YYYY" → { start, end } or null.
@@ -75,37 +75,34 @@ function parseText(text) {
  * DateRangeModal
  *
  * Props:
- *   open          boolean                     — controls visibility
- *   onClose       () => void                  — called on Cancel or backdrop click
- *   onApply       (start: Date, end: Date) => void — called when advisor confirms range
- *   initialRange  { start: Date, end: Date }? — pre-fill if a custom range already exists
+ *   open          boolean
+ *   onClose       () => void
+ *   onApply       (start: Date, end: Date) => void
+ *   initialRange  { start: Date, end: Date }?
  */
 export default function DateRangeModal({ open, onClose, onApply, initialRange }) {
   const t     = useTokens();
   const today = toDay(new Date());
 
-  // Calendar view state
-  const [viewYear,  setViewYear]  = useState(today.getFullYear());
-  const [viewMonth, setViewMonth] = useState(today.getMonth());
-
-  // Selection state — managed internally, committed on Apply
+  const [viewYear,   setViewYear]   = useState(today.getFullYear());
+  const [viewMonth,  setViewMonth]  = useState(today.getMonth());
   const [rangeStart, setRangeStart] = useState(null);
   const [rangeEnd,   setRangeEnd]   = useState(null);
   const [hoverDate,  setHoverDate]  = useState(null);
+  const [textInput,  setTextInput]  = useState('');
+  const [textError,  setTextError]  = useState('');
 
-  // Text input state
-  const [textInput, setTextInput] = useState('');
-  const [textError, setTextError] = useState('');
-
-  // Initialise / reset when modal opens
+  // Reset / pre-fill whenever modal opens
   useEffect(() => {
     if (!open) return;
     if (initialRange?.start && initialRange?.end) {
-      setRangeStart(toDay(initialRange.start));
-      setRangeEnd(toDay(initialRange.end));
-      setTextInput(`${fmt(initialRange.start)} - ${fmt(initialRange.end)}`);
-      setViewYear(initialRange.start.getFullYear());
-      setViewMonth(initialRange.start.getMonth());
+      const s = toDay(initialRange.start);
+      const e = toDay(initialRange.end);
+      setRangeStart(s);
+      setRangeEnd(e);
+      setTextInput(buildRangeText(s, e));
+      setViewYear(s.getFullYear());
+      setViewMonth(s.getMonth());
     } else {
       setRangeStart(null);
       setRangeEnd(null);
@@ -125,7 +122,6 @@ export default function DateRangeModal({ open, onClose, onApply, initialRange })
     if (viewMonth === 0) { setViewYear(y => y - 1); setViewMonth(11); }
     else setViewMonth(m => m - 1);
   }
-
   function nextMonth() {
     if (viewMonth === 11) { setViewYear(y => y + 1); setViewMonth(0); }
     else setViewMonth(m => m + 1);
@@ -134,27 +130,21 @@ export default function DateRangeModal({ open, onClose, onApply, initialRange })
   // ── Day click ───────────────────────────────────────────────────────────────
 
   function handleDayClick(date) {
-    if (!date) return;
     const d = toDay(date);
-
-    // If no start yet, or both ends already chosen → start a new selection
     if (!rangeStart || (rangeStart && rangeEnd)) {
       setRangeStart(d);
       setRangeEnd(null);
-      setTextInput(fmt(d));
+      setTextInput(buildRangeText(d, null));
       setTextError('');
       return;
     }
-
-    // Start chosen, end not yet — complete the range
     if (d < rangeStart) {
-      // Clicked before the start: treat as new start, let them pick end
       setRangeStart(d);
       setRangeEnd(null);
-      setTextInput(fmt(d));
+      setTextInput(buildRangeText(d, null));
     } else {
       setRangeEnd(d);
-      setTextInput(`${fmt(rangeStart)} - ${fmt(d)}`);
+      setTextInput(buildRangeText(rangeStart, d));
       setTextError('');
     }
   }
@@ -165,8 +155,6 @@ export default function DateRangeModal({ open, onClose, onApply, initialRange })
     const val = e.target.value;
     setTextInput(val);
     setTextError('');
-
-    // Only parse once it looks complete (rough length check)
     if (val.length >= 23) {
       const parsed = parseText(val);
       if (parsed) {
@@ -179,110 +167,70 @@ export default function DateRangeModal({ open, onClose, onApply, initialRange })
   }
 
   function handleTextBlur() {
-    if (!textInput.trim()) return;
+    if (!textInput.trim() || textInput.endsWith('- ')) return;
     const parsed = parseText(textInput);
     if (!parsed) {
-      setTextError('Please use MM/DD/YYYY - MM/DD/YYYY format, and ensure the end date is after the start.');
+      setTextError('Use MM/DD/YYYY - MM/DD/YYYY and ensure the end date is after the start.');
     }
   }
 
   // ── Apply ───────────────────────────────────────────────────────────────────
 
   function handleApply() {
-    if (!rangeStart || !rangeEnd) return;
-    onApply(rangeStart, rangeEnd);
+    if (rangeStart && rangeEnd) onApply(rangeStart, rangeEnd);
   }
 
-  // ── Cell classification ─────────────────────────────────────────────────────
+  // ── Cell role ───────────────────────────────────────────────────────────────
 
-  // The "preview end" is either the confirmed rangeEnd or the hoverDate
-  // (when only rangeStart is selected and the user is hovering).
-  const previewEnd = rangeEnd || (rangeStart && hoverDate && hoverDate >= rangeStart ? hoverDate : null);
+  // Preview end: confirmed end or hover position while mid-selection.
+  const previewEnd = rangeEnd
+    || (rangeStart && hoverDate && hoverDate >= rangeStart ? hoverDate : null);
 
+  // Returns: 'start' | 'end' | 'both' | 'inRange' | 'default'
   function cellRole(date) {
-    const d = toDay(date);
-    if (sameDay(d, rangeStart) || sameDay(d, rangeEnd)) return 'endpoint';
-    if (rangeStart && previewEnd && d > rangeStart && d < previewEnd) return 'inRange';
+    const d       = toDay(date);
+    const isStart = sameDay(d, rangeStart);
+    const isEnd   = sameDay(d, previewEnd);
+    if (isStart && isEnd)                                                  return 'both';
+    if (isStart)                                                           return 'start';
+    if (isEnd)                                                             return 'end';
+    if (rangeStart && previewEnd && d > rangeStart && d < previewEnd)     return 'inRange';
     return 'default';
   }
 
-  // ── Grid ────────────────────────────────────────────────────────────────────
+  // ── Cell rendering helpers ──────────────────────────────────────────────────
 
-  const grid = buildGrid(viewYear, viewMonth);
+  // The outer div carries the horizontal band — no border-radius so it bleeds
+  // edge-to-edge across adjacent cells. Endpoints use a half-gradient so the
+  // band only covers the interior side of the circle.
+  function bandStyle(role) {
+    if (role === 'inRange') return { background: t.ACCENT_MUTED };
+    if (role === 'start')   return { background: `linear-gradient(to right, transparent 50%, ${t.ACCENT_MUTED} 50%)` };
+    if (role === 'end')     return { background: `linear-gradient(to left,  transparent 50%, ${t.ACCENT_MUTED} 50%)` };
+    return { background: 'transparent' };
+  }
 
-  // ── Styles ──────────────────────────────────────────────────────────────────
-
-  const overlay = {
-    position: 'fixed', inset: 0,
-    background: 'rgba(0,0,0,0.65)',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    zIndex: 1000, padding: '20px',
-  };
-
-  const card = {
-    background: t.SURFACE,
-    border: `1px solid ${t.BORDER}`,
-    borderRadius: RADIUS_LG,
-    boxShadow: SHADOW_LG,
-    width: '100%',
-    maxWidth: '360px',
-    overflow: 'hidden',
-    animation: 'drFadeUp 0.18s ease both',
-  };
-
-  const header = {
-    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-    padding: '18px 22px', borderBottom: `1px solid ${t.BORDER}`,
-  };
-
-  const body   = { padding: '20px 22px' };
-  const footer = {
-    display: 'flex', justifyContent: 'flex-end', gap: '10px',
-    padding: '14px 22px', borderTop: `1px solid ${t.BORDER}`,
-  };
-
-  const navButton = {
-    background: 'none', border: 'none', cursor: 'pointer',
-    padding: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-    borderRadius: RADIUS_MD, color: t.TEXT_MUTED,
-  };
-
-  const monthLabel = {
-    fontFamily: FONT_BODY, fontSize: '14px', fontWeight: FW_MEDIUM,
-    color: t.TEXT, letterSpacing: '0.02em',
-  };
-
-  const dayLabelStyle = {
-    textAlign: 'center', fontSize: '10px', fontWeight: FW_SEMIBOLD,
-    textTransform: 'uppercase', letterSpacing: '0.08em',
-    color: t.TEXT_MUTED, paddingBottom: '8px',
-    fontFamily: FONT_BODY,
-  };
-
-  function cellStyle(date, inMonth) {
-    if (!inMonth) return { visibility: 'hidden' };
-    const role      = cellRole(date);
-    const isToday   = sameDay(toDay(date), today);
-    const isEndpoint = role === 'endpoint';
-    const isInRange  = role === 'inRange';
-
+  // The inner div is the visible circle on top of the band.
+  function circleStyle(role, date) {
+    const isEndpoint = role === 'start' || role === 'end' || role === 'both';
+    const isToday    = sameDay(toDay(date), today);
     return {
-      width: '36px', height: '36px',
+      width: '32px', height: '32px',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       borderRadius: RADIUS_MD,
-      cursor: 'pointer',
-      fontFamily: FONT_BODY,
-      fontSize: '13px',
+      fontFamily: FONT_BODY, fontSize: '13px',
       fontWeight: isEndpoint ? FW_SEMIBOLD : isToday ? FW_MEDIUM : FW_LIGHT,
-      background: isEndpoint ? t.ACCENT : isInRange ? t.ACCENT_MUTED : 'transparent',
-      color: isEndpoint ? '#ffffff' : isInRange ? t.ACCENT : t.TEXT,
+      background: isEndpoint ? t.ACCENT : 'transparent',
+      color: isEndpoint ? '#ffffff' : t.TEXT,
       border: isToday && !isEndpoint ? `1px solid ${t.ACCENT_BORDER}` : 'none',
-      transition: 'background 0.1s, color 0.1s',
-      position: 'relative',
+      cursor: 'pointer',
       userSelect: 'none',
+      transition: 'background 0.1s',
+      flexShrink: 0,
     };
   }
 
+  const grid     = buildGrid(viewYear, viewMonth);
   const canApply = !!(rangeStart && rangeEnd);
 
   return (
@@ -292,20 +240,26 @@ export default function DateRangeModal({ open, onClose, onApply, initialRange })
           from { opacity: 0; transform: translateY(10px); }
           to   { opacity: 1; transform: translateY(0); }
         }
-        .dr-day:hover { background: var(--dr-hover) !important; }
-        .dr-nav-btn:hover { background: var(--dr-hover) !important; }
+        .dr-circle:hover           { background: var(--dr-hover)   !important; }
+        .dr-circle.endpoint:hover  { background: var(--dr-accent)  !important; }
       `}</style>
 
-      {/* Overlay — click outside to close */}
+      {/* Overlay */}
       <div
-        style={overlay}
+        style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.65)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}
         onClick={e => { if (e.target === e.currentTarget) onClose(); }}
       >
-        {/* Inject hover token for CSS class */}
-        <div style={{ '--dr-hover': t.SURFACE_ALT, ...card }}>
+        <div style={{
+          '--dr-hover':  t.ACCENT_MUTED,
+          '--dr-accent': t.ACCENT,
+          background: t.SURFACE, border: `1px solid ${t.BORDER}`,
+          borderRadius: RADIUS_LG, boxShadow: SHADOW_LG,
+          width: '100%', maxWidth: '360px', overflow: 'hidden',
+          animation: 'drFadeUp 0.18s ease both',
+        }}>
 
           {/* Header */}
-          <div style={header}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '18px 22px', borderBottom: `1px solid ${t.BORDER}` }}>
             <h2 style={{ margin: 0, fontFamily: FONT_DISPLAY, fontSize: '20px', fontWeight: FW_REGULAR, color: t.TEXT, letterSpacing: '0.01em' }}>
               Custom range
             </h2>
@@ -314,96 +268,89 @@ export default function DateRangeModal({ open, onClose, onApply, initialRange })
             </button>
           </div>
 
-          <div style={body}>
+          <div style={{ padding: '20px 22px' }}>
 
-            {/* ── Month navigation ─────────────────────────────────────── */}
+            {/* Month navigation */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-              <button className="dr-nav-btn" style={navButton} onClick={prevMonth} aria-label="Previous month">
-                {/* CSS left-pointing triangle */}
-                <span style={{ width: 0, height: 0, borderTop: '5px solid transparent', borderBottom: '5px solid transparent', borderRight: `6px solid ${t.TEXT_MUTED}` }} />
+              <button onClick={prevMonth} aria-label="Previous month" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '6px', display: 'flex', alignItems: 'center', borderRadius: RADIUS_MD, color: t.TEXT_MUTED }}>
+                <span style={{ width: 0, height: 0, borderTop: '5px solid transparent', borderBottom: '5px solid transparent', borderRight: '6px solid currentColor' }} />
               </button>
-              <span style={monthLabel}>{MONTH_NAMES[viewMonth]} {viewYear}</span>
-              <button className="dr-nav-btn" style={navButton} onClick={nextMonth} aria-label="Next month">
-                {/* CSS right-pointing triangle */}
-                <span style={{ width: 0, height: 0, borderTop: '5px solid transparent', borderBottom: '5px solid transparent', borderLeft: `6px solid ${t.TEXT_MUTED}` }} />
+              <span style={{ fontFamily: FONT_BODY, fontSize: '14px', fontWeight: FW_MEDIUM, color: t.TEXT }}>
+                {MONTH_NAMES[viewMonth]} {viewYear}
+              </span>
+              <button onClick={nextMonth} aria-label="Next month" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '6px', display: 'flex', alignItems: 'center', borderRadius: RADIUS_MD, color: t.TEXT_MUTED }}>
+                <span style={{ width: 0, height: 0, borderTop: '5px solid transparent', borderBottom: '5px solid transparent', borderLeft: '6px solid currentColor' }} />
               </button>
             </div>
 
-            {/* ── Day-of-week labels ───────────────────────────────────── */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', marginBottom: '4px' }}>
+            {/* Day-of-week labels */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', marginBottom: '2px' }}>
               {DAY_LABELS.map(d => (
-                <div key={d} style={dayLabelStyle}>{d}</div>
-              ))}
-            </div>
-
-            {/* ── Calendar grid ────────────────────────────────────────── */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '2px' }}>
-              {grid.map(({ date, inMonth }, i) => (
-                <div
-                  key={i}
-                  className={inMonth ? 'dr-day' : ''}
-                  style={cellStyle(date, inMonth)}
-                  onClick={() => inMonth && handleDayClick(date)}
-                  onMouseEnter={() => inMonth && rangeStart && !rangeEnd && setHoverDate(toDay(date))}
-                  onMouseLeave={() => setHoverDate(null)}
-                >
-                  {inMonth ? date.getDate() : ''}
+                <div key={d} style={{ textAlign: 'center', fontSize: '10px', fontWeight: FW_SEMIBOLD, textTransform: 'uppercase', letterSpacing: '0.08em', color: t.TEXT_MUTED, paddingBottom: '6px', fontFamily: FONT_BODY }}>
+                  {d}
                 </div>
               ))}
             </div>
 
-            {/* ── Range summary ────────────────────────────────────────── */}
-            {(rangeStart || rangeEnd) && (
-              <div style={{ marginTop: '16px', padding: '10px 14px', background: t.SURFACE_ALT, borderRadius: RADIUS_MD, border: `1px solid ${t.BORDER}` }}>
-                <p style={{ margin: 0, fontSize: '12px', color: t.TEXT_MUTED, fontFamily: FONT_BODY, fontWeight: FW_LIGHT }}>
-                  {rangeStart && !rangeEnd
-                    ? `From ${fmt(rangeStart)} — select end date`
-                    : rangeStart && rangeEnd
-                      ? `${fmt(rangeStart)} – ${fmt(rangeEnd)}`
-                      : ''}
-                </p>
-              </div>
-            )}
+            {/* Calendar grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)' }}>
+              {grid.map(({ date, inMonth }, i) => {
+                if (!inMonth) return <div key={i} style={{ height: '36px' }} />;
 
-            {/* ── Divider ──────────────────────────────────────────────── */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', margin: '20px 0 14px' }}>
-              <div style={{ flex: 1, height: '1px', background: t.BORDER }} />
-              <span style={{ fontSize: '11px', color: t.TEXT_MUTED, fontFamily: FONT_BODY, fontWeight: FW_LIGHT, whiteSpace: 'nowrap' }}>or enter manually</span>
-              <div style={{ flex: 1, height: '1px', background: t.BORDER }} />
+                const role       = cellRole(date);
+                const isEndpoint = role === 'start' || role === 'end' || role === 'both';
+
+                return (
+                  // Outer: band layer — fills the full cell width for continuous color
+                  <div
+                    key={i}
+                    style={{ ...bandStyle(role), display: 'flex', alignItems: 'center', justifyContent: 'center', height: '36px' }}
+                    onClick={() => handleDayClick(date)}
+                    onMouseEnter={() => rangeStart && !rangeEnd && setHoverDate(toDay(date))}
+                    onMouseLeave={() => setHoverDate(null)}
+                  >
+                    {/* Inner: circle layer — sits on top of the band */}
+                    <div
+                      className={`dr-circle${isEndpoint ? ' endpoint' : ''}`}
+                      style={circleStyle(role, date)}
+                    >
+                      {date.getDate()}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
 
-            {/* ── Text input ───────────────────────────────────────────── */}
-            <input
-              type="text"
-              value={textInput}
-              onChange={handleTextChange}
-              onBlur={handleTextBlur}
-              placeholder="MM/DD/YYYY - MM/DD/YYYY"
-              style={{
-                width: '100%', boxSizing: 'border-box',
-                border: `1px solid ${textError ? '#f87171' : t.BORDER}`,
-                borderRadius: RADIUS_MD,
-                padding: '9px 12px',
-                fontSize: '13px', color: t.TEXT,
-                background: t.SURFACE_ALT,
-                fontFamily: FONT_BODY, fontWeight: FW_LIGHT,
-                outline: 'none',
-                letterSpacing: '0.03em',
-              }}
-            />
-            {textError && (
-              <p style={{ margin: '6px 0 0', fontSize: '11px', color: '#f87171', fontFamily: FONT_BODY, fontWeight: FW_LIGHT, lineHeight: '1.4' }}>
-                {textError}
-              </p>
-            )}
+            {/* ── Single input — calendar writes to it; typing updates calendar ── */}
+            <div style={{ marginTop: '16px' }}>
+              <input
+                type="text"
+                value={textInput}
+                onChange={handleTextChange}
+                onBlur={handleTextBlur}
+                placeholder="MM/DD/YYYY - MM/DD/YYYY"
+                style={{
+                  width: '100%', boxSizing: 'border-box',
+                  border: `1px solid ${textError ? '#f87171' : t.BORDER}`,
+                  borderRadius: RADIUS_MD, padding: '9px 12px',
+                  fontSize: '13px', color: t.TEXT,
+                  background: t.SURFACE_ALT, fontFamily: FONT_BODY,
+                  fontWeight: FW_LIGHT, outline: 'none', letterSpacing: '0.03em',
+                  textAlign: 'center',
+                }}
+              />
+              {textError && (
+                <p style={{ margin: '6px 0 0', fontSize: '11px', color: '#f87171', fontFamily: FONT_BODY, fontWeight: FW_LIGHT, lineHeight: '1.4' }}>
+                  {textError}
+                </p>
+              )}
+            </div>
+
           </div>
 
           {/* Footer */}
-          <div style={footer}>
-            <button
-              onClick={onClose}
-              style={{ padding: '9px 20px', borderRadius: RADIUS_MD, border: `1px solid ${t.BORDER}`, background: 'transparent', fontSize: '13px', cursor: 'pointer', color: t.TEXT_MUTED, fontFamily: FONT_BODY }}
-            >
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', padding: '14px 22px', borderTop: `1px solid ${t.BORDER}` }}>
+            <button onClick={onClose} style={{ padding: '9px 20px', borderRadius: RADIUS_MD, border: `1px solid ${t.BORDER}`, background: 'transparent', fontSize: '13px', cursor: 'pointer', color: t.TEXT_MUTED, fontFamily: FONT_BODY }}>
               Cancel
             </button>
             <button
