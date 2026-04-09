@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { useOrg } from '../context/OrgContext';
@@ -42,12 +42,7 @@ export default function OrgDetail() {
     if (!orgLoading && !isAdmin && !isPlatformAdmin) navigate('/hq');
   }, [isAdmin, isPlatformAdmin, orgLoading, navigate]);
 
-  useEffect(() => {
-    if (!orgId || orgLoading) return;
-    fetchAll();
-  }, [orgId, orgLoading]);
-
-  async function fetchAll() {
+  const fetchAll = useCallback(async () => {
     setLoading(true);
     const [orgResult, membersResult] = await Promise.all([
       supabase
@@ -65,7 +60,12 @@ export default function OrgDetail() {
     }
     setMembers(membersResult.data || []);
     setLoading(false);
-  }
+  }, [orgId, isPlatformAdmin]);
+
+  useEffect(() => {
+    if (!orgId || orgLoading) return;
+    fetchAll();
+  }, [orgId, orgLoading, fetchAll]);
 
   function showToast(message, type = 'success') {
     setToast({ message, type });

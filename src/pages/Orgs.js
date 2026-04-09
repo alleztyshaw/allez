@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { useOrg } from '../context/OrgContext';
 import { useTokens } from '../context/ThemeContext';
 import useWindowWidth from '../hooks/useWindowWidth';
 import {
-  FONT_DISPLAY, FONT_BODY,
+  FONT_BODY,
   FW_LIGHT, FW_REGULAR, FW_SEMIBOLD,
   RADIUS_MD, RADIUS_LG, RADIUS_PILL,
   SHADOW_MD,
@@ -62,12 +62,7 @@ export default function Orgs() {
     if (!orgLoading && !isPlatformAdmin && !isAdmin) navigate('/hq');
   }, [isPlatformAdmin, isAdmin, orgLoading, navigate]);
 
-  useEffect(() => {
-    if (orgLoading) return;
-    fetchOrgs();
-  }, [orgLoading, isPlatformAdmin]);
-
-  async function fetchOrgs() {
+  const fetchOrgs = useCallback(async () => {
     setLoading(true);
     const { data, error } = isPlatformAdmin
       ? await supabase.rpc('get_all_orgs_platform')
@@ -75,7 +70,12 @@ export default function Orgs() {
     if (error) console.error('fetchOrgs error:', error);
     setOrgs(data || []);
     setLoading(false);
-  }
+  }, [isPlatformAdmin]);
+
+  useEffect(() => {
+    if (orgLoading) return;
+    fetchOrgs();
+  }, [orgLoading, isPlatformAdmin, fetchOrgs]);
 
   function handleSort(key) {
     if (sortKey === key) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
