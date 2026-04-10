@@ -99,7 +99,7 @@ export function Dropdown({ options = [], value, onChange, placeholder = 'Select.
     position: 'absolute',
     inset: 0,
     background: t.SURFACE,
-    opacity: 9,
+    opacity: .95,
     backdropFilter: 'blur(16px)',
     WebkitBackdropFilter: 'blur(16px)',
     zIndex: 0,
