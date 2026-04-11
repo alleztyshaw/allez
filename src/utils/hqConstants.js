@@ -32,12 +32,16 @@ export const COLOR_WARNING = '#fbbf24'; // amber — caution, overdue, pending
 export const COLOR_INFO    = '#60a5fa'; // blue — informational, updates, neutral changes
 
 // --- ONBOARDING ---
-export const ONBOARDING_BG_START        = '#F7F9FC'; // Gradient start — off-white
-export const ONBOARDING_BG_END          = '#D8EAF5'; // Gradient end — light blue
-export const ONBOARDING_ICON_FILL       = '#EEF4FB'; // Icon circle fill in orientation illustrations
+export const ONBOARDING_BG_START          = '#F7F9FC'; // Gradient start — off-white
+export const ONBOARDING_BG_END            = '#D8EAF5'; // Gradient end — light blue
+export const ONBOARDING_ICON_FILL         = '#EEF4FB'; // Icon circle fill in orientation illustrations
 export const ONBOARDING_HEADLINE_GRADIENT = 'linear-gradient(135deg, #6366f1 0%, #a78bfa 100%)'; // Welcome headline
-export const INDIGO                     = '#4F46E5'; // Profiles illustration stroke
-export const AMBER                      = '#D97706'; // Daily Brief illustration stroke
+export const INDIGO                       = '#4F46E5'; // Profiles illustration stroke
+export const AMBER                        = '#D97706'; // Daily Brief illustration stroke
+
+// --- LIGHT / DARK TOGGLE ---
+export const TOGGLE_SUN  = '#F59E0B'; // Amber — toggle sun icon (active in light mode)
+export const TOGGLE_MOON = '#29B5FF'; // Neon blue — toggle moon icon (active in dark mode); sibling to Emerald
 
 // --- SITE ACCENT — Allez HQ public/marketing pages (allezhq.com) ---
 export const SITE_ACCENT        = '#667eea'; // Purple — portfolio brand colour

@@ -39,6 +39,7 @@ import OnboardingGate from './components/onboarding/OnboardingGate';
 import StandardLayout from './components/StandardLayout';
 import MobilePreviewLayout from './components/MobilePreviewLayout';
 import SearchOverlay from './components/SearchOverlay';
+import PlatformPill from './components/PlatformPill';
 import { useOrg } from './context/OrgContext';
 import './App.css';
 
@@ -71,6 +72,7 @@ function App() {
         <Router>
           <ScrollReset />
           <SearchOverlay />
+          <PlatformPill />
           <div className="App">
             <Routes>
               <Route path="/"                          element={<HomePage />} />

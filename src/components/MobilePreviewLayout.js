@@ -3,7 +3,6 @@
 // Only rendered when devMobileOverride is active for platform admins.
 
 import Sidebar from './Sidebar';
-import DevBanner, { DEV_BANNER_HEIGHT } from './DevBanner';
 import ProtectedRoute from './ProtectedRoute';
 import { useTokens } from '../context/ThemeContext';
 import useIdleTimeout from '../hooks/useIdleTimeout';
@@ -35,7 +34,7 @@ export default function MobilePreviewLayout({ children }) {
         background:     t.SURFACE_ALT,
         display:        'flex',
         justifyContent: 'center',
-        padding:        `32px 0 calc(32px + ${DEV_BANNER_HEIGHT}px)`,
+        padding:        '32px 0',
       }}>
         {/* Phone frame — 390px container, all content inside including topbar */}
         <div style={{
@@ -55,7 +54,6 @@ export default function MobilePreviewLayout({ children }) {
           <p style={{ ...footerStyle, color: t.TEXT_SUBTLE }}>{FOOTER_TEXT}</p>
         </div>
       </div>
-      <DevBanner />
     </ProtectedRoute>
   );
 }

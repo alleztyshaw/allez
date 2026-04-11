@@ -20,8 +20,10 @@ import {
  *   placeholder string                              — shown when value is null/empty
  *   style       object?                             — optional overrides on the trigger pill
  *   panelWidth  string?                             — optional override e.g. '240px'
+ *   dropUp      boolean?                            — opens panel above trigger
+ *   compact     boolean?                            — panel fits content width; options align with trigger text
  */
-export function Dropdown({ options = [], value, onChange, placeholder = 'Select...', style = {}, panelWidth }) {
+export function Dropdown({ options = [], value, onChange, placeholder = 'Select...', style = {}, panelWidth, dropUp = false, compact = false }) {
   const t = useTokens();
   const [open,    setOpen]    = useState(false);
   const [hovered, setHovered] = useState(null);
@@ -64,71 +66,66 @@ export function Dropdown({ options = [], value, onChange, placeholder = 'Select.
     ...style,
   };
 
-  // ── Frosted panel — two-layer approach ───────────────────────────────────
-  //
-  // The problem with `opacity` on the panel element: it makes ALL children
-  // (text, pills, everything) semi-transparent too. At opacity 0.1, text
-  // nearly vanishes — so the change looked invisible, not frosted.
-  //
-  // The correct approach: the panel wrapper has no background of its own.
-  // An absolutely-positioned child div carries the background + blur at
-  // reduced opacity. All option content renders above it at full opacity,
-  // so text stays crisp while only the surface is translucent.
+  // dropUp gap is larger (10px) to give breathing room from the pill edge
+  const panelGap = dropUp ? '10px' : '6px';
+
+  // compact: uniform 4px panel padding on all sides so option pills have
+  // breathing room from the panel edge. 4px gap → option pill radius = RADIUS_LG(14) - 4
+  // = RADIUS_MD(10) for concentric curves. panel(4px) + option(4px) = 8px from
+  // wrapper left = trigger text position (trigger padding: '4px 8px').
 
   const panel = {
     position: 'absolute',
-    top: 'calc(100% + 6px)',
+    ...(dropUp
+      ? { bottom: `calc(100% + ${panelGap})`, top: 'auto' }
+      : { top:    `calc(100% + ${panelGap})`, bottom: 'auto' }
+    ),
     left: 0,
     zIndex: 200,
-    // No background here — handled by panelBg layer below
     border: `1px solid ${t.BORDER}`,
     borderRadius: RADIUS_LG,
     boxShadow: SHADOW_LG,
-    minWidth: '180px',
-    width: panelWidth || 'auto',
-    padding: '6px',
+    minWidth: compact ? 0 : '180px',
+    width: compact ? 'max-content' : (panelWidth || 'auto'),
+    padding: compact ? '4px' : '6px',
     display: 'flex',
     flexDirection: 'column',
-    gap: '6px',
-    animation: 'ddFadeDown 0.12s ease both',
-    overflow: 'hidden', // clips the bg layer to the panel's border-radius
+    gap: '2px',
+    animation: dropUp ? 'ddFadeUp 0.12s ease both' : 'ddFadeDown 0.12s ease both',
+    overflow: 'hidden',
   };
 
-  // Background layer — only this is translucent. Sits behind options via z-index.
   const panelBg = {
-    position: 'absolute',
-    inset: 0,
-    background: t.SURFACE,
-    opacity: .95,
-    backdropFilter: 'blur(16px)',
+    position:             'absolute',
+    inset:                0,
+    background:           t.SURFACE,
+    opacity:              .95,
+    backdropFilter:       'blur(16px)',
     WebkitBackdropFilter: 'blur(16px)',
-    zIndex: 0,
-    // No border-radius needed — parent overflow:hidden clips it
+    zIndex:               0,
   };
 
-  // Each option pill — z-index 1 so it renders above the bg layer.
   function optionStyle(opt) {
     const isSelected = opt.value === value;
-    const isHovered  = hovered === opt.value;
+    const isHov      = hovered === opt.value;
     return {
-      position: 'relative',
-      zIndex: 1,
-      padding: '5px 12px',
-      cursor: 'pointer',
-      fontFamily: FONT_BODY,
-      fontSize: '13px',
-      fontWeight: isSelected ? FW_SEMIBOLD : FW_MEDIUM,
-      color: isSelected ? t.ACCENT : t.TEXT,
-      display: 'flex',
+      position:      'relative',
+      zIndex:        1,
+      // compact: 4px left padding aligns text with trigger (panel 4px + option 4px = 8px)
+      // option radius = RADIUS_MD (concentric with panel RADIUS_LG at 4px gap)
+      padding:       compact ? '5px 4px' : '5px 12px',
+      cursor:        'pointer',
+      fontFamily:    FONT_BODY,
+      fontSize:      '13px',
+      fontWeight:    isSelected ? FW_SEMIBOLD : FW_MEDIUM,
+      color:         isSelected ? t.ACCENT : t.TEXT,
+      display:       'flex',
       flexDirection: 'column',
-      gap: '2px',
-      borderRadius: RADIUS_LG,
-      background: isSelected
-        ? t.ACCENT_MUTED
-        : isHovered
-          ? t.SURFACE_ALT
-          : 'transparent',
-      transition: 'background 0.1s',
+      gap:           '2px',
+      borderRadius:  compact ? RADIUS_MD : RADIUS_LG,
+      background:    isSelected ? t.ACCENT_MUTED : isHov ? t.SURFACE_ALT : 'transparent',
+      transition:    'background 0.1s',
+      whiteSpace:    'nowrap',
     };
   }
 
@@ -139,16 +136,20 @@ export function Dropdown({ options = [], value, onChange, placeholder = 'Select.
           from { opacity: 0; transform: translateY(-6px); }
           to   { opacity: 1; transform: translateY(0); }
         }
+        @keyframes ddFadeUp {
+          from { opacity: 0; transform: translateY(6px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
       `}</style>
 
       <div style={{ position: 'relative', display: 'inline-block' }} ref={ref}>
 
-        {/* Trigger pill */}
+        {/* Trigger */}
         <div style={trigger} onClick={() => setOpen(o => !o)}>
           <span style={{ flex: 1 }}>{selected ? selected.label : placeholder}</span>
 
-          {/* Clear button — only for non-default selections (value !== '') */}
-          {selected && selected.value !== '' && (
+          {/* Clear — only for non-default selections */}
+          {!compact && selected && selected.value !== '' && (
             <span
               onClick={e => { e.stopPropagation(); onChange(''); setOpen(false); }}
               style={{
@@ -162,7 +163,7 @@ export function Dropdown({ options = [], value, onChange, placeholder = 'Select.
             </span>
           )}
 
-          {/* Chevron — always visible so the advisor can open and switch filters */}
+          {/* Chevron */}
           <span style={{
             width: 0, height: 0,
             borderLeft: '4px solid transparent',
@@ -174,13 +175,10 @@ export function Dropdown({ options = [], value, onChange, placeholder = 'Select.
           }} />
         </div>
 
-        {/* Dropdown panel */}
+        {/* Panel */}
         {open && (
           <div style={panel}>
-            {/* Background layer — translucent, sits behind options */}
             <div style={panelBg} />
-
-            {/* Options — full opacity, above bg layer */}
             {options.map(opt => (
               <div
                 key={opt.value}
