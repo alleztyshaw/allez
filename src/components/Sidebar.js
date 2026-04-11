@@ -103,10 +103,10 @@ export default function Sidebar() {
     ...(!orgLoading && (isAdmin || userRole === 'compliance')
       ? [{ to: '/hq/audit', label: 'Audit Log' }]
       : []),
-    { to: '/hq/settings', label: 'Settings' },
     ...(!orgLoading && (isPlatformAdmin || isAdmin)
       ? [{ to: isPlatformAdmin ? '/hq/orgs' : `/hq/orgs/${orgId}`, label: 'Org' }]
       : []),
+    { to: '/hq/settings', label: 'Settings' },
   ];
 
   // Stagger timing derived from link count — total window ~180ms
