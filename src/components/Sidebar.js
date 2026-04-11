@@ -6,7 +6,7 @@ import { useTokens, useTheme } from '../context/ThemeContext';
 import {
   FONT_DISPLAY, FONT_BODY,
   FW_LIGHT, FW_REGULAR, FW_MEDIUM, FW_SEMIBOLD,
-  SITE_ACCENT, TOGGLE_SUN, TOGGLE_MOON,
+  TOGGLE_SUN, TOGGLE_MOON,
   TOPBAR_HEIGHT, SIDEBAR_WIDTH,
   RADIUS_PILL,
 } from '../utils/hqConstants';

@@ -33,8 +33,8 @@ export default function PlatformPill() {
   const {
     isDevMode,
     devMobileOverride, setDevMobileOverride,
-    devRoleOverride,   setDevRoleOverride,
-    demoRoleOverride,  setDemoRoleOverride,
+    setDevRoleOverride,
+    setDemoRoleOverride,
     isOrgSwitched,     isDemoOrg,
     userRole,
   } = useOrg();
@@ -99,7 +99,7 @@ export default function PlatformPill() {
         : `pillEnter ${ENTER_MS}ms cubic-bezier(0.25, 0.46, 0.45, 0.94) both`,
     },
 
-    // No overflow:hidden — dropdown panels must escape upward.
+    // No overflow:hidden — dropdown panels escape upward freely.
     // pillBg carries its own borderRadius to stay visually contained.
     pill: {
       position:     'relative',
@@ -149,7 +149,6 @@ export default function PlatformPill() {
     },
   };
 
-  // Compact trigger style — transparent, pill-shaped, fits the floating pill context
   const dropdownTriggerStyle = {
     padding:      '4px 8px',
     fontSize:     '12px',
@@ -177,7 +176,6 @@ export default function PlatformPill() {
           <div style={s.pillBg} />
           <div style={s.pillContent}>
 
-            {/* Viewport toggle — dev mode only */}
             {showFull && (
               <>
                 <Dropdown
@@ -193,7 +191,6 @@ export default function PlatformPill() {
               </>
             )}
 
-            {/* Viewing as role */}
             <span style={s.label}>Viewing as</span>
             <Dropdown
               options={ROLE_DROPDOWN_OPTIONS}
